@@ -368,13 +368,6 @@ function App() {
   return (
     <>
       <div className="app-container">
-        {/* HEADER */}
-        <div className="header">
-          <h1 className="title">Asset Management</h1>
-
-          <p className="subtitle">Manage your company assets easily</p>
-        </div>
-
         <div className="dashboard-grid">
           <div className="dashboard-card"><span>Total Assets</span><strong>{stats.total}</strong></div>
           <div className="dashboard-card"><span>Available</span><strong>{stats.available}</strong></div>

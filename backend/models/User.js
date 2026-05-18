@@ -27,6 +27,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    department: {
+      type: String,
+      trim: true,
+    },
+    phoneNumber: {
+      type: String,
+      trim: true,
+    },
     role: {
       type: String,
       enum: USER_ROLES,
@@ -76,6 +84,8 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
     employeeId: this.employeeId,
     role: this.role,
     status: this.status,
+    department: this.department,
+    phoneNumber: this.phoneNumber,
   };
 };
 

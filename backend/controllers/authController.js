@@ -71,3 +71,41 @@ export const login = async (req, res) => {
 export const currentUser = (req, res) => {
   res.status(200).json({ success: true, user: req.user.toSafeJSON() });
 };
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, email, employeeId, department, phoneNumber, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (email && email.toLowerCase() !== user.email.toLowerCase()) {
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return res.status(409).json({ success: false, message: "Email is already registered" });
+      }
+      user.email = email.toLowerCase();
+    }
+
+    if (name) user.name = name;
+    if (employeeId !== undefined) user.employeeId = employeeId;
+    if (department !== undefined) user.department = department;
+    if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+
+    if (newPassword) {
+      user.setPassword(newPassword);
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      user: user.toSafeJSON(),
+      message: "Profile updated successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

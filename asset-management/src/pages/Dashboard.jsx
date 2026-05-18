@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { fetchAssetList } from "../store/slices/assetSlice";
 import {
   DataTable,
@@ -8,9 +9,12 @@ import {
   PageTitle,
 } from "../components/common/ModuleComponents";
 import { buildStats, currency, groupByCount } from "../utils/assetUtils";
+import { ROUTE_ROLES } from "../utils/permissions";
 
 function Dashboard() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
   const { assetListData } = useSelector((state) => state.assetList);
   const stats = buildStats(assetListData);
 
@@ -35,6 +39,16 @@ function Dashboard() {
         eyebrow="Dashboard"
         title="Asset Operations Overview"
         description="Live inventory, assignment, warranty, repair, audit, and lifecycle health."
+        action={
+          ROUTE_ROLES["/add-asset"]?.includes(user?.role) && (
+            <button
+              onClick={() => navigate("/add-asset")}
+              className="primary-action"
+            >
+              + Add Asset
+            </button>
+          )
+        }
       />
       <KpiGrid
         items={[

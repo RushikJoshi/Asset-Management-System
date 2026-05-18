@@ -2,13 +2,9 @@ import { useNavigate } from "react-router-dom";
 import "./ModuleComponents.css";
 
 export function PageTitle({ eyebrow, title, description, action }) {
+  if (!action) return null;
   return (
-    <div className="module-title">
-      <div>
-        <p>{eyebrow}</p>
-        <h2>{title}</h2>
-        {description && <span>{description}</span>}
-      </div>
+    <div className="module-title-actions-only">
       {action}
     </div>
   );
