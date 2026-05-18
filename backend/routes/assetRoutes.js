@@ -12,7 +12,7 @@ import {
   seedWorkflowDemoData,
   updateAsset,
 } from "../controllers/assetController.js";
-import { currentUser, login, register } from "../controllers/authController.js";
+import { currentUser, login, register, updateProfile } from "../controllers/authController.js";
 import { allowRoles, authenticate } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -20,6 +20,7 @@ const router = express.Router();
 router.post("/auth/register", register);
 router.post("/auth/login", login);
 router.get("/auth/me", authenticate, currentUser);
+router.put("/auth/profile/update", authenticate, updateProfile);
 
 router.get("/scan/:id", getScanAsset);
 

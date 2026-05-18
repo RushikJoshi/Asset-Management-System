@@ -3,17 +3,13 @@ import Cookies from "js-cookie";
 
 const getApiBaseUrl = () => {
   if (typeof window === "undefined") {
-    return import.meta.env.VITE_API_BASE_URL;
+    return import.meta.env.VITE_API_BASE_URL || "http://localhost:7000/api";
   }
 
   const { protocol, hostname } = window.location;
-  const isNetworkHost = hostname && !["localhost", "127.0.0.1", "::1"].includes(hostname);
-
-  if (isNetworkHost) {
-    return `${protocol}//${hostname}:7000/api`;
-  }
-
-  return import.meta.env.VITE_API_BASE_URL || `${protocol}//${hostname}:7000/api`;
+  
+  // Dynamically connect to the same host opened in the browser to prevent connection timeouts when network IPs change!
+  return `${protocol}//${hostname}:7000/api`;
 };
 
 export const API_BASE_URL = getApiBaseUrl();

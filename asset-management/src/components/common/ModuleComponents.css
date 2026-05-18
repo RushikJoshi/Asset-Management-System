@@ -1,3 +1,9 @@
+.module-title-actions-only {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 18px 0;
+}
+
 .module-title {
   align-items: center;
   display: flex;

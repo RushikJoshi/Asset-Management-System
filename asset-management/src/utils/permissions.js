@@ -41,6 +41,7 @@ export const ROUTE_ROLES = {
   "/add-request": ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
   "/edit-request": ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
   "/asset-details": ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "AUDITOR"],
+  "/profile": ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "AUDITOR", "EMPLOYEE"],
 };
 
 export const canAccessRoute = (role, pathname) => {
