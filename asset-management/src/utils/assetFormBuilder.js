@@ -3,6 +3,7 @@ const STORAGE_KEY = "assetFormBuilderConfig";
 export const assetFormSections = [
   {
     title: "Asset Information",
+    description: "Capture asset identity, QR, and status details.",
     fields: [
       { name: "assetName", label: "Asset Name", required: true, locked: true },
       { name: "category", label: "Category", required: true, locked: true },
@@ -18,6 +19,7 @@ export const assetFormSections = [
   },
   {
     title: "IP Configuration",
+    description: "Visible only for Laptop, PC, Desktop, or Computer assets.",
     fields: [
       { name: "ipAddress", label: "IP Address" },
       { name: "macAddress", label: "MAC Address" },
@@ -29,6 +31,7 @@ export const assetFormSections = [
   },
   {
     title: "Computer Specifications",
+    description: "Hardware and software details for computer-style assets.",
     fields: [
       { name: "operatingSystem", label: "Operating System" },
       { name: "processor", label: "Processor" },
@@ -40,6 +43,7 @@ export const assetFormSections = [
   },
   {
     title: "Request & Purchase Details",
+    description: "Track request approvals, vendor purchase, and invoice data.",
     fields: [
       { name: "requestId", label: "Request ID" },
       { name: "requestedBy", label: "Requested By" },
@@ -57,6 +61,7 @@ export const assetFormSections = [
   },
   {
     title: "Warranty, Office & Assignment",
+    description: "Manage reminders, branch placement, and employee assignment.",
     fields: [
       { name: "warrantyPeriod", label: "Warranty Period (Months)" },
       { name: "warrantyStart", label: "Warranty Start" },
@@ -81,6 +86,7 @@ export const assetFormSections = [
   },
   {
     title: "Retirement & Documentation",
+    description: "Record retirement, disposal, ownership, and supporting notes.",
     fields: [
       { name: "retirementStatus", label: "Retirement Status" },
       { name: "retirementApproval", label: "Retirement Approval" },
@@ -110,22 +116,41 @@ const applyFieldLabels = (fields, labels = {}) =>
     label: labels[field.name] || field.label,
   }));
 
+const applyOrder = (items, order = [], getKey = (item) => item.key) => {
+  if (!Array.isArray(order) || !order.length) return items;
+
+  const orderMap = new Map(order.map((key, index) => [key, index]));
+
+  return [...items].sort((a, b) => {
+    const aIndex = orderMap.has(getKey(a)) ? orderMap.get(getKey(a)) : Number.MAX_SAFE_INTEGER;
+    const bIndex = orderMap.has(getKey(b)) ? orderMap.get(getKey(b)) : Number.MAX_SAFE_INTEGER;
+
+    if (aIndex === bIndex) return 0;
+    return aIndex - bIndex;
+  });
+};
+
 export const getAssetFormSections = (config = {}) => {
   const customFields = config.__customFields || [];
   const labels = config.__fieldLabels || {};
   const sectionLabels = config.__sectionLabels || {};
+  const sectionDescriptions = config.__sectionDescriptions || {};
   const customSections = config.__customSections || [];
+  const deletedFields = new Set(config.__deletedFields || []);
+  const fieldSections = config.__fieldSections || {};
+  const fieldOrder = config.__fieldOrder || {};
   const baseSections = assetFormSections.map((section) => ({
     key: section.title,
     ...section,
     title: sectionLabels[section.title] || section.title,
-    fields: applyFieldLabels(section.fields, labels),
+    description: sectionDescriptions[section.title] || section.description,
+    fields: [],
   }));
 
   const sectionMap = baseSections.reduce((acc, section) => {
     acc[section.key] = {
       ...section,
-      fields: [...section.fields],
+      fields: [],
     };
     return acc;
   }, {});
@@ -136,34 +161,53 @@ export const getAssetFormSections = (config = {}) => {
       sectionMap[sectionKey] = {
         key: sectionKey,
         title: sectionLabels[sectionKey] || section.title,
+        description: sectionDescriptions[sectionKey] || section.description || "",
         fields: [],
       };
     }
   });
 
-  customFields.forEach((field) => {
-    const sectionKey = field.sectionKey || field.sectionTitle || "Custom Fields";
-
+  const ensureSection = (sectionKey, fallbackTitle = sectionKey, fallbackDescription = "") => {
     if (!sectionMap[sectionKey]) {
       sectionMap[sectionKey] = {
         key: sectionKey,
-        title: sectionLabels[sectionKey] || field.sectionTitle || sectionKey,
+        title: sectionLabels[sectionKey] || fallbackTitle,
+        description: sectionDescriptions[sectionKey] || fallbackDescription,
         fields: [],
       };
     }
 
-    sectionMap[sectionKey].fields.push({
+    return sectionMap[sectionKey];
+  };
+
+  assetFormSections.forEach((section) => {
+    applyFieldLabels(
+      section.fields.filter((field) => !deletedFields.has(field.name)),
+      labels,
+    ).forEach((field) => {
+      const sectionKey = fieldSections[field.name] || section.title;
+      ensureSection(sectionKey, sectionKey).fields.push(field);
+    });
+  });
+
+  customFields.forEach((field) => {
+    const sectionKey = fieldSections[field.name] || field.sectionKey || field.sectionTitle || "Custom Fields";
+    ensureSection(sectionKey, field.sectionTitle || sectionKey, field.sectionDescription || "").fields.push({
       ...field,
       label: labels[field.name] || field.label,
     });
   });
 
-  const orderedSections = baseSections.map((section) => sectionMap[section.key]);
-  const customOnlySections = Object.values(sectionMap).filter(
-    (section) => !baseSections.some((baseSection) => baseSection.key === section.key),
-  );
+  Object.values(sectionMap).forEach((section) => {
+    section.fields = applyOrder(section.fields, fieldOrder[section.key], (field) => field.name);
+  });
 
-  return [...orderedSections, ...customOnlySections];
+  const defaultSectionOrder = [
+    ...baseSections.map((section) => section.key),
+    ...customSections.map((section) => section.key || section.title),
+  ];
+
+  return applyOrder(Object.values(sectionMap), config.__sectionOrder || defaultSectionOrder);
 };
 
 export const getDefaultAssetFormConfig = () => defaultConfig;
@@ -180,7 +224,12 @@ export const loadAssetFormConfig = () => {
     config.__customFields = Array.isArray(saved.__customFields) ? saved.__customFields : [];
     config.__fieldLabels = saved.__fieldLabels || {};
     config.__sectionLabels = saved.__sectionLabels || {};
+    config.__sectionDescriptions = saved.__sectionDescriptions || {};
     config.__customSections = Array.isArray(saved.__customSections) ? saved.__customSections : [];
+    config.__deletedFields = Array.isArray(saved.__deletedFields) ? saved.__deletedFields : [];
+    config.__sectionOrder = Array.isArray(saved.__sectionOrder) ? saved.__sectionOrder : [];
+    config.__fieldOrder = saved.__fieldOrder || {};
+    config.__fieldSections = saved.__fieldSections || {};
     config.__customFields.forEach((field) => {
       config[field.name] = {
         visible: true,

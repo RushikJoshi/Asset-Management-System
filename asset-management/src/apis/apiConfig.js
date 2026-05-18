@@ -7,7 +7,12 @@ const getApiBaseUrl = () => {
   }
 
   const { protocol, hostname } = window.location;
-  const isNetworkHost = hostname && !["localhost", "127.0.0.1", "::1"].includes(hostname);
+  const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(hostname);
+  const isNetworkHost = hostname && !isLocalHost;
+
+  if (isLocalHost) {
+    return `${protocol}//${hostname}:7000/api`;
+  }
 
   if (isNetworkHost) {
     return `${protocol}//${hostname}:7000/api`;

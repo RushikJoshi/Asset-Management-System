@@ -70,29 +70,12 @@ function AddAsset() {
   const isFieldVisible = (name) => assetFormConfig[name]?.visible !== false;
   const isFieldRequired = (name) => assetFormConfig[name]?.required === true;
   const formSections = getAssetFormSections(assetFormConfig);
-  const baseSectionKeys = [
-    "Asset Information",
-    "IP Configuration",
-    "Computer Specifications",
-    "Request & Purchase Details",
-    "Warranty, Office & Assignment",
-    "Retirement & Documentation",
-  ];
   const allCustomFields = formSections.flatMap((section) =>
     section.fields.filter((field) => field.custom).map((field) => ({
       ...field,
       sectionKey: section.key,
       sectionTitle: section.title,
     })),
-  );
-  const getCustomFieldsForSection = (sectionKey) =>
-    allCustomFields.filter((field) => field.sectionKey === sectionKey && isFieldVisible(field.name));
-  const getSectionTitle = (sectionKey) =>
-    formSections.find((section) => section.key === sectionKey)?.title || sectionKey;
-  const customOnlySections = formSections.filter(
-    (section) =>
-      !baseSectionKeys.includes(section.key) &&
-      section.fields.some((field) => field.custom && isFieldVisible(field.name)),
   );
   const fieldLabelMap = formSections
     .flatMap((section) => section.fields)
@@ -243,6 +226,132 @@ function AddAsset() {
       </div>
     ) : null;
 
+  const dateFields = new Set([
+    "purchaseDate",
+    "warrantyStart",
+    "warrantyEnd",
+    "assignedDate",
+    "expectedReturn",
+    "retirementDate",
+  ]);
+
+  const renderConfiguredField = (field) => {
+    if (!isFieldVisible(field.name) || field.name === "ownerName") return null;
+
+    if (field.name === "assetStatus") {
+      return (
+        <div className="input-wrapper" key={field.name}>
+          <label className="input-label">
+            {fieldLabelMap.assetStatus || "Asset Status"}
+            {isFieldRequired("assetStatus") && <span className="required">*</span>}
+          </label>
+          <select {...register("assetStatus")} className="custom-input">
+            <option value="AVAILABLE">Available</option>
+            <option value="ASSIGNED">Assigned</option>
+            <option value="UNDER_REPAIR">Under Repair</option>
+            <option value="RETURNED">Returned</option>
+            <option value="DAMAGED">Damaged</option>
+            <option value="LOST">Lost</option>
+            <option value="RETIRED">Retired</option>
+            <option value="DISPOSED">Disposed</option>
+            <option value="RECYCLED">Recycled</option>
+          </select>
+        </div>
+      );
+    }
+
+    if (field.name === "assetDescription") {
+      return (
+        <div className="full-width" key={field.name}>
+          <label className="input-label">
+            {fieldLabelMap.assetDescription || "Asset Description"}
+            {isFieldRequired("assetDescription") && <span className="required">*</span>}
+          </label>
+          <textarea
+            placeholder="Enter notes, condition, or documentation details"
+            {...register("assetDescription")}
+            className="custom-textarea"
+          />
+        </div>
+      );
+    }
+
+    if (field.name === "deviceOwnedBy") {
+      return (
+        <div className="ownership-row" key={field.name}>
+          <span className="input-label">
+            {fieldLabelMap.deviceOwnedBy || "Device Owned By"}:
+            {isFieldRequired("deviceOwnedBy") && <span className="required">*</span>}
+          </span>
+          <label className="radio-label">
+            <input type="radio" value="Me" {...register("deviceOwnedBy")} /> Me
+          </label>
+          <label className="radio-label">
+            <input type="radio" value="Other" {...register("deviceOwnedBy")} /> Other
+          </label>
+          {deviceOwnedBy === "Other" && isFieldVisible("ownerName") && (
+            <div style={{ marginLeft: "20px", flex: 1 }}>
+              <FormUsersInputText
+                inputLabel={fieldLabelMap.ownerName || "Owner Name"}
+                inputname="ownerName"
+                register={register}
+                errors={errors}
+                mandatory={isFieldRequired("ownerName")}
+              />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (dateFields.has(field.name)) {
+      return <div key={field.name}>{renderDateField(field.label, field.name)}</div>;
+    }
+
+    const extraProps = {};
+    if (field.name === "officePhone") {
+      extraProps.inputType = "tel";
+      extraProps.inputMode = "numeric";
+      extraProps.maxLength = 10;
+    }
+    if (field.name === "employeeEmail") {
+      extraProps.inputType = "email";
+    }
+
+    const renderedField = renderTextField(field.label, field.name, extraProps);
+
+    return field.name === "assetName" ? (
+      <div className="grid-col-span-2" key={field.name}>
+        {renderedField}
+      </div>
+    ) : (
+      <div key={field.name}>{renderedField}</div>
+    );
+  };
+
+  const renderConfiguredSection = (section) => {
+    if (["IP Configuration", "Computer Specifications"].includes(section.key) && !showComputerFields) {
+      return null;
+    }
+
+    const visibleFields = section.fields.filter((field) => {
+      if (field.name === "ownerName") return false;
+      return isFieldVisible(field.name);
+    });
+
+    if (!visibleFields.length) return null;
+
+    return (
+      <section className="form-section" key={section.key}>
+        <h3>{section.title}</h3>
+        {section.description && <p className="section-desc">{section.description}</p>}
+        <div className="form-grid">
+          {visibleFields.map((field) => renderConfiguredField(field))}
+        </div>
+      </section>
+    );
+  };
+
   return (
     <div className="page-wrapper">
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -351,202 +460,7 @@ function AddAsset() {
             </>
           ) : (
             <>
-          <section className="form-section">
-            <h3>{getSectionTitle("Asset Information")}</h3>
-            <p className="section-desc">Capture asset identity, QR, and status details.</p>
-            <div className="form-grid">
-              {isFieldVisible("assetName") && (
-                <div className="grid-col-span-2">
-                  {renderTextField("Asset Name", "assetName")}
-                </div>
-              )}
-              {renderTextField("Category", "category")}
-              {renderTextField("Sub Category", "subCategory")}
-              {isFieldVisible("assetStatus") && (
-                <div className="input-wrapper">
-                  <label className="input-label">
-                    {fieldLabelMap.assetStatus || "Asset Status"}
-                    {isFieldRequired("assetStatus") && <span className="required">*</span>}
-                  </label>
-                  <select {...register("assetStatus")} className="custom-input">
-                    <option value="AVAILABLE">Available</option>
-                    <option value="ASSIGNED">Assigned</option>
-                    <option value="UNDER_REPAIR">Under Repair</option>
-                    <option value="RETURNED">Returned</option>
-                    <option value="DAMAGED">Damaged</option>
-                    <option value="LOST">Lost</option>
-                    <option value="RETIRED">Retired</option>
-                    <option value="DISPOSED">Disposed</option>
-                    <option value="RECYCLED">Recycled</option>
-                  </select>
-                </div>
-              )}
-              {renderTextField("Assigned To", "assignedTo")}
-              {renderTextField("Serial Number", "serialNumber")}
-              {renderTextField("Asset Code", "assetCode")}
-              {renderTextField("Brand", "brand")}
-              {renderTextField("Model", "model")}
-              {renderTextField("Asset Type", "assetType")}
-              {getCustomFieldsForSection("Asset Information").map((field) =>
-                renderTextField(field.label, field.name),
-              )}
-            </div>
-          </section>
-
-          {showComputerFields && (
-            <>
-              <section className="form-section conditional-section">
-                <h3>{getSectionTitle("IP Configuration")}</h3>
-                <p className="section-desc">Visible only for Laptop, PC, Desktop, or Computer assets.</p>
-                <div className="form-grid">
-                  {renderTextField("IP Address", "ipAddress")}
-                  {renderTextField("MAC Address", "macAddress")}
-                  {renderTextField("Host / Device Name", "hostName")}
-                  {renderTextField("Network Type", "networkType")}
-                  {renderTextField("Subnet", "subnet")}
-                  {renderTextField("Gateway", "gateway")}
-                  {getCustomFieldsForSection("IP Configuration").map((field) =>
-                    renderTextField(field.label, field.name),
-                  )}
-                </div>
-              </section>
-
-              <section className="form-section conditional-section">
-                <h3>{getSectionTitle("Computer Specifications")}</h3>
-                <p className="section-desc">Hardware and software details for computer-style assets.</p>
-                <div className="form-grid">
-                  {renderTextField("Operating System", "operatingSystem")}
-                  {renderTextField("Processor", "processor")}
-                  {renderTextField("RAM", "ram")}
-                  {renderTextField("Storage", "storage")}
-                  {renderTextField("Antivirus", "antivirus")}
-                  {renderTextField("Domain", "domainName")}
-                  {getCustomFieldsForSection("Computer Specifications").map((field) =>
-                    renderTextField(field.label, field.name),
-                  )}
-                </div>
-              </section>
-            </>
-          )}
-
-          <section className="form-section">
-            <h3>{getSectionTitle("Request & Purchase Details")}</h3>
-            <p className="section-desc">Track request approvals, vendor purchase, and invoice data.</p>
-            <div className="form-grid">
-              {renderTextField("Request ID", "requestId")}
-              {renderTextField("Requested By", "requestedBy")}
-              {renderTextField("Priority", "requestPriority")}
-              {renderTextField("Reason", "requestReason")}
-              {renderTextField("Request Status", "requestStatus")}
-              {renderTextField("Manager Approval", "managerApproval")}
-              {renderTextField("IT/Admin Approval", "adminApproval")}
-              {renderDateField("Purchase Date", "purchaseDate")}
-              {renderTextField("Vendor", "vendor")}
-              {renderTextField("Invoice Number", "invoiceNumber")}
-              {renderTextField("Purchase Cost", "price")}
-              {renderTextField("Purchase Status", "purchaseStatus")}
-              {getCustomFieldsForSection("Request & Purchase Details").map((field) =>
-                renderTextField(field.label, field.name),
-              )}
-            </div>
-          </section>
-
-          <section className="form-section">
-            <h3>{getSectionTitle("Warranty, Office & Assignment")}</h3>
-            <p className="section-desc">Manage reminders, branch placement, and employee assignment.</p>
-            <div className="form-grid">
-              {renderTextField("Warranty Period (Months)", "warrantyPeriod")}
-              {renderDateField("Warranty Start", "warrantyStart")}
-              {renderDateField("Warranty End", "warrantyEnd")}
-              {renderTextField("Reminder Days", "warrantyReminderDays")}
-              {renderTextField("Maintenance Period (Months)", "maintenancePeriod")}
-              {renderTextField("Office Name", "officeName")}
-              {renderTextField("Branch Code", "branchCode")}
-              {renderTextField("Floor", "floor")}
-              {renderTextField("Department", "department")}
-              {renderTextField("Room/Cabin", "room")}
-              {renderTextField("City", "city")}
-              {renderTextField("State", "state")}
-              {renderTextField("Office Contact Person", "officeContactPerson")}
-              {renderTextField("Office Phone", "officePhone", {
-                inputType: "tel",
-                inputMode: "numeric",
-                maxLength: 10,
-              })}
-              {renderDateField("Assigned Date", "assignedDate")}
-              {renderTextField("Employee ID", "employeeId")}
-              {renderTextField("Employee Email", "employeeEmail", { inputType: "email" })}
-              {renderDateField("Expected Return", "expectedReturn")}
-              {renderTextField("Assigned By", "assignedBy")}
-              {getCustomFieldsForSection("Warranty, Office & Assignment").map((field) =>
-                renderTextField(field.label, field.name),
-              )}
-            </div>
-          </section>
-
-          <section className="form-section">
-            <h3>{getSectionTitle("Retirement & Documentation")}</h3>
-            <p className="section-desc">Record retirement, disposal, ownership, and supporting notes.</p>
-            <div className="form-grid">
-              {renderTextField("Retirement Status", "retirementStatus")}
-              {renderTextField("Retirement Approval", "retirementApproval")}
-              {renderTextField("Disposal Method", "disposalMethod")}
-              {renderDateField("Retirement Date", "retirementDate")}
-              {getCustomFieldsForSection("Retirement & Documentation").map((field) =>
-                renderTextField(field.label, field.name),
-              )}
-            </div>
-
-            {isFieldVisible("assetDescription") && (
-              <div className="full-width">
-                <label className="input-label">
-                  {fieldLabelMap.assetDescription || "Asset Description"}
-                  {isFieldRequired("assetDescription") && <span className="required">*</span>}
-                </label>
-                <textarea
-                  placeholder="Enter notes, condition, or documentation details"
-                  {...register("assetDescription")}
-                  className="custom-textarea"
-                />
-              </div>
-            )}
-
-            {isFieldVisible("deviceOwnedBy") && (
-              <div className="ownership-row">
-                <span className="input-label">
-                  {fieldLabelMap.deviceOwnedBy || "Device Owned By"}:
-                  {isFieldRequired("deviceOwnedBy") && <span className="required">*</span>}
-                </span>
-                <label className="radio-label">
-                  <input type="radio" value="Me" {...register("deviceOwnedBy")} /> Me
-                </label>
-                <label className="radio-label">
-                  <input type="radio" value="Other" {...register("deviceOwnedBy")} /> Other
-                </label>
-                {deviceOwnedBy === "Other" && isFieldVisible("ownerName") && (
-                <div style={{ marginLeft: "20px", flex: 1 }}>
-                  <FormUsersInputText
-                    inputLabel={fieldLabelMap.ownerName || "Owner Name"}
-                    inputname="ownerName"
-                    register={register}
-                    errors={errors}
-                    mandatory={isFieldRequired("ownerName")}
-                  />
-                </div>
-                )}
-              </div>
-            )}
-          </section>
-
-          {customOnlySections.map((section) => (
-            <section className="form-section" key={section.title}>
-              <h3>{section.title}</h3>
-              <p className="section-desc">Fields added from Master Editor.</p>
-              <div className="form-grid">
-                {section.fields.map((field) => renderTextField(field.label, field.name))}
-              </div>
-            </section>
-          ))}
+              {formSections.map((section) => renderConfiguredSection(section))}
             </>
           )}
         </div>
