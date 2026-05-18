@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -13,6 +14,8 @@ import {
   FaShieldAlt,
   FaTools,
   FaUserFriends,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 import logoImage from "../../images/logo.jpeg";
 import { logout } from "../../store/slices/authSlice";
@@ -38,6 +41,8 @@ function AppLayout() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const visibleNavItems = navItems.filter((item) =>
     item.menuRoles.includes(user?.role),
   );
@@ -49,7 +54,11 @@ function AppLayout() {
 
   return (
     <div className="shell">
-      <aside className="sidebar">
+      {isSidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)}></div>
+      )}
+
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div className="brand-block">
           <div className="brand-mark">
             <img src={logoImage} alt="AssetPro logo" className="brand-logo" />
@@ -58,6 +67,9 @@ function AppLayout() {
             <h2>AssetPro</h2>
             <p>Lifecycle ERP</p>
           </div>
+          <button className="sidebar-close" onClick={() => setIsSidebarOpen(false)}>
+            <FaTimes />
+          </button>
         </div>
 
         <nav className="side-nav">
@@ -67,6 +79,7 @@ function AppLayout() {
               to={item.to}
               end={item.to === "/"}
               className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+              onClick={() => setIsSidebarOpen(false)}
             >
               {item.icon}
               <span>{item.label}</span>
@@ -77,10 +90,15 @@ function AppLayout() {
 
       <main className="main-panel">
         <header className="topbar">
-          <div>
-            <p className="topbar-kicker">Enterprise Asset Management</p>
-            <h1>Company Asset Control Center</h1>
-            <p className="role-line">{user?.name} | {ROLE_LABELS[user?.role] || user?.role}</p>
+          <div className="topbar-left">
+            <button className="sidebar-toggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+              <FaBars />
+            </button>
+            <div>
+              <p className="topbar-kicker">Enterprise Asset Management</p>
+              <h1>Company Asset Control Center</h1>
+              <p className="role-line">{user?.name} | {ROLE_LABELS[user?.role] || user?.role}</p>
+            </div>
           </div>
           <div className="topbar-actions">
             {ROUTE_ROLES["/scan-demo"]?.includes(user?.role) && (
