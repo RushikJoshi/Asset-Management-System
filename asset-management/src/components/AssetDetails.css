@@ -1,0 +1,389 @@
+.asset-container {
+  max-width: 1180px;
+  margin: 20px auto;
+  padding: 24px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+}
+
+.asset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #dbe4ee;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+}
+
+.asset-header h1 {
+  margin: 4px 0;
+  color: #0f172a;
+  font-size: 30px;
+}
+
+.asset-header p {
+  color: #64748b;
+}
+
+.eyebrow {
+  color: #03a4aa !important;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.status-badge {
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.status-badge.available { background: #dcfce7; color: #166534; }
+.status-badge.assigned { background: #e0f2fe; color: #075985; }
+.status-badge.under_repair { background: #fef3c7; color: #92400e; }
+.status-badge.returned { background: #f1f5f9; color: #334155; }
+.status-badge.damaged, .status-badge.lost { background: #fee2e2; color: #991b1b; }
+.status-badge.retired, .status-badge.disposed, .status-badge.recycled { background: #ede9fe; color: #5b21b6; }
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.metric-card,
+.info-card,
+.description-card,
+.sticker-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.metric-card {
+  padding: 16px;
+}
+
+.metric-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.metric-card strong {
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.tab-row button {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  color: #334155;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 10px 14px;
+  text-transform: capitalize;
+}
+
+.tab-row .active-tab {
+  background: #03a4aa;
+  border-color: #03a4aa;
+  color: #ffffff;
+}
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.info-card,
+.description-card,
+.sticker-card {
+  padding: 18px;
+}
+
+.info-card h3,
+.description-card h3 {
+  margin: 0 0 14px;
+  color: #0f172a;
+  font-size: 17px;
+}
+
+.info-item {
+  margin: 11px 0;
+  font-size: 14px;
+  color: #334155;
+}
+
+.info-item span {
+  font-weight: 700;
+  color: #64748b;
+  display: inline-block;
+  width: 130px;
+}
+
+.description-card {
+  margin-top: 18px;
+}
+
+.workflow-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.workflow-form input,
+.workflow-form select {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  color: #334155;
+  padding: 10px 12px;
+}
+
+.workflow-form button {
+  background: #03a4aa;
+  border: 0;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 10px 14px;
+}
+
+.workflow-table-wrap {
+  overflow-x: auto;
+}
+
+.workflow-table {
+  border-collapse: collapse;
+  min-width: 100%;
+  width: max-content;
+}
+
+.workflow-table th {
+  background: #03a4aa;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+  padding: 14px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.workflow-table td {
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px;
+  white-space: nowrap;
+}
+
+.timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.timeline-item {
+  border-left: 3px solid #03a4aa;
+  padding-left: 14px;
+}
+
+.timeline-item span {
+  color: #64748b;
+  display: block;
+  font-size: 12px;
+}
+
+.timeline-item strong {
+  color: #0f172a;
+}
+
+.timeline-item p {
+  color: #475569;
+  margin-top: 4px;
+}
+
+.sticker-layout {
+  align-items: stretch;
+  border: 2px solid #0f172a;
+  border-radius: 8px;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 280px minmax(280px, 1fr);
+  overflow-x: auto;
+  padding: 18px;
+}
+
+.qr-sticker {
+  width: 280px;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 0 18px 0 0;
+  text-align: center;
+}
+
+.qr-sticker h3 {
+  color: #03a4aa;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.qr-sticker img {
+  display: block;
+  height: 190px;
+  margin: 12px auto;
+  width: 190px;
+}
+
+.qr-sticker span {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.sticker-details-panel {
+  background: #f8fafc;
+  border: 0;
+  border-radius: 0;
+  min-width: 280px;
+  padding: 18px;
+}
+
+.sticker-details-kicker {
+  color: #03a4aa;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sticker-details-panel h3 {
+  color: #0f172a;
+  font-size: 20px;
+  margin: 0 0 16px;
+}
+
+.sticker-details-list {
+  display: grid;
+  gap: 10px;
+}
+
+.sticker-detail-row {
+  align-items: start;
+  border-bottom: 1px solid #e2e8f0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 120px minmax(0, 1fr);
+  padding-bottom: 10px;
+}
+
+.sticker-detail-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.sticker-detail-row span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sticker-detail-row strong {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.asset-message,
+.loader-container {
+  padding: 50px;
+  text-align: center;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  border: 4px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 4px solid #03a4aa;
+  height: 40px;
+  margin: 0 auto 20px;
+  width: 40px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 800px) {
+  .asset-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sticker-card {
+    overflow-x: auto;
+  }
+
+  .sticker-layout {
+    gap: 18px;
+    grid-template-columns: 240px 260px;
+    min-width: 540px;
+    overflow-x: visible;
+    padding: 14px;
+  }
+
+  .qr-sticker {
+    min-width: 240px;
+    padding: 0;
+    width: 240px;
+  }
+
+  .qr-sticker h3,
+  .sticker-details-kicker {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .qr-sticker img {
+    height: auto;
+    max-width: 160px;
+    width: 100%;
+  }
+
+  .sticker-details-panel {
+    min-width: 260px;
+    padding: 0;
+  }
+
+  .sticker-detail-row {
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 10px;
+  }
+}

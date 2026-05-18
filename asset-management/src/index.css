@@ -1,0 +1,82 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Amazon Ember", sans-serif;
+}
+
+button,
+input,
+select,
+textarea,
+table {
+  font-family: "Amazon Ember", sans-serif;
+}
+
+html {
+  scrollbar-color: #03a4aa #e2e8f0;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  height: 3px;
+  width: 3px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #03a4aa;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #02848a;
+}
+
+.scrollbarRemove {
+  scrollbar-width: none;
+}
+
+.scrollbarRemove::-webkit-scrollbar {
+  height: 0;
+  width: 0;
+}
+
+.custom-multi-select__value-container::-webkit-scrollbar {
+  height: 2px;
+}
+
+.horizontalScroll {
+  scrollbar-color: #03a4aa #dbe4ee;
+  scrollbar-width: thin;
+}
+
+.horizontalScroll::-webkit-scrollbar {
+  background: #dbe4ee;
+  height: 2px;
+  width: 2px;
+}
+
+.horizontalScroll::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+.horizontalScroll::-webkit-scrollbar-thumb {
+  background: #03a4aa;
+  border-radius: 2px;
+}
