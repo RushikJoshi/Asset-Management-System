@@ -22,8 +22,8 @@ html {
 }
 
 *::-webkit-scrollbar {
-  height: 3px;
-  width: 3px;
+  height: 4px;
+  width: 4px;
 }
 
 *::-webkit-scrollbar-track {
@@ -65,9 +65,9 @@ html {
 }
 
 .horizontalScroll::-webkit-scrollbar {
-  background: #dbe4ee;
-  height: 2px;
-  width: 2px;
+  background: #eef2f7;
+  height: 4px;
+  width: 4px;
 }
 
 .horizontalScroll::-webkit-scrollbar-button {

@@ -19,12 +19,16 @@ import {
   currency,
   dateText,
   exportRowsToCsv,
+  getInventoryAssets,
+  getRequestRecords,
   groupByCount,
   repairCost,
   warrantyDays,
 } from "../utils/assetUtils";
+import { deleteAsset } from "../store/slices/assetSlice";
 import { useToast } from "../components/toast/toastStore";
 import { getQrClientOrigin } from "../apis/apiConfig";
+import { createRole, deleteRole, fetchRoles, updateRole } from "../utils/roleApi";
 
 const assetColumns = [
   { key: "assetName", label: "Asset", render: (row) => <AssetLink asset={row} /> },
@@ -83,7 +87,22 @@ export function Requests() {
   const dispatch = useDispatch();
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const requests = assetListData.filter((asset) => asset.requestId || asset.requestedBy);
+  const requests = getRequestRecords(assetListData);
+
+  const removeRequest = async (id) => {
+    const confirmed = window.confirm("Delete this request?");
+    if (!confirmed) return;
+    try {
+      await dispatch(deleteAsset(id)).unwrap();
+      showToast({ title: "Request deleted", message: "The request was removed successfully." });
+    } catch (error) {
+      showToast({
+        title: "Delete failed",
+        message: error || "Unable to delete this request.",
+        type: "error",
+      });
+    }
+  };
 
   const approve = async (asset, field) => {
     try {
@@ -131,6 +150,7 @@ export function Requests() {
               <div className="module-actions">
                 <button className="module-button" onClick={() => navigate(`/edit-request/${row._id}`)}>Edit</button>
                 <button className="module-button" onClick={() => approve(row, "adminApproval")}>Approve</button>
+                <button className="module-button danger" onClick={() => removeRequest(row._id)}>Delete</button>
               </div>
             ),
           },
@@ -143,6 +163,7 @@ export function Requests() {
 
 export function Inventory() {
   const { assetListData } = useModuleData();
+  const inventoryAssets = getInventoryAssets(assetListData);
   const stats = buildStats(assetListData);
 
   return (
@@ -155,10 +176,10 @@ export function Inventory() {
         { label: "Repair", value: stats.repair },
       ]} />
       <div className="chart-grid">
-        <MiniBars title="Office-wise Assets" data={groupByCount(assetListData, "officeName")} />
-        <MiniBars title="Category-wise Assets" data={groupByCount(assetListData, "category")} />
+        <MiniBars title="Office-wise Assets" data={groupByCount(inventoryAssets, "officeName")} />
+        <MiniBars title="Category-wise Assets" data={groupByCount(inventoryAssets, "category")} />
       </div>
-      <DataTable columns={assetColumns} rows={assetListData} />
+      <DataTable columns={assetColumns} rows={inventoryAssets} />
     </>
   );
 }
@@ -501,21 +522,206 @@ export function Reports() {
 }
 
 export function Roles() {
-  const roles = [
-    { id: "super", role: "Super Admin", access: "Dashboard, Assets, Requests, Reports, Employee Portal, Audit Session" },
-    { id: "admin", role: "Admin", access: "Dashboard, Assets, Requests, Reports" },
-    { id: "it", role: "IT Staff", access: "Assets, Requests" },
-    { id: "auditor", role: "Auditor", access: "Audit Session" },
-    { id: "employee", role: "Employee", access: "Employee Portal" },
-  ];
+  const { showToast } = useToast();
+  const [roles, setRoles] = useState([]);
+  const [newRole, setNewRole] = useState({ label: "", access: "" });
+  const [editingKey, setEditingKey] = useState("");
+  const [editForm, setEditForm] = useState({ label: "", access: "" });
+  const [saving, setSaving] = useState(false);
+
+  const loadRoles = async () => {
+    const data = await fetchRoles();
+    setRoles(
+      data.map((role) => ({
+        id: role.key,
+        key: role.key,
+        role: role.label,
+        access: role.access || "-",
+        isSystem: Boolean(role.isSystem),
+      })),
+    );
+  };
+
+  useEffect(() => {
+    loadRoles();
+  }, []);
+
+  const addRole = async (event) => {
+    event.preventDefault();
+    if (!newRole.label.trim()) {
+      showToast({ title: "Role required", message: "Enter a role name.", type: "error" });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await createRole({
+        label: newRole.label.trim(),
+        access: newRole.access.trim(),
+      });
+      setNewRole({ label: "", access: "" });
+      await loadRoles();
+      showToast({ title: "Role added", message: "New role is available in registration dropdown." });
+    } catch (error) {
+      showToast({
+        title: "Unable to add role",
+        message: error?.response?.data?.message || error?.message || "Try again.",
+        type: "error",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const startEdit = (row) => {
+    setEditingKey(row.key);
+    setEditForm({
+      label: row.role === "-" ? "" : row.role,
+      access: row.access === "-" ? "" : row.access,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingKey("");
+    setEditForm({ label: "", access: "" });
+  };
+
+  const saveEdit = async (row) => {
+    if (!editForm.label.trim()) {
+      showToast({ title: "Role required", message: "Enter a role name.", type: "error" });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await updateRole(row.key, {
+        label: editForm.label.trim(),
+        access: editForm.access.trim(),
+      });
+      cancelEdit();
+      await loadRoles();
+      showToast({ title: "Role updated", message: "Role changes saved successfully." });
+    } catch (error) {
+      showToast({
+        title: "Unable to update role",
+        message: error?.response?.data?.message || error?.message || "Try again.",
+        type: "error",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeRole = async (row) => {
+    if (row.isSystem) {
+      showToast({ title: "Not allowed", message: "System roles cannot be deleted.", type: "error" });
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete role "${row.role}"?`);
+    if (!confirmed) return;
+
+    setSaving(true);
+    try {
+      await deleteRole(row.key);
+      if (editingKey === row.key) cancelEdit();
+      await loadRoles();
+      showToast({ title: "Role deleted", message: "Role removed from the list." });
+    } catch (error) {
+      showToast({
+        title: "Unable to delete role",
+        message: error?.response?.data?.message || error?.message || "Try again.",
+        type: "error",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
-      <PageTitle eyebrow="Role-Based Access" title="Users & Access" description="Role-aware menu visibility and primary workflow access from the project document." />
+      <PageTitle
+        eyebrow="Role-Based Access"
+        title="Users & Access"
+        description="Role-aware menu visibility and primary workflow access from the project document."
+        action={(
+          <form className="role-add-form" onSubmit={addRole}>
+            <input
+              placeholder="New role name"
+              value={newRole.label}
+              onChange={(e) => setNewRole({ ...newRole, label: e.target.value })}
+            />
+            <input
+              placeholder="Visible / primary access"
+              value={newRole.access}
+              onChange={(e) => setNewRole({ ...newRole, access: e.target.value })}
+            />
+            <button type="submit" className="module-button" disabled={saving}>
+              {saving ? "Adding..." : "Add Role"}
+            </button>
+          </form>
+        )}
+      />
       <DataTable
         columns={[
-          { key: "role", label: "Role" },
-          { key: "access", label: "Visible / Primary Access" },
+          {
+            key: "role",
+            label: "Role",
+            render: (row) => (
+              editingKey === row.key ? (
+                <input
+                  className="role-inline-input"
+                  value={editForm.label}
+                  onChange={(e) => setEditForm({ ...editForm, label: e.target.value })}
+                />
+              ) : row.role
+            ),
+          },
+          {
+            key: "access",
+            label: "Visible / Primary Access",
+            render: (row) => (
+              editingKey === row.key ? (
+                <input
+                  className="role-inline-input"
+                  value={editForm.access}
+                  onChange={(e) => setEditForm({ ...editForm, access: e.target.value })}
+                />
+              ) : row.access
+            ),
+          },
+          {
+            key: "actions",
+            label: "Actions",
+            render: (row) => (
+              <div className="module-actions">
+                {editingKey === row.key ? (
+                  <>
+                    <button type="button" className="module-button" disabled={saving} onClick={() => saveEdit(row)}>
+                      Save
+                    </button>
+                    <button type="button" className="module-button secondary-button" disabled={saving} onClick={cancelEdit}>
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" className="module-button" disabled={saving} onClick={() => startEdit(row)}>
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="module-button danger"
+                      disabled={saving || row.isSystem}
+                      onClick={() => removeRole(row)}
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
+              </div>
+            ),
+          },
         ]}
         rows={roles}
       />

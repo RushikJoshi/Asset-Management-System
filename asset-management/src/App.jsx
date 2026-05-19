@@ -12,6 +12,7 @@ import {
   assetImportSampleRows,
   buildStats,
   exportRowsToCsv,
+  getInventoryAssets,
   parseCsvText,
 } from "./utils/assetUtils";
 import { useToast } from "./components/toast/toastStore";
@@ -222,7 +223,9 @@ function App() {
     dispatch(fetchAssetList());
   }, [dispatch]);
 
-  const filteredAssets = assetListData.filter((asset) => {
+  const inventoryAssets = getInventoryAssets(assetListData);
+
+  const filteredAssets = inventoryAssets.filter((asset) => {
     const matchesStatus = statusFilter === "ALL" || asset.assetStatus === statusFilter;
     const haystack = [
       asset.assetName,
@@ -367,7 +370,7 @@ function App() {
 
   return (
     <>
-      <div className="app-container">
+      <div className="app-container assets-page">
         <div className="dashboard-grid">
           <div className="dashboard-card"><span>Total Assets</span><strong>{stats.total}</strong></div>
           <div className="dashboard-card"><span>Available</span><strong>{stats.available}</strong></div>
@@ -376,7 +379,8 @@ function App() {
           <div className="dashboard-card alert-card"><span>Warranty Alerts</span><strong>{stats.warranty}</strong></div>
         </div>
 
-        <div className="toolbar">
+        <div className="assets-toolbar">
+          <div className="assets-toolbar-fields">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -397,41 +401,43 @@ function App() {
             <option value="LOST">Lost</option>
             <option value="RETIRED">Retired</option>
           </select>
-          <button onClick={exportCsv} className="export-btn">
-            <FaFileCsv /> Export CSV
-          </button>
-          <button onClick={downloadSampleCsv} className="sample-btn">
-            <FaDownload /> Sample CSV
-          </button>
-          <button onClick={() => fileInputRef.current?.click()} className="import-btn">
-            <FaFileImport /> Import CSV
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="csv-file-input"
-            onChange={importCsv}
-          />
-          <button
-            onClick={() => navigate("/add-asset")}
-            className={`add-btn ${loading ? "loading-btn" : ""}`}
-          >
-            Add Asset
-          </button>
-          <button
-            onClick={openSideStickers}
-            className="side-sticker-btn"
-          >
-            <FaTags /> Print All Asset Stickers
-          </button>
+          </div>
+          <div className="assets-toolbar-actions">
+            <div className="assets-toolbar-actions-left">
+              <button onClick={exportCsv} className="export-btn">
+                <FaFileCsv /> Export CSV
+              </button>
+              <button onClick={downloadSampleCsv} className="sample-btn">
+                <FaDownload /> Sample CSV
+              </button>
+              <button onClick={() => fileInputRef.current?.click()} className="import-btn">
+                <FaFileImport /> Import CSV
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="csv-file-input"
+                onChange={importCsv}
+              />
+              <button onClick={openSideStickers} className="side-sticker-btn">
+                <FaTags /> Print All Asset Stickers
+              </button>
+            </div>
+            <button
+              onClick={() => navigate("/add-asset")}
+              className={`add-btn add-btn-primary ${loading ? "loading-btn" : ""}`}
+            >
+              Add Asset
+            </button>
+          </div>
         </div>
 
         {/* ERROR */}
         {error && <p className="error-text">{error}</p>}
 
         {/* TABLE */}
-        <div className="table-wrapper">
+        <div className="table-wrapper assets-table-scroll">
           <table className="asset-table">
             <thead>
               <tr>
@@ -458,7 +464,11 @@ function App() {
                     <td>{item.assignedTo}</td>
                     <td>{item.serialNumber}</td>
                     <td>{item.assetCode}</td>
-                    <td>{item.assetStatus}</td>
+                    <td>
+                      <span className={`asset-status-pill status-${String(item.assetStatus || "unknown").toLowerCase().replace(/_/g, "-")}`}>
+                        {String(item.assetStatus || "-").replace(/_/g, " ")}
+                      </span>
+                    </td>
                     <td>{item.officeName || item.location}</td>
                     <td>{item.warrantyEnd ? moment(item.warrantyEnd).format("DD-MM-YYYY") : "-"}</td>
                     <td>{item.assignedDate ? moment(item.assignedDate).format("DD-MM-YYYY") : "-"}</td>

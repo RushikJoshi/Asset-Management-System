@@ -1,9 +1,12 @@
-import User, { USER_ROLES } from "../models/User.js";
+import User from "../models/User.js";
+import Role, { ensureDefaultRoles } from "../models/Role.js";
 import { createToken } from "../utils/authToken.js";
 
-const normalizeRole = (role) => {
+const normalizeRole = async (role) => {
+  await ensureDefaultRoles();
   const value = String(role || "EMPLOYEE").toUpperCase().replace(/[\s-]+/g, "_");
-  return USER_ROLES.includes(value) ? value : "EMPLOYEE";
+  const exists = await Role.exists({ key: value });
+  return exists ? value : "EMPLOYEE";
 };
 
 export const register = async (req, res) => {
@@ -21,7 +24,7 @@ export const register = async (req, res) => {
     }
 
     const hasUsers = await User.exists({});
-    const requestedRole = normalizeRole(req.body.role);
+    const requestedRole = await normalizeRole(req.body.role);
     const role = hasUsers ? requestedRole : "SUPER_ADMIN";
     const user = new User({ name, email, employeeId, role });
     user.setPassword(password);

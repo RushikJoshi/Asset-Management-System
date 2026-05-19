@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import route from "./routes/assetRoutes.js";
+import { ensureDefaultRoles } from "./models/Role.js";
 import cors from "cors";
 
 dotenv.config();
@@ -24,8 +25,9 @@ const MONGO_URL = process.env.MONGO_URL;
 
 mongoose
   .connect(MONGO_URL)
-  .then(() => {
+  .then(async () => {
     console.log("Database connected successfully!");
+    await ensureDefaultRoles();
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server is running on port: ${PORT}`);
     });

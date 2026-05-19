@@ -212,6 +212,12 @@ const assetSchema = new mongoose.Schema(
     officeContactPerson: String,
     officePhone: String,
 
+    recordType: {
+      type: String,
+      enum: ["ASSET", "REQUEST"],
+      default: "ASSET",
+    },
+
     // Asset Request / Assignment
     requestId: String,
     requestType: String,

@@ -13,10 +13,15 @@ import {
   updateAsset,
 } from "../controllers/assetController.js";
 import { currentUser, login, register, updateProfile } from "../controllers/authController.js";
+import { createRole, deleteRole, listRoles, updateRole } from "../controllers/roleController.js";
 import { allowRoles, authenticate } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
+router.get("/roles", listRoles);
+router.post("/roles", authenticate, allowRoles("SUPER_ADMIN"), createRole);
+router.put("/roles/:key", authenticate, allowRoles("SUPER_ADMIN"), updateRole);
+router.delete("/roles/:key", authenticate, allowRoles("SUPER_ADMIN"), deleteRole);
 router.post("/auth/register", register);
 router.post("/auth/login", login);
 router.get("/auth/me", authenticate, currentUser);

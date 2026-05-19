@@ -1,17 +1,19 @@
 import { useState } from "react";
 import {
-  getDefaultAssetFormConfig,
-  getAssetFormSections,
-  loadAssetFormConfig,
-  resetAssetFormConfig,
-  saveAssetFormConfig,
+  FORM_TYPES,
+  getDefaultFormConfig,
+  getFormSections,
+  loadFormConfig,
+  resetFormConfig,
+  saveFormConfig,
 } from "../utils/assetFormBuilder";
 import { useToast } from "../components/toast/toastStore";
 import "./MasterEditor.css";
 
 function MasterEditor() {
   const { showToast } = useToast();
-  const [config, setConfig] = useState(() => loadAssetFormConfig());
+  const [activeFormType, setActiveFormType] = useState(FORM_TYPES.ASSET);
+  const [config, setConfig] = useState(() => loadFormConfig(FORM_TYPES.ASSET));
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [selectedSection, setSelectedSection] = useState("Asset Information");
   const [newSectionTitle, setNewSectionTitle] = useState("");
@@ -22,7 +24,17 @@ function MasterEditor() {
   const [editingSectionTitle, setEditingSectionTitle] = useState("");
   const [editingSectionDescription, setEditingSectionDescription] = useState("");
   const [dragItem, setDragItem] = useState(null);
-  const sections = getAssetFormSections(config);
+  const sections = getFormSections(activeFormType, config);
+
+  const switchFormType = (formType) => {
+    setActiveFormType(formType);
+    setConfig(loadFormConfig(formType));
+    setSelectedSection(
+      formType === FORM_TYPES.REQUEST ? "Request Details" : "Asset Information",
+    );
+    setEditingField(null);
+    setEditingSection(null);
+  };
   const sectionOptions = sections.map((section) => ({ key: section.key, title: section.title }));
   const isCustomSection = (sectionKey) =>
     (config.__customSections || []).some((section) => section.key === sectionKey);
@@ -69,7 +81,7 @@ function MasterEditor() {
     if (!sourceSectionKey || !targetSectionKey || sourceSectionKey === targetSectionKey) return;
 
     setConfig((current) => {
-      const currentSections = getAssetFormSections(current);
+      const currentSections = getFormSections(activeFormType, current);
       const savedConfig = {
         ...current,
         __sectionOrder: reorderItems(
@@ -78,7 +90,7 @@ function MasterEditor() {
           targetSectionKey,
         ),
       };
-      saveAssetFormConfig(savedConfig);
+      saveFormConfig(activeFormType, savedConfig);
       return savedConfig;
     });
   };
@@ -87,7 +99,7 @@ function MasterEditor() {
     if (!fieldName || !targetSectionKey || fieldName === targetFieldName) return;
 
     setConfig((current) => {
-      const currentSections = getAssetFormSections(current);
+      const currentSections = getFormSections(activeFormType, current);
       const fieldOrder = createFieldOrder(currentSections);
       const targetSection = currentSections.find((section) => section.key === targetSectionKey);
       const targetSectionTitle = targetSection?.title || targetSectionKey;
@@ -120,7 +132,7 @@ function MasterEditor() {
             : field,
         ),
       };
-      saveAssetFormConfig(savedConfig);
+      saveFormConfig(activeFormType, savedConfig);
       return savedConfig;
     });
   };
@@ -243,7 +255,7 @@ function MasterEditor() {
             Object.entries(current.__fieldLabels || {}).filter(([name]) => name !== field.name),
           ),
         };
-        saveAssetFormConfig(savedConfig);
+        saveFormConfig(activeFormType, savedConfig);
         return savedConfig;
       });
       return;
@@ -262,7 +274,7 @@ function MasterEditor() {
           required: false,
         },
       };
-      saveAssetFormConfig(savedConfig);
+      saveFormConfig(activeFormType, savedConfig);
       return savedConfig;
     });
   };
@@ -304,16 +316,16 @@ function MasterEditor() {
           Object.entries(current.__fieldLabels || {}).filter(([name]) => !fieldNames.includes(name)),
         ),
       };
-      saveAssetFormConfig(savedConfig);
+      saveFormConfig(activeFormType, savedConfig);
       return savedConfig;
     });
   };
 
   const saveChanges = () => {
-    saveAssetFormConfig(config);
+    saveFormConfig(activeFormType, config);
     showToast({
       title: "Builder saved",
-      message: "Master Editor changes were saved successfully.",
+      message: `${activeFormType === FORM_TYPES.REQUEST ? "Request" : "Asset"} form saved successfully.`,
     });
   };
 
@@ -383,8 +395,8 @@ function MasterEditor() {
   };
 
   const resetDefaults = () => {
-    resetAssetFormConfig();
-    setConfig(getDefaultAssetFormConfig());
+    resetFormConfig(activeFormType);
+    setConfig(getDefaultFormConfig(activeFormType));
   };
 
   return (
@@ -393,9 +405,28 @@ function MasterEditor() {
         <div>
           <p>Form Builder</p>
           <h2>Master Editor</h2>
-          <span>{visibleFields} of {totalFields} fields visible in Add Asset form</span>
+          <span>
+            {visibleFields} of {totalFields} fields visible in{" "}
+            {activeFormType === FORM_TYPES.REQUEST ? "Add Request" : "Add Asset"} form
+          </span>
         </div>
         <div className="master-editor-actions">
+          <div className="master-form-tabs">
+            <button
+              type="button"
+              className={activeFormType === FORM_TYPES.ASSET ? "active" : ""}
+              onClick={() => switchFormType(FORM_TYPES.ASSET)}
+            >
+              Asset Form
+            </button>
+            <button
+              type="button"
+              className={activeFormType === FORM_TYPES.REQUEST ? "active" : ""}
+              onClick={() => switchFormType(FORM_TYPES.REQUEST)}
+            >
+              Request Form
+            </button>
+          </div>
           <button type="button" className="reset-master-btn" onClick={resetDefaults}>
             Reset Defaults
           </button>

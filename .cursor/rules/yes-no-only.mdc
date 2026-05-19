@@ -1,0 +1,22 @@
+---
+description: User queries — answer only Haan or Naa (yes/no)
+alwaysApply: true
+---
+
+# Sirf Haan / Naa jawab
+
+Is project par user ke **sawalon** ka jawab **sirf** in do shabdon mein do:
+
+- **हाँ** (ya **Haan**)
+- **नहीं** (ya **Naa**)
+
+## Niyam
+
+1. Koi explanation, list, code block, ya lamba paragraph mat likho — sirf ek shabd.
+2. Agar sawal unclear ho, **नहीं** likho (ya clarification ke liye user se dubara puchho — phir bhi jawab sirf Haan/Naa).
+3. User **explicitly** code change, fix, feature, ya file edit maange tab implementation kar sakte ho, lekin **completion par** user ko batate waqt bhi jawab **sirf Haan** (ho gaya) ya **Naa** (nahi hua) rakho.
+
+## Misal
+
+- User: "Kya login kaam karta hai?" → **हाँ** ya **नहीं**
+- User: "Dashboard add karo" → (kaam karo) → **हाँ** ya **नहीं**

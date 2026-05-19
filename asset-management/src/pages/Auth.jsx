@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, registerUser } from "../store/slices/authSlice";
 import { getRoleHome, ROLE_OPTIONS } from "../utils/permissions";
+import { fetchRoles, rolesToOptions } from "../utils/roleApi";
 import "./Auth.css";
 
 export function Login() {
@@ -76,6 +77,7 @@ export function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
+  const [roleOptions, setRoleOptions] = useState(ROLE_OPTIONS);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -85,6 +87,13 @@ export function Register() {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    fetchRoles().then((roles) => {
+      const options = rolesToOptions(roles);
+      if (options.length) setRoleOptions(options);
+    });
+  }, []);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -166,7 +175,7 @@ export function Register() {
 
         <label>Role</label>
         <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-          {ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+          {roleOptions.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
         </select>
 
         <label>Password <span className="required">*</span></label>

@@ -23,13 +23,14 @@ import {
 } from "react-icons/fa";
 import logoImage from "../../images/logo.jpeg";
 import { logout } from "../../store/slices/authSlice";
-import { ROLE_LABELS, ROUTE_ROLES } from "../../utils/permissions";
+// import { ROLE_LABELS, ROUTE_ROLES } from "../../utils/permissions";
 import { useToast } from "../toast/toastStore";
 import "./AppLayout.css";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: <FaHome />, menuRoles: ["SUPER_ADMIN", "ADMIN"] },
   { to: "/assets", label: "Assets", icon: <FaLaptop />, menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"] },
+  { to: "/master-editor", label: "Master Editor", icon: <FaEdit />, menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"] },
   { to: "/scan-demo", label: "QR Console", icon: <FaQrcode />, menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"] },
   { to: "/requests", label: "Requests", icon: <FaClipboardCheck />, menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"] },
   { to: "/inventory", label: "Inventory", icon: <FaBoxes />, menuRoles: [] },
@@ -56,12 +57,13 @@ const getPageTitle = (pathname) => {
   if (pathname === "/audit") return "Audit Session";
   if (pathname === "/reports") return "Reports";
   if (pathname === "/roles") return "Users & Access";
+  if (pathname === "/master-editor") return "Master Editor";
   if (pathname === "/scan-demo") return "QR Console";
   if (pathname === "/add-asset") return "Add Asset";
   if (pathname.startsWith("/edit-asset/")) return "Edit Asset";
   if (pathname === "/profile") return "My Profile";
   if (pathname.startsWith("/asset-details/")) return "Asset Details";
-  if (pathname === "/add-request") return "Add Request";
+  if (pathname === "/add-request") return "New Asset Request";
   if (pathname.startsWith("/edit-request/")) return "Edit Request";
   return "AssetPro";
 };
@@ -166,7 +168,7 @@ function AppLayout() {
             </div>
           </div>
         </header>
-        <main className="main-panel">
+        <main className={`main-panel ${location.pathname === "/assets" ? "main-panel-assets" : ""}`}>
           <Outlet />
         </main>
       </div>

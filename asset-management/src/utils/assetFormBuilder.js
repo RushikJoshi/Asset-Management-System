@@ -1,4 +1,14 @@
-const STORAGE_KEY = "assetFormBuilderConfig";
+export const FORM_TYPES = {
+  ASSET: "asset",
+  REQUEST: "request",
+};
+
+const STORAGE_KEYS = {
+  [FORM_TYPES.ASSET]: "assetFormBuilderConfig",
+  [FORM_TYPES.REQUEST]: "requestFormBuilderConfig",
+};
+
+const ASSET_EXCLUDED_SECTION_KEYS = new Set(["Request & Purchase Details"]);
 
 export const assetFormSections = [
   {
@@ -42,21 +52,13 @@ export const assetFormSections = [
     ],
   },
   {
-    title: "Request & Purchase Details",
-    description: "Track request approvals, vendor purchase, and invoice data.",
+    title: "Purchase & Invoice",
+    description: "Recorded purchase details for inventory assets.",
     fields: [
-      { name: "requestId", label: "Request ID" },
-      { name: "requestedBy", label: "Requested By" },
-      { name: "requestPriority", label: "Priority" },
-      { name: "requestReason", label: "Reason" },
-      { name: "requestStatus", label: "Request Status" },
-      { name: "managerApproval", label: "Manager Approval" },
-      { name: "adminApproval", label: "IT/Admin Approval" },
       { name: "purchaseDate", label: "Purchase Date" },
       { name: "vendor", label: "Vendor" },
       { name: "invoiceNumber", label: "Invoice Number" },
       { name: "price", label: "Purchase Cost" },
-      { name: "purchaseStatus", label: "Purchase Status" },
     ],
   },
   {
@@ -80,7 +82,6 @@ export const assetFormSections = [
       { name: "assignedDate", label: "Assigned Date" },
       { name: "employeeId", label: "Employee ID" },
       { name: "employeeEmail", label: "Employee Email" },
-      { name: "expectedReturn", label: "Expected Return" },
       { name: "assignedBy", label: "Assigned By" },
     ],
   },
@@ -99,16 +100,68 @@ export const assetFormSections = [
   },
 ];
 
-const defaultConfig = assetFormSections.reduce((acc, section) => {
-  section.fields.forEach((field) => {
-    acc[field.name] = {
-      visible: true,
-      required: Boolean(field.required),
-      locked: Boolean(field.locked),
-    };
-  });
-  return acc;
-}, {});
+export const requestFormSections = [
+  {
+    title: "Request Details",
+    description: "Employee and procurement request information.",
+    fields: [
+      { name: "requestId", label: "Request ID" },
+      { name: "requestType", label: "Request Type", required: true, locked: true },
+      { name: "requestDate", label: "Request Date", required: true },
+      { name: "requestedBy", label: "Requested By", required: true },
+      { name: "employeeId", label: "Employee ID" },
+      { name: "employeeEmail", label: "Employee Email" },
+      { name: "department", label: "Department" },
+      { name: "officeName", label: "Office Name" },
+      { name: "requestPriority", label: "Priority" },
+      { name: "requestReason", label: "Reason / Notes" },
+    ],
+  },
+  {
+    title: "Requested Asset",
+    description: "Asset details needed before approval and purchase.",
+    fields: [
+      { name: "assetName", label: "Requested Asset Name", required: true, locked: true },
+      { name: "category", label: "Category", required: true, locked: true },
+      { name: "subCategory", label: "Sub Category" },
+      { name: "brand", label: "Brand" },
+      { name: "model", label: "Model" },
+      { name: "vendor", label: "Preferred Vendor" },
+      { name: "price", label: "Estimated Cost" },
+    ],
+  },
+  {
+    title: "Approval & Purchase",
+    description: "Manager, IT/admin approval, and purchase tracking.",
+    fields: [
+      { name: "requestStatus", label: "Request Status", required: true },
+      { name: "managerApproval", label: "Manager Approval" },
+      { name: "adminApproval", label: "IT/Admin Approval" },
+      { name: "purchaseStatus", label: "Purchase Status" },
+      { name: "expectedReturn", label: "Expected Return" },
+    ],
+  },
+];
+
+const FORM_SECTIONS = {
+  [FORM_TYPES.ASSET]: assetFormSections,
+  [FORM_TYPES.REQUEST]: requestFormSections,
+};
+
+const buildDefaultConfig = (sections) =>
+  sections.reduce((acc, section) => {
+    section.fields.forEach((field) => {
+      acc[field.name] = {
+        visible: true,
+        required: Boolean(field.required),
+        locked: Boolean(field.locked),
+      };
+    });
+    return acc;
+  }, {});
+
+const defaultAssetConfig = buildDefaultConfig(assetFormSections);
+const defaultRequestConfig = buildDefaultConfig(requestFormSections);
 
 const applyFieldLabels = (fields, labels = {}) =>
   fields.map((field) => ({
@@ -130,7 +183,8 @@ const applyOrder = (items, order = [], getKey = (item) => item.key) => {
   });
 };
 
-export const getAssetFormSections = (config = {}) => {
+const buildFormSections = (formType, config = {}) => {
+  const sectionDefinitions = FORM_SECTIONS[formType] || assetFormSections;
   const customFields = config.__customFields || [];
   const labels = config.__fieldLabels || {};
   const sectionLabels = config.__sectionLabels || {};
@@ -139,7 +193,8 @@ export const getAssetFormSections = (config = {}) => {
   const deletedFields = new Set(config.__deletedFields || []);
   const fieldSections = config.__fieldSections || {};
   const fieldOrder = config.__fieldOrder || {};
-  const baseSections = assetFormSections.map((section) => ({
+
+  const baseSections = sectionDefinitions.map((section) => ({
     key: section.title,
     ...section,
     title: sectionLabels[section.title] || section.title,
@@ -148,10 +203,7 @@ export const getAssetFormSections = (config = {}) => {
   }));
 
   const sectionMap = baseSections.reduce((acc, section) => {
-    acc[section.key] = {
-      ...section,
-      fields: [],
-    };
+    acc[section.key] = { ...section, fields: [] };
     return acc;
   }, {});
 
@@ -176,11 +228,10 @@ export const getAssetFormSections = (config = {}) => {
         fields: [],
       };
     }
-
     return sectionMap[sectionKey];
   };
 
-  assetFormSections.forEach((section) => {
+  sectionDefinitions.forEach((section) => {
     applyFieldLabels(
       section.fields.filter((field) => !deletedFields.has(field.name)),
       labels,
@@ -207,16 +258,31 @@ export const getAssetFormSections = (config = {}) => {
     ...customSections.map((section) => section.key || section.title),
   ];
 
-  return applyOrder(Object.values(sectionMap), config.__sectionOrder || defaultSectionOrder);
+  let sections = applyOrder(Object.values(sectionMap), config.__sectionOrder || defaultSectionOrder);
+
+  if (formType === FORM_TYPES.ASSET) {
+    sections = sections.filter((section) => !ASSET_EXCLUDED_SECTION_KEYS.has(section.key));
+  }
+
+  return sections;
 };
 
-export const getDefaultAssetFormConfig = () => defaultConfig;
+export const getAssetFormSections = (config = {}) => buildFormSections(FORM_TYPES.ASSET, config);
 
-export const loadAssetFormConfig = () => {
-  if (typeof window === "undefined") return defaultConfig;
+export const getRequestFormSections = (config = {}) => buildFormSections(FORM_TYPES.REQUEST, config);
+
+export const getDefaultAssetFormConfig = () => ({ ...defaultAssetConfig });
+
+export const getDefaultRequestFormConfig = () => ({ ...defaultRequestConfig });
+
+const loadConfigForType = (formType) => {
+  const defaultConfig =
+    formType === FORM_TYPES.REQUEST ? defaultRequestConfig : defaultAssetConfig;
+
+  if (typeof window === "undefined") return { ...defaultConfig };
 
   try {
-    const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
+    const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEYS[formType]) || "{}");
     const config = Object.keys(defaultConfig).reduce((acc, name) => {
       acc[name] = { ...defaultConfig[name], ...(saved[name] || {}) };
       return acc;
@@ -239,16 +305,55 @@ export const loadAssetFormConfig = () => {
     });
     return config;
   } catch {
-    return defaultConfig;
+    return { ...defaultConfig };
   }
 };
 
+export const loadAssetFormConfig = () => loadConfigForType(FORM_TYPES.ASSET);
+
+export const loadRequestFormConfig = () => loadConfigForType(FORM_TYPES.REQUEST);
+
 export const saveAssetFormConfig = (config) => {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-  window.dispatchEvent(new Event("asset-form-builder-updated"));
+  window.localStorage.setItem(STORAGE_KEYS[FORM_TYPES.ASSET], JSON.stringify(config));
+  window.dispatchEvent(new CustomEvent("form-builder-updated", { detail: { formType: FORM_TYPES.ASSET } }));
+};
+
+export const saveRequestFormConfig = (config) => {
+  window.localStorage.setItem(STORAGE_KEYS[FORM_TYPES.REQUEST], JSON.stringify(config));
+  window.dispatchEvent(new CustomEvent("form-builder-updated", { detail: { formType: FORM_TYPES.REQUEST } }));
 };
 
 export const resetAssetFormConfig = () => {
-  window.localStorage.removeItem(STORAGE_KEY);
-  window.dispatchEvent(new Event("asset-form-builder-updated"));
+  window.localStorage.removeItem(STORAGE_KEYS[FORM_TYPES.ASSET]);
+  window.dispatchEvent(new CustomEvent("form-builder-updated", { detail: { formType: FORM_TYPES.ASSET } }));
+};
+
+export const resetRequestFormConfig = () => {
+  window.localStorage.removeItem(STORAGE_KEYS[FORM_TYPES.REQUEST]);
+  window.dispatchEvent(new CustomEvent("form-builder-updated", { detail: { formType: FORM_TYPES.REQUEST } }));
+};
+
+export const saveFormConfig = (formType, config) => {
+  if (formType === FORM_TYPES.REQUEST) return saveRequestFormConfig(config);
+  return saveAssetFormConfig(config);
+};
+
+export const loadFormConfig = (formType) => {
+  if (formType === FORM_TYPES.REQUEST) return loadRequestFormConfig();
+  return loadAssetFormConfig();
+};
+
+export const resetFormConfig = (formType) => {
+  if (formType === FORM_TYPES.REQUEST) return resetRequestFormConfig();
+  return resetAssetFormConfig();
+};
+
+export const getDefaultFormConfig = (formType) => {
+  if (formType === FORM_TYPES.REQUEST) return getDefaultRequestFormConfig();
+  return getDefaultAssetFormConfig();
+};
+
+export const getFormSections = (formType, config = {}) => {
+  if (formType === FORM_TYPES.REQUEST) return getRequestFormSections(config);
+  return getAssetFormSections(config);
 };

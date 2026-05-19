@@ -272,15 +272,32 @@ export const parseCsvText = (csvText) => {
   });
 };
 
-export const buildStats = (assets) => ({
-  total: assets.length,
-  available: assets.filter((asset) => asset.assetStatus === "AVAILABLE").length,
-  assigned: assets.filter((asset) => asset.assetStatus === "ASSIGNED").length,
-  repair: assets.filter((asset) => asset.assetStatus === "UNDER_REPAIR").length,
-  warranty: assets.filter((asset) => {
+export const isRequestRecord = (asset) => {
+  if (asset?.recordType === "REQUEST") return true;
+  if (asset?.recordType === "ASSET") return false;
+  return Boolean(
+    asset?.requestType &&
+      (asset?.requestId || asset?.requestedBy) &&
+      !asset?.serialNumber,
+  );
+};
+
+export const getInventoryAssets = (assets) => assets.filter((asset) => !isRequestRecord(asset));
+
+export const getRequestRecords = (assets) => assets.filter(isRequestRecord);
+
+export const buildStats = (assets) => {
+  const inventory = getInventoryAssets(assets);
+  return {
+  total: inventory.length,
+  available: inventory.filter((asset) => asset.assetStatus === "AVAILABLE").length,
+  assigned: inventory.filter((asset) => asset.assetStatus === "ASSIGNED").length,
+  repair: inventory.filter((asset) => asset.assetStatus === "UNDER_REPAIR").length,
+  warranty: inventory.filter((asset) => {
     const days = warrantyDays(asset);
     return days !== null && days >= 0 && days <= Number(asset.warrantyReminderDays || 10);
   }).length,
-  auditPending: assets.filter((asset) => !asset.auditLogs?.length).length,
-  repairCost: assets.reduce((sum, asset) => sum + repairCost(asset), 0),
-});
+  auditPending: inventory.filter((asset) => !asset.auditLogs?.length).length,
+  repairCost: inventory.reduce((sum, asset) => sum + repairCost(asset), 0),
+};
+};

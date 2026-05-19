@@ -34,6 +34,34 @@
   font-weight: 700;
 }
 
+.master-form-tabs {
+  display: inline-flex;
+  gap: 6px;
+  margin-right: 12px;
+  padding: 4px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.master-form-tabs button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #475569;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.master-form-tabs button.active {
+  background: #03a4aa;
+  border-color: #03a4aa;
+  color: #ffffff;
+}
+
 .master-editor-actions {
   display: flex;
   gap: 10px;

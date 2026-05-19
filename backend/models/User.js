@@ -37,9 +37,10 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: USER_ROLES,
       default: "EMPLOYEE",
       required: true,
+      trim: true,
+      uppercase: true,
     },
     passwordHash: {
       type: String,

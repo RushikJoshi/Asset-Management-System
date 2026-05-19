@@ -9,6 +9,7 @@ import Assets from "../pages/Assets";
 import { Login, Register } from "../pages/Auth";
 import Dashboard from "../pages/Dashboard";
 import Profile from "../pages/Profile";
+import MasterEditor from "../pages/MasterEditor";
 import {
   Assignments,
   Audit,

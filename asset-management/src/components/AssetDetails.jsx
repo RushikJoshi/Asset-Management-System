@@ -149,7 +149,7 @@ function AssetDetails() {
   if (!asset?._id) return <p className="asset-message">No Asset Found</p>;
 
   return (
-    <div className="asset-container">
+    <div className={`asset-container${activeTab === "sticker" ? " asset-container--sticker-fit" : ""}`}>
       <header className="asset-header">
         <div>
           <p className="eyebrow">{isScanPage ? "QR Scan Details" : "Asset Lifecycle"}</p>
@@ -296,7 +296,11 @@ function AssetDetails() {
               <option>Missing</option>
               <option>Damaged</option>
             </select>
-            <input placeholder="Location Verified" value={auditForm.locationVerified || ""} onChange={(e) => setAuditForm({ ...auditForm, locationVerified: e.target.value })} />
+            <select value={auditForm.locationVerified || ""} onChange={(e) => setAuditForm({ ...auditForm, locationVerified: e.target.value })}>
+              <option value="">Select</option>
+              <option value="Haan">Haan</option>
+              <option value="Naa">Naa</option>
+            </select>
             <input placeholder="Notes" value={auditForm.notes || ""} onChange={(e) => setAuditForm({ ...auditForm, notes: e.target.value })} />
             <button type="submit">Mark Audit</button>
           </form>
@@ -307,11 +311,17 @@ function AssetDetails() {
         <section className="description-card">
           <h3>Asset Timeline</h3>
           <div className="timeline">
-            {(asset.lifecycleTimeline || []).map((item, index) => (
-              <div className="timeline-item" key={`${item.title}-${index}`}>
-                <span>{dateText(item.date)}</span>
-                <strong>{item.title}</strong>
-                <p>{item.detail}</p>
+            {(asset.lifecycleTimeline || []).map((item, index, list) => (
+              <div className="timeline-entry" key={`${item.title}-${index}`}>
+                <div className="timeline-marker">
+                  <div className="timeline-dot" />
+                  {index < list.length - 1 && <div className="timeline-line" />}
+                </div>
+                <div className="timeline-card">
+                  <strong>{item.title}</strong>
+                  <p>{item.detail}</p>
+                  <span>{dateText(item.date)}</span>
+                </div>
               </div>
             ))}
           </div>
