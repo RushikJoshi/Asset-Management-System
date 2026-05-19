@@ -4,6 +4,7 @@ import apiInstance from "../apis/apiConfig";
 import { useToast } from "../components/toast/toastStore";
 import { updateUserSession } from "../store/slices/authSlice";
 import { ROLE_LABELS } from "../utils/permissions";
+import { PageTitle } from "../components/common/ModuleComponents";
 import "./Profile.css";
 
 function Profile() {
@@ -96,32 +97,127 @@ function Profile() {
   };
 
   return (
-    <div className="profile-page-wrapper">
-      <div className="profile-header-section">
-        <h2>My Profile</h2>
-        <p className="profile-subtitle">Manage your personal information and security preferences</p>
-      </div>
+    <div className="profile-page-wrapper" style={{ width: "100%", boxSizing: "border-box", padding: "8px 0 40px" }}>
+      <PageTitle 
+        eyebrow="My Account" 
+        title="Personal Settings" 
+        description="Manage your personal information, department details, and security credentials." 
+      />
 
-      <div className="profile-content-grid">
-        <form onSubmit={handleSave} className="profile-card main-info-card">
-          <div className="profile-avatar-banner">
-            <div className="profile-large-avatar">
-              {getInitials(user?.name)}
-            </div>
-            <div className="profile-avatar-details">
-              <h3>{user?.name || "User Name"}</h3>
-              <p className="profile-role-badge">{ROLE_LABELS[user?.role] || user?.role}</p>
-              <span className="profile-status-dot active">Active Account</span>
+      <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        
+        {/* Profile Avatar Card */}
+        <div 
+          className="form-section"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "var(--radius-lg)",
+            padding: "20px",
+            boxShadow: "var(--shadow-sm)",
+            display: "flex",
+            alignItems: "center",
+            gap: "20px"
+          }}
+        >
+          <div 
+            className="profile-large-avatar"
+            style={{
+              width: "64px",
+              height: "64px",
+              background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))",
+              color: "#ffffff",
+              fontSize: "24px",
+              fontWeight: 700,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 12px rgba(14, 165, 164, 0.2)",
+              flexShrink: 0
+            }}
+          >
+            {getInitials(user?.name)}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "var(--text-main)" }}>
+              {user?.name || "User Name"}
+            </h3>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <span 
+                className="profile-role-badge"
+                style={{
+                  background: "rgba(14, 165, 164, 0.1)",
+                  color: "var(--color-primary)",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  padding: "2px 10px",
+                  borderRadius: "var(--radius-full)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
+                  border: "1px solid rgba(14, 165, 164, 0.15)"
+                }}
+              >
+                {ROLE_LABELS[user?.role] || user?.role}
+              </span>
+              <span 
+                className="profile-status-dot"
+                style={{
+                  fontSize: "12px",
+                  color: "var(--text-muted)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontWeight: 500
+                }}
+              >
+                <span style={{ display: "inline-block", width: "6px", height: "6px", background: "#10B981", borderRadius: "50%" }}></span>
+                Active Account
+              </span>
             </div>
           </div>
+        </div>
 
-          <div className="profile-fields-grid">
-            <div className="form-group">
-              <label htmlFor="name">Full Name *</label>
+        {/* Personal Details Card */}
+        <div 
+          className="form-section"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "var(--radius-lg)",
+            padding: "20px",
+            boxShadow: "var(--shadow-sm)"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+            <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "var(--text-main)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+              Personal Details
+            </h3>
+            <button 
+              type="submit" 
+              disabled={isSaving} 
+              className="module-button"
+              style={{
+                height: "30px",
+                padding: "0 16px",
+                fontSize: "12px",
+                fontWeight: "600",
+                borderRadius: "var(--radius-sm)"
+              }}
+            >
+              {isSaving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="name" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Full Name *</label>
               <input
                 type="text"
                 id="name"
                 name="name"
+                className="custom-input"
+                style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
                 value={formData.name}
                 onChange={handleInputChange}
                 required
@@ -129,12 +225,14 @@ function Profile() {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="email">Email Address *</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="email" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Email Address *</label>
               <input
                 type="email"
                 id="email"
                 name="email"
+                className="custom-input"
+                style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
                 value={formData.email}
                 onChange={handleInputChange}
                 required
@@ -142,102 +240,139 @@ function Profile() {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="employeeId">Employee ID</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="employeeId" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Employee ID</label>
               <input
                 type="text"
                 id="employeeId"
                 name="employeeId"
+                className="custom-input"
+                style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
                 value={formData.employeeId}
                 onChange={handleInputChange}
                 placeholder="e.g. EMP-1048"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="department">Department</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="department" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Department</label>
               <input
                 type="text"
                 id="department"
                 name="department"
+                className="custom-input"
+                style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
                 value={formData.department}
                 onChange={handleInputChange}
                 placeholder="e.g. IT Operations"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="phoneNumber">Phone Number</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="phoneNumber" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Phone Number</label>
               <input
                 type="tel"
                 id="phoneNumber"
                 name="phoneNumber"
+                className="custom-input"
+                style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
                 placeholder="e.g. +91 98765 43210"
               />
             </div>
 
-            <div className="form-group readonly">
-              <label>System Access Level</label>
-              <div className="readonly-value">
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>System Access Level</label>
+              <div 
+                style={{ 
+                  height: "36px", 
+                  padding: "0 12px", 
+                  fontSize: "13px", 
+                  background: "var(--bg-subtle)", 
+                  border: "1px solid var(--border-color)", 
+                  borderRadius: "var(--radius-md)", 
+                  color: "var(--text-muted)",
+                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "center",
+                  boxSizing: "border-box"
+                }}
+              >
                 {ROLE_LABELS[user?.role] || user?.role}
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="profile-divider"></div>
+        {/* Security / Password Card */}
+        <div 
+          className="form-section"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "var(--radius-lg)",
+            padding: "20px",
+            boxShadow: "var(--shadow-sm)"
+          }}
+        >
+          <div 
+            onClick={() => setShowPasswordSection(!showPasswordSection)}
+            style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "space-between", 
+              cursor: "pointer", 
+              userSelect: "none",
+              paddingBottom: showPasswordSection ? "12px" : 0,
+              borderBottom: showPasswordSection ? "1px solid var(--border-color)" : "none"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "16px" }}>🔒</span>
+              <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "var(--text-main)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                Security & Password
+              </h3>
+            </div>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+              {showPasswordSection ? "▲" : "▼"}
+            </span>
+          </div>
 
-          {/* Change Password Collapsible Section */}
-          <div className="profile-security-accordion">
-            <button
-              type="button"
-              className={`accordion-trigger ${showPasswordSection ? "active" : ""}`}
-              onClick={() => setShowPasswordSection(!showPasswordSection)}
-            >
-              <span className="security-icon">🔒</span>
-              <span>Change Account Password</span>
-              <span className="accordion-caret">{showPasswordSection ? "▲" : "▼"}</span>
-            </button>
-
-            {showPasswordSection && (
-              <div className="accordion-content">
-                <div className="password-fields-grid">
-                  <div className="form-group">
-                    <label htmlFor="newPassword">New Password</label>
-                    <input
-                      type="password"
-                      id="newPassword"
-                      name="newPassword"
-                      value={formData.newPassword}
-                      onChange={handleInputChange}
-                      placeholder="Enter new password"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="confirmPassword">Confirm New Password</label>
-                    <input
-                      type="password"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      placeholder="Confirm new password"
-                    />
-                  </div>
-                </div>
+          {showPasswordSection && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", paddingTop: "16px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label htmlFor="newPassword" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>New Password</label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  name="newPassword"
+                  className="custom-input"
+                  style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
+                  value={formData.newPassword}
+                  onChange={handleInputChange}
+                  placeholder="Enter new password"
+                />
               </div>
-            )}
-          </div>
 
-          <div className="profile-actions-bar">
-            <button type="submit" disabled={isSaving} className="primary-action save-profile-btn">
-              {isSaving ? "Saving..." : "Save Profile Details"}
-            </button>
-          </div>
-        </form>
-      </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label htmlFor="confirmPassword" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Confirm New Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  className="custom-input"
+                  style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm new password"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+      </form>
     </div>
   );
 }

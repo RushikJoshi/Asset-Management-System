@@ -1,3 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Colors */
+  --color-primary: #2185f3; /* Gitakshmi Electric Blue */
+  --color-primary-dark: #0e73e0;
+  --color-secondary: #4ea5ff; /* Lighter Accent Blue */
+  --color-accent: #2563EB; /* soft blue */
+  
+  --bg-app: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F1F5F9;
+  
+  --border-color: #E2E8F0;
+  
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.04);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+}
+
 *{
   margin: 0;
   padding: 0;
@@ -5,7 +40,10 @@
 }
 
 body {
-  font-family: "Amazon Ember", sans-serif;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
@@ -13,11 +51,11 @@ input,
 select,
 textarea,
 table {
-  font-family: "Amazon Ember", sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 html {
-  scrollbar-color: #03a4aa #e2e8f0;
+  scrollbar-color: var(--color-primary) #e2e8f0;
   scrollbar-width: thin;
 }
 
@@ -38,7 +76,7 @@ html {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #03a4aa;
+  background: var(--color-primary);
   border-radius: 999px;
 }
 

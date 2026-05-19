@@ -405,7 +405,7 @@ function AddAsset() {
     );
   };
 
-  const renderConfiguredSection = (section) => {
+  const renderConfiguredSection = (section, index) => {
     if (
       !isRequestMode &&
       ["IP Configuration", "Computer Specifications"].includes(section.key) &&
@@ -423,7 +423,29 @@ function AddAsset() {
 
     return (
       <section className="form-section" key={section.key}>
-        <h3>{section.title}</h3>
+        <h3>
+          <span>{section.title}</span>
+          {index === 0 && (
+            <div className="header-buttons" style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                className="cancel-btn"
+                style={{ padding: "4px 12px", height: "28px", fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                onClick={() => navigate(isRequestMode ? "/requests" : "/assets")}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="submit-btn" 
+                style={{ padding: "4px 12px", height: "28px", fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                disabled={loading}
+              >
+                {loading ? "Saving..." : isEditMode ? "Update" : "Submit"}
+              </button>
+            </div>
+          )}
+        </h3>
         {section.description && <p className="section-desc">{section.description}</p>}
         <div className="form-grid">
           {visibleFields.map((field) => renderConfiguredField(field))}
@@ -435,30 +457,8 @@ function AddAsset() {
   return (
     <div className="page-wrapper">
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="form-header">
-          <h1>
-            {isEditMode
-              ? `Edit ${isRequestMode ? "Request" : "Asset"}`
-              : isRequestMode
-                ? "New Asset Request"
-                : "Add Asset"}
-          </h1>
-          <div className="header-buttons">
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={() => navigate(isRequestMode ? "/requests" : "/assets")}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? "Saving..." : isEditMode ? "Update" : "Submit"}
-            </button>
-          </div>
-        </div>
-
         <div className="form-content">
-          {formSections.map((section) => renderConfiguredSection(section))}
+          {formSections.map((section, index) => renderConfiguredSection(section, index))}
         </div>
       </form>
     </div>

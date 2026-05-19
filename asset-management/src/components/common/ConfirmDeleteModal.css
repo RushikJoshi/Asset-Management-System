@@ -1,6 +1,7 @@
 .delete-modal-overlay {
   align-items: center;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   height: 100vh;
   justify-content: center;
@@ -12,74 +13,83 @@
 }
 
 .delete-modal {
-  animation: confirmModalPopup 0.3s ease;
-  background: #ffffff;
-  border-radius: 14px;
+  animation: confirmModalPopup 0.2s ease;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   max-width: 92vw;
-  padding: 35px 30px;
+  padding: 40px 36px;
   text-align: center;
-  width: 450px;
+  width: 460px;
 }
 
 .delete-modal-image {
   margin-bottom: 20px;
-  width: 180px;
+  width: 160px;
 }
 
 .delete-title {
-  color: #111827;
-  font-size: 28px;
-  font-weight: 800;
-  margin-bottom: 15px;
+  color: var(--text-main);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
 }
 
 .delete-text {
-  color: #6b7280;
-  font-size: 17px;
-  line-height: 1.7;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.6;
   margin-bottom: 28px;
 }
 
 .delete-modal-buttons {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   justify-content: center;
 }
 
 .cancel-delete-btn {
-  background: #ffffff;
-  border: 2px solid #03a4aa;
-  border-radius: 6px;
-  color: #03a4aa;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 14px;
   padding: 12px 28px;
-  transition: 0.3s;
+  transition: all var(--transition-fast);
 }
 
 .cancel-delete-btn:hover {
-  background: #f0fdfa;
+  background: var(--bg-subtle);
 }
 
 .confirm-delete-btn {
-  background: #03a4aa;
-  border: 0;
-  border-radius: 6px;
+  background: #EF4444;
+  border: 1px solid #EF4444;
+  border-radius: var(--radius-md);
   color: #ffffff;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 14px;
   padding: 12px 28px;
-  transition: 0.3s;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .confirm-delete-btn:hover {
-  background: #02848a;
+  background: #DC2626;
+  border-color: #DC2626;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 @keyframes confirmModalPopup {
   from {
     opacity: 0;
-    transform: scale(0.92);
+    transform: scale(0.94);
   }
   to {
     opacity: 1;

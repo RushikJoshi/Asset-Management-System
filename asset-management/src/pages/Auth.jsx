@@ -38,9 +38,9 @@ export function Login() {
   };
 
   return (
-    <AuthShell title="Login" subtitle="Use your GT AMS account to continue.">
+    <AuthSplitShell title="Login" subtitle="Use your GT AMS account to continue.">
       <form className="auth-form" onSubmit={submit} noValidate>
-        <label>Email or Username <span className="required">*</span></label>
+        <label>Email or Username</label>
         <input
           type="text"
           value={form.email}
@@ -52,7 +52,7 @@ export function Login() {
         />
         {errors.email && <span className="field-error">{errors.email}</span>}
 
-        <label>Password <span className="required">*</span></label>
+        <label>Password</label>
         <input
           type="password"
           value={form.password}
@@ -69,7 +69,7 @@ export function Login() {
         <button type="submit" disabled={loading}>{loading ? "Signing in..." : "Login"}</button>
         <p className="auth-link">New user? <Link to="/register">Register account</Link></p>
       </form>
-    </AuthShell>
+    </AuthSplitShell>
   );
 }
 
@@ -149,9 +149,9 @@ export function Register() {
   };
 
   return (
-    <AuthShell title="Register" subtitle="Create a role-based account for GT AMS.">
+    <AuthClassicShell title="Register" subtitle="Create a role-based account for GT AMS.">
       <form className="auth-form" onSubmit={submit} noValidate>
-        <label>Name <span className="required">*</span></label>
+        <label>Name</label>
         <input
           value={form.name}
           onChange={(e) => {
@@ -162,7 +162,7 @@ export function Register() {
         />
         {errors.name && <span className="field-error">{errors.name}</span>}
 
-        <label>Username <span className="required">*</span></label>
+        <label>Username</label>
         <input
           value={form.username}
           onChange={(e) => {
@@ -173,7 +173,7 @@ export function Register() {
         />
         {errors.username && <span className="field-error">{errors.username}</span>}
 
-        <label>Email <span className="required">*</span></label>
+        <label>Email</label>
         <input
           type="email"
           value={form.email}
@@ -196,7 +196,7 @@ export function Register() {
           {roleOptions.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
         </select>
 
-        <label>Password <span className="required">*</span></label>
+        <label>Password</label>
         <input
           type="password"
           value={form.password}
@@ -208,7 +208,7 @@ export function Register() {
         />
         {errors.password && <span className="field-error">{errors.password}</span>}
 
-        <label>Confirm Password <span className="required">*</span></label>
+        <label>Confirm Password</label>
         <input
           type="password"
           value={form.confirmPassword}
@@ -224,11 +224,49 @@ export function Register() {
         <button type="submit" disabled={loading}>{loading ? "Creating..." : "Create Account"}</button>
         <p className="auth-link">Already registered? <Link to="/login">Login</Link></p>
       </form>
-    </AuthShell>
+    </AuthClassicShell>
   );
 }
 
-function AuthShell({ title, subtitle, children }) {
+function AuthSplitShell({ title, subtitle, children }) {
+  return (
+    <div className="auth-split-wrapper">
+      
+      {/* Left Pane: White background with Logo and Title */}
+      <div className="auth-left-pane">
+        <div className="auth-left-content">
+          <img 
+            src="/logo.png" 
+            alt="Gitakshmi logo" 
+            className="auth-logo-img"
+          />
+          <h1 className="auth-left-title">Asset Management System</h1>
+          <p className="auth-left-subtitle">
+            Streamline your team's assets, lifecycles, specifications, and workflows with secure tracking and real-time management.
+          </p>
+        </div>
+      </div>
+
+      {/* Right Pane: Vibrant Blue background containing the clean white login card */}
+      <div className="auth-right-pane">
+        <div className="auth-card">
+          <div className="auth-card-header">
+            <h2 className="auth-card-title">
+              {title === "Login" ? "Welcome Back!!" : title}
+            </h2>
+            <p className="auth-card-subtitle">
+              {title === "Login" ? "Sign in with your email and password" : subtitle}
+            </p>
+          </div>
+          {children}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+function AuthClassicShell({ title, subtitle, children }) {
   return (
     <main className="auth-page">
       <section className="auth-panel">

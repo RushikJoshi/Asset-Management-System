@@ -152,7 +152,6 @@ function AssetDetails() {
     <div className={`asset-container${activeTab === "sticker" ? " asset-container--sticker-fit" : ""}`}>
       <header className="asset-header">
         <div>
-          <p className="eyebrow">{isScanPage ? "QR Scan Details" : "Asset Lifecycle"}</p>
           <h1>{asset.assetName}</h1>
           <p>{asset.assetCode || asset.serialNumber || "Asset record"}</p>
         </div>

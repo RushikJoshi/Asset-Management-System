@@ -115,7 +115,7 @@ function AppLayout() {
             <h2>AssetPro</h2>
             <p>Lifecycle ERP</p>
           </div>
-          <button className="sidebar-collapse-btn" onClick={() => setIsCollapsed(!isCollapsed)}>
+          <button className="sidebar-collapse-btn" onClick={() => setIsCollapsed(!isCollapsed)} aria-label="Toggle Sidebar">
             {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
           </button>
           <button className="sidebar-close" onClick={() => setIsSidebarOpen(false)}>

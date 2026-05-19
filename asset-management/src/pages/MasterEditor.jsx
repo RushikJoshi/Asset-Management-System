@@ -425,15 +425,7 @@ function MasterEditor() {
 
   return (
     <div className="master-editor-page">
-      <div className="master-editor-header">
-        <div>
-          <p>Form Builder</p>
-          <h2>Master Editor</h2>
-          <span>
-            {visibleFields} of {totalFields} fields visible in{" "}
-            {activeFormType === FORM_TYPES.REQUEST ? "Add Request" : "Add Asset"} form
-          </span>
-        </div>
+      <div className="master-editor-header" style={{ justifyContent: "flex-end", minHeight: "auto" }}>
         <div className="master-editor-actions">
           <div className="master-form-tabs">
             <button

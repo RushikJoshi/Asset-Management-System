@@ -4,7 +4,7 @@ import "./App.css";
 import { useEffect, useRef, useState } from "react";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
-import { FaDownload, FaEdit, FaEye, FaFileCsv, FaFileImport, FaTags, FaTimes, FaTrash } from "react-icons/fa";
+import { FaDownload, FaEdit, FaEye, FaFileCsv, FaFileImport, FaTags, FaTimes, FaTrash, FaBoxOpen, FaCheckCircle, FaUserCheck, FaWrench, FaShieldAlt } from "react-icons/fa";
 import deleteModelImage from "../src/images/deleteModalImage.svg";
 import logoImage from "../src/images/logo.jpeg";
 import {
@@ -372,11 +372,56 @@ function App() {
     <>
       <div className="app-container assets-page">
         <div className="dashboard-grid">
-          <div className="dashboard-card"><span>Total Assets</span><strong>{stats.total}</strong></div>
-          <div className="dashboard-card"><span>Available</span><strong>{stats.available}</strong></div>
-          <div className="dashboard-card"><span>Assigned</span><strong>{stats.assigned}</strong></div>
-          <div className="dashboard-card"><span>Under Repair</span><strong>{stats.repair}</strong></div>
-          <div className="dashboard-card alert-card"><span>Warranty Alerts</span><strong>{stats.warranty}</strong></div>
+          <div className="dashboard-card">
+            <div className="card-left">
+              <span className="card-title-label">Total Assets</span>
+              <strong className="card-value-text">{stats.total}</strong>
+              <span className="card-sub-trend">+12 this month</span>
+            </div>
+            <div className="card-right-icon" style={{ color: "#2185f3", backgroundColor: "#2185f312" }}>
+              <FaBoxOpen />
+            </div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-left">
+              <span className="card-title-label">Available</span>
+              <strong className="card-value-text">{stats.available}</strong>
+              <span className="card-sub-trend">Ready to assign</span>
+            </div>
+            <div className="card-right-icon" style={{ color: "#10B981", backgroundColor: "#10B98112" }}>
+              <FaCheckCircle />
+            </div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-left">
+              <span className="card-title-label">Assigned</span>
+              <strong className="card-value-text">{stats.assigned}</strong>
+              <span className="card-sub-trend">Currently active</span>
+            </div>
+            <div className="card-right-icon" style={{ color: "#2563EB", backgroundColor: "#2563EB12" }}>
+              <FaUserCheck />
+            </div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-left">
+              <span className="card-title-label">Under Repair</span>
+              <strong className="card-value-text">{stats.repair}</strong>
+              <span className="card-sub-trend">In maintenance</span>
+            </div>
+            <div className="card-right-icon" style={{ color: "#F59E0B", backgroundColor: "#F59E0B12" }}>
+              <FaWrench />
+            </div>
+          </div>
+          <div className="dashboard-card alert-card">
+            <div className="card-left">
+              <span className="card-title-label">Warranty Alerts</span>
+              <strong className="card-value-text">{stats.warranty}</strong>
+              <span className="card-sub-trend">Expiring soon</span>
+            </div>
+            <div className="card-right-icon" style={{ color: "#EF4444", backgroundColor: "#EF444412" }}>
+              <FaShieldAlt />
+            </div>
+          </div>
         </div>
 
         <div className="assets-toolbar">

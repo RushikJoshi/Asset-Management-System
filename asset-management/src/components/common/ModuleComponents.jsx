@@ -4,21 +4,47 @@ import "./ModuleComponents.css";
 export function PageTitle({ eyebrow, title, description, action }) {
   if (!action) return null;
   return (
-    <div className="module-title-actions-only">
-      {action}
+    <div className="module-title" style={{ justifyContent: "flex-end", minHeight: "auto", marginBottom: "16px", padding: 0 }}>
+      <div className="module-title-action">{action}</div>
     </div>
   );
 }
 
-export function KpiGrid({ items }) {
+export function KpiGrid({ items, action }) {
   return (
-    <div className="module-kpi-grid">
-      {items.map((item) => (
-        <div className="module-kpi" key={item.label}>
-          <span>{item.label}</span>
-          <strong>{item.value}</strong>
+    <div className="module-kpi-grid-container">
+      <div className="module-kpi-grid">
+        {items.map((item) => (
+          <div 
+            className="module-kpi" 
+            key={item.label}
+            style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              alignItems: "flex-start", 
+              justifyContent: "center", 
+              gap: "6px", 
+              height: "76px", 
+              minHeight: "76px",
+              maxHeight: "76px",
+              width: "228px",
+              boxSizing: "border-box"
+            }}
+          >
+            <span style={{ color: "var(--text-muted)", fontSize: "10.5px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", lineHeight: 1.2 }}>
+              {item.label}
+            </span>
+            <strong style={{ color: "var(--text-main)", fontSize: "20px", fontWeight: 700, lineHeight: 1 }}>
+              {item.value}
+            </strong>
+          </div>
+        ))}
+      </div>
+      {action && (
+        <div className="module-kpi-action" style={{ display: "flex", alignItems: "center" }}>
+          {action}
         </div>
-      ))}
+      )}
     </div>
   );
 }

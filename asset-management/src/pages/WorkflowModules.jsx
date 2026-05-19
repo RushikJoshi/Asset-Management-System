@@ -128,13 +128,15 @@ export function Requests() {
         eyebrow="Asset Request"
         title="Request & Approval Workflow"
         description="Employee request, manager approval, IT/admin approval, and purchase handoff."
-        action={<button className="module-button" onClick={() => navigate("/add-request")}>Add Request</button>}
       />
-      <KpiGrid items={[
-        { label: "Requests", value: requests.length },
-        { label: "Pending", value: requests.filter((item) => item.requestStatus !== "Approved").length },
-        { label: "Approved", value: requests.filter((item) => item.requestStatus === "Approved").length },
-      ]} />
+      <KpiGrid 
+        action={<button className="module-button" onClick={() => navigate("/add-request")}>Add Request</button>}
+        items={[
+          { label: "Requests", value: requests.length },
+          { label: "Pending", value: requests.filter((item) => item.requestStatus !== "Approved").length },
+          { label: "Approved", value: requests.filter((item) => item.requestStatus === "Approved").length },
+        ]} 
+      />
       <DataTable
         columns={[
           { key: "requestId", label: "Request ID" },
@@ -318,15 +320,17 @@ export function Maintenance() {
         eyebrow="Maintenance"
         title="Tickets & Repair History"
         description="Open tickets, repair spend, vendors, and permanent repair records."
-        action={<button className="module-button" onClick={loadDemoData}>Load Demo Data</button>}
       />
-      <KpiGrid items={[
-        { label: "Tickets", value: repairs.length },
-        { label: "Open", value: repairs.filter((item) => item.status !== "COMPLETED").length },
-        { label: "Assets Under Repair", value: assetListData.filter((asset) => asset.assetStatus === "UNDER_REPAIR").length },
-        { label: "Maintenance Due Soon", value: assetListData.filter((asset) => maintenanceStatus(asset).startsWith("Due in")).length },
-        { label: "Repair Spend", value: currency(repairs.reduce((sum, item) => sum + Number(item.repairCost || 0), 0)) },
-      ]} />
+      <KpiGrid 
+        action={<button className="module-button" onClick={loadDemoData}>Load Demo Data</button>}
+        items={[
+          { label: "Tickets", value: repairs.length },
+          { label: "Open", value: repairs.filter((item) => item.status !== "COMPLETED").length },
+          { label: "Assets Under Repair", value: assetListData.filter((asset) => asset.assetStatus === "UNDER_REPAIR").length },
+          { label: "Maintenance Due Soon", value: assetListData.filter((asset) => maintenanceStatus(asset).startsWith("Due in")).length },
+          { label: "Repair Spend", value: currency(repairs.reduce((sum, item) => sum + Number(item.repairCost || 0), 0)) },
+        ]} 
+      />
       <DataTable
         columns={[
           { key: "assetName", label: "Asset", render: (row) => <AssetLink asset={row} /> },
@@ -376,14 +380,16 @@ export function Warranty() {
         eyebrow="Warranty"
         title="Warranty & AMC Alerts"
         description="Expiry tracking and reminder workflow."
-        action={<button className="module-button" onClick={loadDemoData}>Load Demo Data</button>}
       />
-      <KpiGrid items={[
-        { label: "Tracked Warranties", value: warranties.length },
-        { label: "Expiring Soon", value: warranties.filter((asset) => asset.days >= 0 && asset.days <= Number(asset.warrantyReminderDays || 10)).length },
-        { label: "Expired", value: warranties.filter((asset) => asset.days < 0).length },
-        { label: "Active", value: warranties.filter((asset) => asset.warrantyCheck === "Active").length },
-      ]} />
+      <KpiGrid 
+        action={<button className="module-button" onClick={loadDemoData}>Load Demo Data</button>}
+        items={[
+          { label: "Tracked Warranties", value: warranties.length },
+          { label: "Expiring Soon", value: warranties.filter((asset) => asset.days >= 0 && asset.days <= Number(asset.warrantyReminderDays || 10)).length },
+          { label: "Expired", value: warranties.filter((asset) => asset.days < 0).length },
+          { label: "Active", value: warranties.filter((asset) => asset.warrantyCheck === "Active").length },
+        ]} 
+      />
       <DataTable
         columns={[
           { key: "assetName", label: "Asset", render: (row) => <AssetLink asset={row} /> },
@@ -512,10 +518,30 @@ export function Reports() {
         eyebrow="Reports"
         title="Reports & Analytics"
         description="Asset, repair, warranty, and office reports with CSV export."
+      />
+      <KpiGrid 
         action={(
           <div className="export-dropdown-wrap" ref={exportMenuRef}>
-            <button type="button" className="module-button" onClick={() => setExportMenuOpen((open) => !open)}>
-              Export Report
+            <button 
+              type="button" 
+              className="module-button" 
+              style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "8px", 
+                height: "36px", 
+                padding: "0 16px", 
+                fontSize: "13px", 
+                borderRadius: "var(--radius-md)" 
+              }} 
+              onClick={() => setExportMenuOpen((open) => !open)}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block" }}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              <span>Export Report</span>
             </button>
             {exportMenuOpen && (
               <div className="export-dropdown-menu">
@@ -526,12 +552,12 @@ export function Reports() {
             )}
           </div>
         )}
+        items={[
+          { label: "Total Assets", value: assetListData.length },
+          { label: "Total Repair Cost", value: currency(assetListData.reduce((sum, asset) => sum + repairCost(asset), 0)) },
+          { label: "Repair Records", value: repairs.length },
+        ]} 
       />
-      <KpiGrid items={[
-        { label: "Total Assets", value: assetListData.length },
-        { label: "Total Repair Cost", value: currency(assetListData.reduce((sum, asset) => sum + repairCost(asset), 0)) },
-        { label: "Repair Records", value: repairs.length },
-      ]} />
       <div className="chart-grid">
         <MiniBars title="Office-wise Asset Count" data={groupByCount(assetListData, "officeName")} />
         <MiniBars title="Category-wise Asset Count" data={groupByCount(assetListData, "category")} />
@@ -656,109 +682,137 @@ export function Roles() {
   };
 
   return (
-    <div className="roles-page">
-      <section className="roles-hero">
-        <div>
-          <p className="roles-hero-kicker">Role-Based Access</p>
-          <h2>Users & Access</h2>
-          <p>Manage role visibility, access scope, and registration options from one place.</p>
-        </div>
-        <div className="roles-hero-stats">
-          <span className="roles-stat-pill">{roles.length} Roles</span>
-          <span className="roles-stat-pill">{roles.filter((role) => !role.isSystem).length} Custom</span>
-        </div>
-      </section>
+    <>
+      <PageTitle
+        eyebrow="Roles"
+        title="Role-Based Access Control"
+        description="Manage role visibility, access scope, and registration options from one place."
+      />
+      
+      <KpiGrid 
+        items={[
+          { label: "Total Roles", value: roles.length },
+          { label: "System Roles", value: roles.filter((role) => role.isSystem).length },
+          { label: "Custom Roles", value: roles.filter((role) => !role.isSystem).length },
+        ]} 
+      />
 
-      <section className="roles-add-card">
-        <h3>Add New Role</h3>
-        <form className="roles-add-form" onSubmit={addRole}>
-          <div>
-            <label htmlFor="new-role-name">Role Name</label>
+      <section 
+        className="form-section" 
+        style={{ 
+          background: "var(--bg-surface)", 
+          border: "1px solid var(--border-color)", 
+          borderRadius: "var(--radius-lg)", 
+          padding: "20px", 
+          marginBottom: "24px",
+          boxShadow: "var(--shadow-sm)"
+        }}
+      >
+        <h3 style={{ margin: "0 0 16px", fontSize: "16px", fontWeight: "600", color: "var(--text-main)" }}>Add New Role</h3>
+        <form 
+          onSubmit={addRole}
+          style={{ 
+            display: "grid", 
+            gridTemplateColumns: "1fr 1fr auto", 
+            gap: "16px", 
+            alignItems: "end" 
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label htmlFor="new-role-name" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Role Name</label>
             <input
               id="new-role-name"
+              className="custom-input"
+              style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
               placeholder="e.g. HR Manager"
               value={newRole.label}
               onChange={(e) => setNewRole({ ...newRole, label: e.target.value })}
             />
           </div>
-          <div>
-            <label htmlFor="new-role-access">Visible / Primary Access</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label htmlFor="new-role-access" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Visible / Primary Access</label>
             <input
               id="new-role-access"
+              className="custom-input"
+              style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
               placeholder="Dashboard, Assets, Reports"
               value={newRole.access}
               onChange={(e) => setNewRole({ ...newRole, access: e.target.value })}
             />
           </div>
-          <button type="submit" className="module-button" disabled={saving}>
+          <button 
+            type="submit" 
+            className="module-button" 
+            style={{ height: "36px", padding: "0 20px", fontSize: "13px", fontWeight: "600", borderRadius: "var(--radius-md)" }}
+            disabled={saving}
+          >
             {saving ? "Adding..." : "Add Role"}
           </button>
         </form>
       </section>
 
-      <section className="roles-grid">
-        {roles.map((row) => (
-          <article className="role-card" key={row.key}>
-            {editingKey === row.key ? (
-              <div className="role-card-edit-fields">
-                <input
-                  value={editForm.label}
-                  onChange={(e) => setEditForm({ ...editForm, label: e.target.value })}
-                  placeholder="Role name"
-                />
-                <input
-                  value={editForm.access}
-                  onChange={(e) => setEditForm({ ...editForm, access: e.target.value })}
-                  placeholder="Visible / primary access"
-                />
+      <DataTable
+        columns={[
+          { 
+            key: "role", 
+            label: "Role", 
+            render: (row) => editingKey === row.key ? (
+              <input 
+                className="custom-input" 
+                style={{ height: "30px", fontSize: "13px", padding: "0 8px", width: "100%", boxSizing: "border-box" }} 
+                value={editForm.label} 
+                onChange={(e) => setEditForm({ ...editForm, label: e.target.value })} 
+              />
+            ) : row.role 
+          },
+          { 
+            key: "access", 
+            label: "Visible / Primary Access", 
+            render: (row) => editingKey === row.key ? (
+              <input 
+                className="custom-input" 
+                style={{ height: "30px", fontSize: "13px", padding: "0 8px", width: "100%", boxSizing: "border-box" }} 
+                value={editForm.access} 
+                onChange={(e) => setEditForm({ ...editForm, access: e.target.value })} 
+              />
+            ) : row.access 
+          },
+          { 
+            key: "type", 
+            label: "Type", 
+            render: (row) => row.isSystem ? (
+              <span className="role-system-tag" style={{ background: "var(--bg-subtle)", color: "var(--text-muted)", padding: "4px 8px", borderRadius: "var(--radius-sm)", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>System</span>
+            ) : (
+              <span className="role-custom-tag" style={{ background: "rgba(14,165,164,0.1)", color: "var(--color-primary)", padding: "4px 8px", borderRadius: "var(--radius-sm)", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>Custom</span>
+            ) 
+          },
+          { 
+            key: "actions", 
+            label: "Actions", 
+            render: (row) => editingKey === row.key ? (
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button type="button" className="module-button" style={{ padding: "0 12px", height: "28px", fontSize: "12px", borderRadius: "var(--radius-sm)" }} onClick={() => saveEdit(row)}>Save</button>
+                <button type="button" className="module-button secondary-button" style={{ padding: "0 12px", height: "28px", fontSize: "12px", borderRadius: "var(--radius-sm)" }} onClick={cancelEdit}>Cancel</button>
               </div>
             ) : (
-              <>
-                <div className="role-card-head">
-                  <h4>{row.role}</h4>
-                  {row.isSystem && <span className="role-system-tag">System</span>}
-                </div>
-                <div>
-                  <p className="role-access-label">Visible / Primary Access</p>
-                  <p className="role-access-text">{row.access}</p>
-                </div>
-              </>
-            )}
-            <div className="role-card-actions">
-              {editingKey === row.key ? (
-                <>
-                  <button type="button" className="module-button" disabled={saving} onClick={() => saveEdit(row)}>
-                    Save
-                  </button>
-                  <button type="button" className="module-button secondary-button" disabled={saving} onClick={cancelEdit}>
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button type="button" className="module-button" disabled={saving} onClick={() => startEdit(row)}>
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="module-button danger"
-                    disabled={saving || row.isSystem}
-                    onClick={() => {
-                      if (row.isSystem) {
-                        showToast({ title: "Not allowed", message: "System roles cannot be deleted.", type: "error" });
-                        return;
-                      }
-                      setDeleteTarget(row);
-                    }}
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button type="button" className="module-button" style={{ padding: "0 12px", height: "28px", fontSize: "12px", borderRadius: "var(--radius-sm)" }} onClick={() => startEdit(row)}>Edit</button>
+                {!row.isSystem && (
+                  <button 
+                    type="button" 
+                    className="module-button danger" 
+                    style={{ padding: "0 12px", height: "28px", fontSize: "12px", background: "#FEF2F2", borderColor: "#FECACA", color: "#DC2626", borderRadius: "var(--radius-sm)" }} 
+                    onClick={() => setDeleteTarget(row)}
                   >
                     Delete
                   </button>
-                </>
-              )}
-            </div>
-          </article>
-        ))}
-      </section>
+                )}
+              </div>
+            ) 
+          }
+        ]}
+        rows={roles}
+      />
 
       <ConfirmDeleteModal
         open={Boolean(deleteTarget)}
@@ -771,7 +825,7 @@ export function Roles() {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={removeRole}
       />
-    </div>
+    </>
   );
 }
 
@@ -842,21 +896,47 @@ export function ScanDemo() {
       <PageTitle
         eyebrow="QR Management"
         title="QR Scanner Console"
-        description={`Auto scan URL: ${currentOrigin}`}
-        action={(
-          <button type="button" className="module-button" disabled={refreshing} onClick={() => refreshForNetwork(false)}>
-            {refreshing ? "Refreshing..." : "Refresh QR Scan Pages"}
-          </button>
-        )}
       />
       {message && <p className="network-note">{message}</p>}
+      
+      {/* Live Scanner KPI Stats Card Section */}
+      <KpiGrid items={[
+        { 
+          label: "Scanner Status", 
+          value: (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#10b981", fontWeight: 600 }}>
+              <span className="pulse-dot"></span>Online
+            </span>
+          ) 
+        },
+        { label: "Linked Assets", value: assetListData.length },
+        { 
+          label: "QR Access URL", 
+          value: (
+            <code style={{ 
+              fontSize: "11px", 
+              padding: "4px 8px", 
+              borderRadius: "4px", 
+              background: "rgba(14, 165, 164, 0.06)", 
+              border: "1px solid rgba(14, 165, 164, 0.15)", 
+              fontFamily: "monospace", 
+              color: "var(--color-primary)", 
+              fontWeight: 600,
+              display: "inline-block",
+              maxWidth: "180px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap"
+            }}>
+              {scannerOrigin.replace("http://", "").replace("https://", "")}
+            </code>
+          )
+        }
+      ]} />
+
       <div className="action-panel qr-scan-panel">
         <div>
-          <h3>Scan URL (Auto)</h3>
-          <p className="qr-scan-help">
-            System ab aapke WiFi ka IP auto detect karke QR banata hai (localhost phone par kaam nahi karta).
-            PC aur phone <strong>same WiFi</strong> par hone chahiye. URL change ho to &quot;Apply To QR Codes&quot; dabayein.
-          </p>
+          <h3>Configure Origin</h3>
         </div>
         <input
           type="text"
@@ -864,6 +944,26 @@ export function ScanDemo() {
           onChange={(event) => setScannerOrigin(event.target.value)}
           placeholder={currentOrigin}
         />
+        <button 
+          type="button" 
+          className="secondary-button" 
+          style={{ height: "32px", margin: 0 }} 
+          onClick={() => {
+            navigator.clipboard.writeText(scannerOrigin);
+            showToast({ title: "Copied!", message: "Scan origin copied to clipboard." });
+          }}
+        >
+          Copy
+        </button>
+        <button 
+          type="button" 
+          className="secondary-button" 
+          disabled={refreshing}
+          style={{ height: "32px", margin: 0 }} 
+          onClick={() => refreshForNetwork(false)}
+        >
+          {refreshing ? "Refreshing..." : "Refresh"}
+        </button>
         <button type="button" className="module-button" disabled={refreshing} onClick={() => refreshForNetwork(false)}>
           Apply To QR Codes
         </button>
@@ -873,7 +973,15 @@ export function ScanDemo() {
           { key: "assetName", label: "Asset", render: (row) => <AssetLink asset={row} /> },
           { key: "assetCode", label: "Code" },
           { key: "serialNumber", label: "Serial" },
-          { key: "qrCode", label: "QR", render: (row) => row.qrCode ? <img src={row.qrCode} alt="QR" style={{ width: 68, height: 68 }} /> : "-" },
+          { 
+            key: "qrCode", 
+            label: "QR Code", 
+            render: (row) => row.qrCode ? (
+              <div className="qr-sticker-badge">
+                <img src={row.qrCode} alt="QR" />
+              </div>
+            ) : "-" 
+          },
         ]}
         rows={assetListData}
       />

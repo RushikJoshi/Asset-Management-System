@@ -4,18 +4,19 @@
 }
 
 .profile-header-section {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .profile-header-section h2 {
-  color: #0f172a;
-  font-size: 28px;
+  color: var(--text-main);
+  font-size: 26px;
   font-weight: 700;
   margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
 }
 
 .profile-subtitle {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 14px;
   margin: 0;
 }
@@ -27,11 +28,12 @@
 }
 
 .profile-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   padding: 32px;
+  transition: all var(--transition-normal);
 }
 
 /* Avatar Banner Styling */
@@ -40,16 +42,16 @@
   align-items: center;
   gap: 24px;
   margin-bottom: 32px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--bg-subtle);
   padding: 24px;
-  border-radius: 10px;
-  border: 1px solid #f1f5f9;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
 }
 
 .profile-large-avatar {
   width: 80px;
   height: 80px;
-  background: #03a4aa;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
   color: #ffffff;
   font-size: 28px;
   font-weight: 700;
@@ -57,32 +59,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(3, 164, 170, 0.2);
+  box-shadow: 0 4px 12px rgba(14, 165, 164, 0.25);
+  flex-shrink: 0;
 }
 
 .profile-avatar-details h3 {
   margin: 0 0 6px 0;
   font-size: 20px;
-  color: #0f172a;
+  color: var(--text-main);
   font-weight: 700;
 }
 
 .profile-role-badge {
   display: inline-block;
-  background: #e0f2fe;
-  color: #0369a1;
+  background: rgba(14, 165, 164, 0.1);
+  color: var(--color-primary);
   font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 50px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
   margin: 0 12px 0 0;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(14, 165, 164, 0.2);
 }
 
 .profile-status-dot {
   font-size: 12.5px;
-  color: #64748b;
+  color: var(--text-muted);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -93,9 +97,9 @@
   display: inline-block;
   width: 8px;
   height: 8px;
-  background: #10b981;
+  background: #10B981;
   border-radius: 50%;
-  box-shadow: 0 0 8px #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
 }
 
 /* Fields Grid Styling */
@@ -113,53 +117,53 @@
 }
 
 .form-group label {
-  color: #334155;
-  font-size: 13.5px;
-  font-weight: 700;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .form-group input {
   padding: 10px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  color: #0f172a;
+  color: var(--text-main);
   outline: none;
-  background: #ffffff;
-  transition: all 0.2s ease;
+  background: var(--bg-surface);
+  transition: all var(--transition-fast);
 }
 
 .form-group input:hover {
-  border-color: #94a3b8;
+  border-color: #94A3B8;
 }
 
 .form-group input:focus {
-  border-color: #03a4aa;
-  box-shadow: 0 0 0 3px rgba(3, 164, 170, 0.15);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.1);
 }
 
 .form-group.readonly-value,
 .readonly-value {
   padding: 10px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  color: #64748b;
-  font-weight: 600;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .profile-divider {
   height: 1px;
-  background: #e2e8f0;
-  margin: 32px 0 24px;
+  background: var(--border-color);
+  margin: 28px 0 20px;
 }
 
-/* Collapsible Security Section */
+/* Security Section */
 .profile-security-accordion {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  margin-bottom: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 28px;
   overflow: hidden;
 }
 
@@ -168,37 +172,37 @@
   display: flex;
   align-items: center;
   padding: 16px 20px;
-  background: #f8fafc;
+  background: var(--bg-subtle);
   border: none;
   cursor: pointer;
   text-align: left;
-  font-size: 14.5px;
-  font-weight: 700;
-  color: #334155;
-  transition: background 0.2s ease;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: background var(--transition-fast);
 }
 
 .accordion-trigger:hover {
-  background: #f1f5f9;
+  background: var(--border-color);
 }
 
 .security-icon {
   margin-right: 12px;
   font-size: 16px;
+  color: var(--color-primary);
 }
 
 .accordion-caret {
   margin-left: auto;
-  font-size: 10px;
-  color: #94a3b8;
-  font-weight: bold;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .accordion-content {
   padding: 24px 20px;
-  border-top: 1px solid #e2e8f0;
-  background: #ffffff;
-  animation: slideDownAccordion 0.25s ease-out;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  animation: slideDownAccordion 0.2s ease-out;
 }
 
 @keyframes slideDownAccordion {
@@ -225,18 +229,23 @@
 }
 
 .save-profile-btn {
-  font-size: 14.5px;
+  font-size: 14px;
   padding: 12px 28px;
-  font-weight: 700;
-  box-shadow: 0 4px 10px rgba(3, 164, 170, 0.25);
-  border-radius: 8px;
+  font-weight: 600;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: #ffffff;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .save-profile-btn:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 6px 15px rgba(3, 164, 170, 0.35);
+  box-shadow: var(--shadow-md);
 }
 
 .save-profile-btn:active {
@@ -250,14 +259,14 @@
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .profile-avatar-banner {
     flex-direction: column;
     text-align: center;
     align-items: center;
     padding: 20px;
   }
-  
+
   .profile-large-avatar {
     width: 70px;
     height: 70px;
