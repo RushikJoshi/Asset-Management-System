@@ -9,6 +9,7 @@ import {
   getReports,
   getScanAsset,
   refreshQrCodes,
+  getQrScanBaseUrl,
   seedWorkflowDemoData,
   updateAsset,
 } from "../controllers/assetController.js";
@@ -28,6 +29,7 @@ router.get("/auth/me", authenticate, currentUser);
 router.put("/auth/profile/update", authenticate, updateProfile);
 
 router.get("/scan/:id", getScanAsset);
+router.get("/qr/scan-base-url", authenticate, getQrScanBaseUrl);
 
 router.get("/assets", authenticate, getAllAssets);
 router.get("/dashboard", authenticate, getDashboard);

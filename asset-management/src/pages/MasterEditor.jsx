@@ -8,6 +8,7 @@ import {
   saveFormConfig,
 } from "../utils/assetFormBuilder";
 import { useToast } from "../components/toast/toastStore";
+import ConfirmDeleteModal from "../components/common/ConfirmDeleteModal";
 import "./MasterEditor.css";
 
 function MasterEditor() {
@@ -24,6 +25,7 @@ function MasterEditor() {
   const [editingSectionTitle, setEditingSectionTitle] = useState("");
   const [editingSectionDescription, setEditingSectionDescription] = useState("");
   const [dragItem, setDragItem] = useState(null);
+  const [sectionDeleteTarget, setSectionDeleteTarget] = useState(null);
   const sections = getFormSections(activeFormType, config);
 
   const switchFormType = (formType) => {
@@ -280,44 +282,66 @@ function MasterEditor() {
   };
 
   const deleteSection = (section) => {
-    if (!isCustomSection(section.key)) return;
-    const confirmed = window.confirm(`Delete "${section.title}" section and all fields inside it?`);
-    if (!confirmed) return;
+    if (isCustomSection(section.key)) {
+      setConfig((current) => {
+        const fieldNames = (current.__customFields || [])
+          .filter((field) => field.sectionKey === section.key)
+          .map((field) => field.name);
+        const nextConfig = { ...current };
+        fieldNames.forEach((name) => {
+          delete nextConfig[name];
+        });
+        const nextFieldSections = Object.fromEntries(
+          Object.entries(current.__fieldSections || {}).filter(([, sectionKey]) => sectionKey !== section.key),
+        );
+        const nextFieldOrder = Object.fromEntries(
+          Object.entries(current.__fieldOrder || {}).filter(([sectionKey]) => sectionKey !== section.key),
+        );
+
+        const savedConfig = {
+          ...nextConfig,
+          __customSections: (current.__customSections || []).filter((item) => item.key !== section.key),
+          __customFields: (current.__customFields || []).filter((field) => field.sectionKey !== section.key),
+          __sectionOrder: (current.__sectionOrder || []).filter((key) => key !== section.key),
+          __fieldSections: nextFieldSections,
+          __fieldOrder: nextFieldOrder,
+          __sectionLabels: Object.fromEntries(
+            Object.entries(current.__sectionLabels || {}).filter(([key]) => key !== section.key),
+          ),
+          __sectionDescriptions: Object.fromEntries(
+            Object.entries(current.__sectionDescriptions || {}).filter(([key]) => key !== section.key),
+          ),
+          __fieldLabels: Object.fromEntries(
+            Object.entries(current.__fieldLabels || {}).filter(([name]) => !fieldNames.includes(name)),
+          ),
+        };
+        saveFormConfig(activeFormType, savedConfig);
+        return savedConfig;
+      });
+      return;
+    }
 
     setConfig((current) => {
-      const fieldNames = (current.__customFields || [])
-        .filter((field) => field.sectionKey === section.key)
-        .map((field) => field.name);
-      const nextConfig = { ...current };
-      fieldNames.forEach((name) => {
-        delete nextConfig[name];
-      });
-      const nextFieldSections = Object.fromEntries(
-        Object.entries(current.__fieldSections || {}).filter(([, sectionKey]) => sectionKey !== section.key),
-      );
-      const nextFieldOrder = Object.fromEntries(
-        Object.entries(current.__fieldOrder || {}).filter(([sectionKey]) => sectionKey !== section.key),
-      );
-
       const savedConfig = {
-        ...nextConfig,
-        __customSections: (current.__customSections || []).filter((item) => item.key !== section.key),
-        __customFields: (current.__customFields || []).filter((field) => field.sectionKey !== section.key),
-        __sectionOrder: (current.__sectionOrder || []).filter((key) => key !== section.key),
-        __fieldSections: nextFieldSections,
-        __fieldOrder: nextFieldOrder,
-        __sectionLabels: Object.fromEntries(
-          Object.entries(current.__sectionLabels || {}).filter(([key]) => key !== section.key),
-        ),
-        __sectionDescriptions: Object.fromEntries(
-          Object.entries(current.__sectionDescriptions || {}).filter(([key]) => key !== section.key),
-        ),
-        __fieldLabels: Object.fromEntries(
-          Object.entries(current.__fieldLabels || {}).filter(([name]) => !fieldNames.includes(name)),
-        ),
+        ...current,
+        __hiddenSections: Array.from(new Set([...(current.__hiddenSections || []), section.key])),
       };
       saveFormConfig(activeFormType, savedConfig);
       return savedConfig;
+    });
+  };
+
+  const confirmDeleteSection = () => {
+    if (!sectionDeleteTarget) return;
+    deleteSection(sectionDeleteTarget);
+    if (selectedSection === sectionDeleteTarget.key) {
+      const remaining = sections.filter((item) => item.key !== sectionDeleteTarget.key);
+      setSelectedSection(remaining[0]?.key || "");
+    }
+    setSectionDeleteTarget(null);
+    showToast({
+      title: "Header deleted",
+      message: `"${sectionDeleteTarget.title}" section removed from the builder.`,
     });
   };
 
@@ -531,11 +555,13 @@ function MasterEditor() {
                     <button type="button" className="field-edit-btn" onClick={() => startSectionEdit(section)}>
                       Edit Header
                     </button>
-                    {isCustomSection(section.key) && (
-                      <button type="button" className="field-delete-btn" onClick={() => deleteSection(section)}>
-                        Delete Header
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="field-delete-btn"
+                      onClick={() => setSectionDeleteTarget(section)}
+                    >
+                      Delete Header
+                    </button>
                   </>
                 )}
                 <button type="button" className="save-master-btn" onClick={() => addFieldToSection(section)}>
@@ -621,6 +647,18 @@ function MasterEditor() {
           </section>
         ))}
       </div>
+
+      <ConfirmDeleteModal
+        open={Boolean(sectionDeleteTarget)}
+        title="DELETE HEADER PERMANENTLY?"
+        message={
+          sectionDeleteTarget
+            ? `If you delete "${sectionDeleteTarget.title}", its header and fields will be removed from this form builder. Do you want to delete it?`
+            : ""
+        }
+        onCancel={() => setSectionDeleteTarget(null)}
+        onConfirm={confirmDeleteSection}
+      />
     </div>
   );
 }

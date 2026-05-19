@@ -19,7 +19,7 @@ export function Login() {
     const newErrors = {};
 
     if (!form.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = "Email or username is required";
     }
     if (!form.password) {
       newErrors.password = "Password is required";
@@ -40,9 +40,9 @@ export function Login() {
   return (
     <AuthShell title="Login" subtitle="Use your GT AMS account to continue.">
       <form className="auth-form" onSubmit={submit} noValidate>
-        <label>Email <span className="required">*</span></label>
+        <label>Email or Username <span className="required">*</span></label>
         <input
-          type="email"
+          type="text"
           value={form.email}
           onChange={(e) => {
             setForm({ ...form, email: e.target.value });
@@ -80,6 +80,7 @@ export function Register() {
   const [roleOptions, setRoleOptions] = useState(ROLE_OPTIONS);
   const [form, setForm] = useState({
     name: "",
+    username: "",
     email: "",
     employeeId: "",
     role: "EMPLOYEE",
@@ -101,6 +102,11 @@ export function Register() {
 
     if (!form.name.trim()) {
       newErrors.name = "Name is required";
+    }
+    if (!form.username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (!/^[a-zA-Z0-9_]{3,30}$/.test(form.username.trim())) {
+      newErrors.username = "Username must be 3-30 characters (letters, numbers, underscore only)";
     }
     if (!form.email.trim()) {
       newErrors.email = "Email is required";
@@ -126,6 +132,7 @@ export function Register() {
     setErrors({});
     const payload = {
       name: form.name,
+      username: form.username.trim(),
       email: form.email,
       employeeId: form.employeeId,
       role: form.role,
@@ -136,7 +143,7 @@ export function Register() {
     if (registerUser.fulfilled.match(result)) {
       navigate("/login", {
         replace: true,
-        state: { message: "Registration completed. Please login with your email and password." },
+        state: { message: "Registration completed. Please login with your email/username and password." },
       });
     }
   };
@@ -154,6 +161,17 @@ export function Register() {
           className={errors.name ? "input-error-border" : ""}
         />
         {errors.name && <span className="field-error">{errors.name}</span>}
+
+        <label>Username <span className="required">*</span></label>
+        <input
+          value={form.username}
+          onChange={(e) => {
+            setForm({ ...form, username: e.target.value });
+            if (errors.username) setErrors({ ...errors, username: "" });
+          }}
+          className={errors.username ? "input-error-border" : ""}
+        />
+        {errors.username && <span className="field-error">{errors.username}</span>}
 
         <label>Email <span className="required">*</span></label>
         <input

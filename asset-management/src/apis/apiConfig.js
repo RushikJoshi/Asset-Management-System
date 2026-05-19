@@ -11,6 +11,9 @@ const getApiBaseUrl = () => {
   const isNetworkHost = hostname && !isLocalHost;
 
   if (isLocalHost) {
+    if (import.meta.env.DEV) {
+      return "/api";
+    }
     return `${protocol}//${hostname}:7000/api`;
   }
 
@@ -22,6 +25,55 @@ const getApiBaseUrl = () => {
 };
 
 export const API_BASE_URL = getApiBaseUrl();
+
+export const getApiOrigin = () => {
+  if (API_BASE_URL.startsWith("/")) {
+    return typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
+  }
+  return API_BASE_URL.replace(/\/api\/?$/, "");
+};
+
+const getLocalNetworkIp = () =>
+  new Promise((resolve) => {
+    if (typeof window === "undefined" || !window.RTCPeerConnection) {
+      resolve(null);
+      return;
+    }
+
+    const peer = new RTCPeerConnection({ iceServers: [] });
+    const done = (ip) => {
+      peer.close();
+      resolve(ip);
+    };
+
+    peer.createDataChannel("ip");
+    peer
+      .createOffer()
+      .then((offer) => peer.setLocalDescription(offer))
+      .catch(() => done(null));
+
+    peer.onicecandidate = (event) => {
+      if (!event?.candidate?.candidate) return;
+      const match = /([0-9]{1,3}(?:\.[0-9]{1,3}){3})/.exec(event.candidate.candidate);
+      if (match?.[1] && !match[1].startsWith("127.")) {
+        done(match[1]);
+      }
+    };
+
+    setTimeout(() => done(null), 1200);
+  });
+
+export const getScanBaseUrl = (override = "") => {
+  const custom = String(override || "").trim().replace(/\/+$/, "");
+  if (!custom) return getQrClientOrigin();
+
+  try {
+    const url = new URL(custom.includes("://") ? custom : `http://${custom}`);
+    return url.origin;
+  } catch {
+    return getQrClientOrigin();
+  }
+};
 
 export const getQrClientOrigin = () => {
   if (typeof window === "undefined") {
@@ -79,7 +131,9 @@ formDataApiInstance.interceptors.request.use(
 
     if (typeof window !== "undefined") {
       config.headers = config.headers || {};
-      config.headers["x-client-origin"] = getQrClientOrigin();
+      if (!config.headers["x-client-origin"]) {
+        config.headers["x-client-origin"] = getQrClientOrigin();
+      }
     }
 
     return config;
@@ -101,7 +155,9 @@ apiInstance.interceptors.request.use(
 
     if (typeof window !== "undefined") {
       config.headers = config.headers || {};
-      config.headers["x-client-origin"] = getQrClientOrigin();
+      if (!config.headers["x-client-origin"]) {
+        config.headers["x-client-origin"] = getQrClientOrigin();
+      }
     }
 
     return config;
@@ -151,5 +207,19 @@ apiInstance.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+export const fetchRecommendedScanBaseUrl = async () => {
+  try {
+    const response = await apiInstance.get("/qr/scan-base-url");
+    return response.data?.scanBaseUrl || getQrClientOrigin();
+  } catch {
+    const { port } = typeof window !== "undefined" ? window.location : { port: "5173" };
+    const lanIp = await getLocalNetworkIp();
+    if (lanIp) {
+      return `http://${lanIp}:${port || "5173"}`;
+    }
+    return getQrClientOrigin();
+  }
+};
 
 export default apiInstance;

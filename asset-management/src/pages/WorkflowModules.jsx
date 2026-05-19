@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -18,7 +18,6 @@ import {
   buildStats,
   currency,
   dateText,
-  exportRowsToCsv,
   getInventoryAssets,
   getRequestRecords,
   groupByCount,
@@ -27,8 +26,11 @@ import {
 } from "../utils/assetUtils";
 import { deleteAsset } from "../store/slices/assetSlice";
 import { useToast } from "../components/toast/toastStore";
-import { getQrClientOrigin } from "../apis/apiConfig";
+import { fetchRecommendedScanBaseUrl, getQrClientOrigin, getScanBaseUrl } from "../apis/apiConfig";
 import { createRole, deleteRole, fetchRoles, updateRole } from "../utils/roleApi";
+import { exportReportCsv, exportReportPdf, exportReportWord } from "../utils/reportExport";
+import ConfirmDeleteModal from "../components/common/ConfirmDeleteModal";
+import "./RolesPage.css";
 
 const assetColumns = [
   { key: "assetName", label: "Asset", render: (row) => <AssetLink asset={row} /> },
@@ -470,33 +472,38 @@ export function Audit() {
 export function Reports() {
   const { assetListData } = useModuleData();
   const { showToast } = useToast();
+  const exportMenuRef = useRef(null);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const repairs = assetListData.flatMap((asset) => asset.repairHistory || []);
-  const exportReport = () => {
-    exportRowsToCsv(
-      "asset-management-report.csv",
-      ["Asset", "Code", "Category", "Status", "Office", "Department", "IP Address", "MAC Address", "Host Name", "OS", "RAM", "Storage", "Repair Cost", "Warranty End"],
-      assetListData.map((asset) => [
-        asset.assetName,
-        asset.assetCode,
-        asset.category,
-        asset.assetStatus,
-        asset.officeName,
-        asset.department,
-        ["laptop", "pc", "desktop", "computer"].includes(String(asset.category || "").toLowerCase()) ? asset.ipAddress : "",
-        ["laptop", "pc", "desktop", "computer"].includes(String(asset.category || "").toLowerCase()) ? asset.macAddress : "",
-        ["laptop", "pc", "desktop", "computer"].includes(String(asset.category || "").toLowerCase()) ? asset.hostName : "",
-        ["laptop", "pc", "desktop", "computer"].includes(String(asset.category || "").toLowerCase()) ? asset.operatingSystem : "",
-        ["laptop", "pc", "desktop", "computer"].includes(String(asset.category || "").toLowerCase()) ? asset.ram : "",
-        ["laptop", "pc", "desktop", "computer"].includes(String(asset.category || "").toLowerCase()) ? asset.storage : "",
-        repairCost(asset),
-        dateText(asset.warrantyEnd),
-      ]),
-    );
-    showToast({
-      title: "Report exported",
-      message: "Asset management report downloaded successfully.",
-      type: "info",
-    });
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setExportMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const handleExport = (format) => {
+    try {
+      if (format === "csv") exportReportCsv(assetListData);
+      if (format === "word") exportReportWord(assetListData);
+      if (format === "pdf") exportReportPdf(assetListData);
+      setExportMenuOpen(false);
+      showToast({
+        title: "Report exported",
+        message: `Asset report downloaded as ${format.toUpperCase()}.`,
+        type: "info",
+      });
+    } catch (error) {
+      showToast({
+        title: "Export failed",
+        message: error?.message || "Unable to export report.",
+        type: "error",
+      });
+    }
   };
 
   return (
@@ -505,7 +512,20 @@ export function Reports() {
         eyebrow="Reports"
         title="Reports & Analytics"
         description="Asset, repair, warranty, and office reports with CSV export."
-        action={<button className="module-button" onClick={exportReport}>Export Report</button>}
+        action={(
+          <div className="export-dropdown-wrap" ref={exportMenuRef}>
+            <button type="button" className="module-button" onClick={() => setExportMenuOpen((open) => !open)}>
+              Export Report
+            </button>
+            {exportMenuOpen && (
+              <div className="export-dropdown-menu">
+                <button type="button" onClick={() => handleExport("pdf")}>Download PDF</button>
+                <button type="button" onClick={() => handleExport("word")}>Download Word</button>
+                <button type="button" onClick={() => handleExport("csv")}>Download CSV</button>
+              </div>
+            )}
+          </div>
+        )}
       />
       <KpiGrid items={[
         { label: "Total Assets", value: assetListData.length },
@@ -527,6 +547,7 @@ export function Roles() {
   const [newRole, setNewRole] = useState({ label: "", access: "" });
   const [editingKey, setEditingKey] = useState("");
   const [editForm, setEditForm] = useState({ label: "", access: "" });
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const loadRoles = async () => {
@@ -612,19 +633,15 @@ export function Roles() {
     }
   };
 
-  const removeRole = async (row) => {
-    if (row.isSystem) {
-      showToast({ title: "Not allowed", message: "System roles cannot be deleted.", type: "error" });
-      return;
-    }
-
-    const confirmed = window.confirm(`Delete role "${row.role}"?`);
-    if (!confirmed) return;
+  const removeRole = async () => {
+    const row = deleteTarget;
+    if (!row) return;
 
     setSaving(true);
     try {
       await deleteRole(row.key);
       if (editingKey === row.key) cancelEdit();
+      setDeleteTarget(null);
       await loadRoles();
       showToast({ title: "Role deleted", message: "Role removed from the list." });
     } catch (error) {
@@ -639,93 +656,122 @@ export function Roles() {
   };
 
   return (
-    <>
-      <PageTitle
-        eyebrow="Role-Based Access"
-        title="Users & Access"
-        description="Role-aware menu visibility and primary workflow access from the project document."
-        action={(
-          <form className="role-add-form" onSubmit={addRole}>
+    <div className="roles-page">
+      <section className="roles-hero">
+        <div>
+          <p className="roles-hero-kicker">Role-Based Access</p>
+          <h2>Users & Access</h2>
+          <p>Manage role visibility, access scope, and registration options from one place.</p>
+        </div>
+        <div className="roles-hero-stats">
+          <span className="roles-stat-pill">{roles.length} Roles</span>
+          <span className="roles-stat-pill">{roles.filter((role) => !role.isSystem).length} Custom</span>
+        </div>
+      </section>
+
+      <section className="roles-add-card">
+        <h3>Add New Role</h3>
+        <form className="roles-add-form" onSubmit={addRole}>
+          <div>
+            <label htmlFor="new-role-name">Role Name</label>
             <input
-              placeholder="New role name"
+              id="new-role-name"
+              placeholder="e.g. HR Manager"
               value={newRole.label}
               onChange={(e) => setNewRole({ ...newRole, label: e.target.value })}
             />
+          </div>
+          <div>
+            <label htmlFor="new-role-access">Visible / Primary Access</label>
             <input
-              placeholder="Visible / primary access"
+              id="new-role-access"
+              placeholder="Dashboard, Assets, Reports"
               value={newRole.access}
               onChange={(e) => setNewRole({ ...newRole, access: e.target.value })}
             />
-            <button type="submit" className="module-button" disabled={saving}>
-              {saving ? "Adding..." : "Add Role"}
-            </button>
-          </form>
-        )}
-      />
-      <DataTable
-        columns={[
-          {
-            key: "role",
-            label: "Role",
-            render: (row) => (
-              editingKey === row.key ? (
+          </div>
+          <button type="submit" className="module-button" disabled={saving}>
+            {saving ? "Adding..." : "Add Role"}
+          </button>
+        </form>
+      </section>
+
+      <section className="roles-grid">
+        {roles.map((row) => (
+          <article className="role-card" key={row.key}>
+            {editingKey === row.key ? (
+              <div className="role-card-edit-fields">
                 <input
-                  className="role-inline-input"
                   value={editForm.label}
                   onChange={(e) => setEditForm({ ...editForm, label: e.target.value })}
+                  placeholder="Role name"
                 />
-              ) : row.role
-            ),
-          },
-          {
-            key: "access",
-            label: "Visible / Primary Access",
-            render: (row) => (
-              editingKey === row.key ? (
                 <input
-                  className="role-inline-input"
                   value={editForm.access}
                   onChange={(e) => setEditForm({ ...editForm, access: e.target.value })}
+                  placeholder="Visible / primary access"
                 />
-              ) : row.access
-            ),
-          },
-          {
-            key: "actions",
-            label: "Actions",
-            render: (row) => (
-              <div className="module-actions">
-                {editingKey === row.key ? (
-                  <>
-                    <button type="button" className="module-button" disabled={saving} onClick={() => saveEdit(row)}>
-                      Save
-                    </button>
-                    <button type="button" className="module-button secondary-button" disabled={saving} onClick={cancelEdit}>
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button type="button" className="module-button" disabled={saving} onClick={() => startEdit(row)}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="module-button danger"
-                      disabled={saving || row.isSystem}
-                      onClick={() => removeRole(row)}
-                    >
-                      Delete
-                    </button>
-                  </>
-                )}
               </div>
-            ),
-          },
-        ]}
-        rows={roles}
+            ) : (
+              <>
+                <div className="role-card-head">
+                  <h4>{row.role}</h4>
+                  {row.isSystem && <span className="role-system-tag">System</span>}
+                </div>
+                <div>
+                  <p className="role-access-label">Visible / Primary Access</p>
+                  <p className="role-access-text">{row.access}</p>
+                </div>
+              </>
+            )}
+            <div className="role-card-actions">
+              {editingKey === row.key ? (
+                <>
+                  <button type="button" className="module-button" disabled={saving} onClick={() => saveEdit(row)}>
+                    Save
+                  </button>
+                  <button type="button" className="module-button secondary-button" disabled={saving} onClick={cancelEdit}>
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button type="button" className="module-button" disabled={saving} onClick={() => startEdit(row)}>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="module-button danger"
+                    disabled={saving || row.isSystem}
+                    onClick={() => {
+                      if (row.isSystem) {
+                        showToast({ title: "Not allowed", message: "System roles cannot be deleted.", type: "error" });
+                        return;
+                      }
+                      setDeleteTarget(row);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <ConfirmDeleteModal
+        open={Boolean(deleteTarget)}
+        title="DELETE ROLE PERMANENTLY?"
+        message={
+          deleteTarget
+            ? `If you delete "${deleteTarget.role}", it will be removed from registration and access lists. Do you want to delete it?`
+            : ""
+        }
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={removeRole}
       />
-    </>
+    </div>
   );
 }
 
@@ -734,50 +780,91 @@ export function ScanDemo() {
   const dispatch = useDispatch();
   const { showToast } = useToast();
   const [message, setMessage] = useState("");
-  const [scannerOrigin, setScannerOrigin] = useState("");
+  const [scannerOrigin, setScannerOrigin] = useState(() => getQrClientOrigin());
+  const [refreshing, setRefreshing] = useState(false);
   const currentOrigin = getQrClientOrigin();
 
-  const refreshForNetwork = async () => {
+  const refreshForNetwork = async (silent = false, preferredUrl = "") => {
+    const scanBaseUrl = getScanBaseUrl(preferredUrl || scannerOrigin);
+    setRefreshing(true);
+
     try {
-      const scannerUrl = scannerOrigin.trim().replace(/\/+$/, "");
-      const result = await dispatch(refreshQrCodes(scannerUrl)).unwrap();
+      const result = await dispatch(refreshQrCodes(scanBaseUrl)).unwrap();
       await dispatch(fetchAssetList());
 
       if (result?.scannerUrl) {
-        setMessage(`QR codes now open ${result.scannerUrl}/api/scan/...`);
+        setMessage(`Phone scan URL: ${result.scannerUrl}/scan/{assetId}?t=token`);
+        setScannerOrigin(result.scannerUrl);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("assetproScanBaseUrl", result.scannerUrl);
+        }
       }
 
-      showToast({
-        title: "QR codes refreshed",
-        message: "QR scanner links now open the backend scan page.",
-      });
+      if (!silent) {
+        showToast({
+          title: "QR codes refreshed",
+          message: "Scanner ab asset details page kholega.",
+        });
+      }
     } catch (error) {
+      const isNetworkError = String(error || "").toLowerCase().includes("network");
       showToast({
         title: "QR refresh failed",
-        message: error || "Unable to refresh QR codes.",
+        message: isNetworkError
+          ? "Backend server band hai. Pehle backend start karein: cd backend && npm start"
+          : error || "Unable to refresh QR codes.",
         type: "error",
       });
+    } finally {
+      setRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    const initQrScan = async () => {
+      try {
+        const recommendedUrl = await fetchRecommendedScanBaseUrl();
+        setScannerOrigin(recommendedUrl);
+        await refreshForNetwork(true, recommendedUrl);
+      } catch {
+        const savedUrl = typeof window !== "undefined"
+          ? localStorage.getItem("assetproScanBaseUrl")
+          : "";
+        await refreshForNetwork(true, savedUrl || getQrClientOrigin());
+      }
+    };
+
+    initQrScan();
+  }, []);
 
   return (
     <>
       <PageTitle
         eyebrow="QR Management"
         title="QR Scanner Console"
-        description={`Current app URL base: ${currentOrigin}`}
-        action={<button className="module-button" onClick={refreshForNetwork}>Refresh QR Scan Pages</button>}
+        description={`Auto scan URL: ${currentOrigin}`}
+        action={(
+          <button type="button" className="module-button" disabled={refreshing} onClick={() => refreshForNetwork(false)}>
+            {refreshing ? "Refreshing..." : "Refresh QR Scan Pages"}
+          </button>
+        )}
       />
       {message && <p className="network-note">{message}</p>}
-      <div className="action-panel">
-        <h3>Public Backend URL</h3>
+      <div className="action-panel qr-scan-panel">
+        <div>
+          <h3>Scan URL (Auto)</h3>
+          <p className="qr-scan-help">
+            System ab aapke WiFi ka IP auto detect karke QR banata hai (localhost phone par kaam nahi karta).
+            PC aur phone <strong>same WiFi</strong> par hone chahiye. URL change ho to &quot;Apply To QR Codes&quot; dabayein.
+          </p>
+        </div>
         <input
-          type="url"
+          type="text"
           value={scannerOrigin}
           onChange={(event) => setScannerOrigin(event.target.value)}
-          placeholder="https://your-public-backend-url"
+          placeholder={currentOrigin}
         />
-        <button className="module-button" onClick={refreshForNetwork}>
+        <button type="button" className="module-button" disabled={refreshing} onClick={() => refreshForNetwork(false)}>
           Apply To QR Codes
         </button>
       </div>

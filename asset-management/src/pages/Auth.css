@@ -1,10 +1,33 @@
 .auth-page {
   align-items: center;
   background: #eef4f7;
+  box-sizing: border-box;
   display: flex;
-  min-height: 100vh;
+  height: 100dvh;
   justify-content: center;
+  overflow: hidden;
+  padding: 16px;
+}
+
+.auth-page:has(.auth-form select) .auth-panel {
   padding: 24px;
+}
+
+.auth-page:has(.auth-form select) .auth-brand p {
+  margin-bottom: 14px;
+}
+
+.auth-page:has(.auth-form select) .auth-form {
+  gap: 8px;
+}
+
+.auth-page:has(.auth-form select) .auth-form input,
+.auth-page:has(.auth-form select) .auth-form select {
+  padding: 9px 12px;
+}
+
+.auth-page:has(.auth-form select) .auth-form button {
+  margin-top: 4px;
 }
 
 .auth-panel {

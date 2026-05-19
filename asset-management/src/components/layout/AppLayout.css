@@ -311,7 +311,50 @@
 }
 
 .sidebar.collapsed {
+  overflow: visible;
   padding: 12px 8px;
+  z-index: 50;
+}
+
+.sidebar.collapsed .side-nav {
+  overflow: visible;
+}
+
+.sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding: 10px;
+  gap: 0;
+  position: relative;
+}
+
+.sidebar.collapsed .nav-link span {
+  background: #0f172a;
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  color: #ffffff;
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  left: calc(100% + 10px);
+  opacity: 0;
+  padding: 8px 12px;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  visibility: hidden;
+  white-space: nowrap;
+  z-index: 300;
+}
+
+.sidebar.collapsed .nav-link:hover span,
+.sidebar.collapsed .nav-link:focus-visible span {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sidebar.collapsed .nav-link.active span {
+  background: #02848a;
 }
 
 .sidebar.collapsed .brand-block {
@@ -326,16 +369,6 @@
 
 .sidebar.collapsed .sidebar-collapse-btn {
   margin-left: 0;
-}
-
-.sidebar.collapsed .nav-link {
-  justify-content: center;
-  padding: 10px;
-  gap: 0;
-}
-
-.sidebar.collapsed .nav-link span {
-  display: none;
 }
 
 /* Sidebar Collapse Button Styling */

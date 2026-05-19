@@ -9,24 +9,56 @@ const normalizeRole = async (role) => {
   return exists ? value : "EMPLOYEE";
 };
 
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,30}$/;
+
+const normalizeUsername = (value) => String(value || "").trim().toLowerCase();
+
+const findUserByEmailOrUsername = (identifier) => {
+  const normalized = String(identifier || "").trim().toLowerCase();
+  if (!normalized) return null;
+
+  if (normalized.includes("@")) {
+    return User.findOne({ email: normalized });
+  }
+
+  return User.findOne({ username: normalized });
+};
+
 export const register = async (req, res) => {
   try {
-    const { name, email, password, employeeId } = req.body;
+    const { name, username, email, password, employeeId } = req.body;
+    const normalizedUsername = normalizeUsername(username);
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "Name, email, and password are required" });
+    if (!name || !normalizedUsername || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, username, email, and password are required",
+      });
     }
 
-    const existingUser = await User.findOne({ email: String(email).toLowerCase() });
+    if (!USERNAME_PATTERN.test(normalizedUsername)) {
+      return res.status(400).json({
+        success: false,
+        message: "Username must be 3-30 characters and contain only letters, numbers, or underscores",
+      });
+    }
 
-    if (existingUser) {
+    const existingEmail = await User.findOne({ email: String(email).toLowerCase() });
+
+    if (existingEmail) {
       return res.status(409).json({ success: false, message: "Email is already registered" });
+    }
+
+    const existingUsername = await User.findOne({ username: normalizedUsername });
+
+    if (existingUsername) {
+      return res.status(409).json({ success: false, message: "Username is already taken" });
     }
 
     const hasUsers = await User.exists({});
     const requestedRole = await normalizeRole(req.body.role);
     const role = hasUsers ? requestedRole : "SUPER_ADMIN";
-    const user = new User({ name, email, employeeId, role });
+    const user = new User({ name, username: normalizedUsername, email, employeeId, role });
     user.setPassword(password);
     await user.save();
 
@@ -48,13 +80,13 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email and password are required" });
+      return res.status(400).json({ success: false, message: "Email/username and password are required" });
     }
 
-    const user = await User.findOne({ email: String(email).toLowerCase() });
+    const user = await findUserByEmailOrUsername(email);
 
     if (!user || !user.verifyPassword(password)) {
-      return res.status(401).json({ success: false, message: "Invalid email or password" });
+      return res.status(401).json({ success: false, message: "Invalid email/username or password" });
     }
 
     if (user.status !== "ACTIVE") {

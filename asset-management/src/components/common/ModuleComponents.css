@@ -254,6 +254,24 @@
   background: #0f172a;
 }
 
+.qr-scan-panel {
+  grid-template-columns: minmax(260px, 1fr) minmax(220px, 320px) auto;
+}
+
+.qr-scan-help {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 6px 0 0;
+  max-width: 720px;
+}
+
+.qr-scan-help code {
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
 .network-note {
   background: #ecfeff;
   border: 1px solid #67e8f9;

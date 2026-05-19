@@ -264,6 +264,9 @@ const buildFormSections = (formType, config = {}) => {
     sections = sections.filter((section) => !ASSET_EXCLUDED_SECTION_KEYS.has(section.key));
   }
 
+  const hiddenSections = new Set(config.__hiddenSections || []);
+  sections = sections.filter((section) => !hiddenSections.has(section.key));
+
   return sections;
 };
 

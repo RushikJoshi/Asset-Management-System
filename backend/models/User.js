@@ -16,6 +16,13 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+    },
     email: {
       type: String,
       required: true,
@@ -81,6 +88,7 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
   return {
     id: this._id,
     name: this.name,
+    username: this.username,
     email: this.email,
     employeeId: this.employeeId,
     role: this.role,

@@ -106,13 +106,22 @@ export const refreshQrCodes = createAsyncThunk(
   "asset/refreshQrCodes",
   async (scannerOrigin, thunkAPI) => {
     try {
-      const headers = scannerOrigin ? { "x-scanner-origin": scannerOrigin } : undefined;
-      const response = await apiInstance.post("/qr/refresh", null, { headers });
+      const headers = scannerOrigin
+        ? { "x-scanner-origin": scannerOrigin, "x-client-origin": scannerOrigin }
+        : undefined;
+      const response = await apiInstance.post(
+        "/qr/refresh",
+        {},
+        { headers, timeout: 120000 },
+      );
 
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to refresh QR codes",
+        error.response?.data?.message
+          || error.response?.data?.error
+          || error.message
+          || "Failed to refresh QR codes",
       );
     }
   },

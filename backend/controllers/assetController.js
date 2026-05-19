@@ -1,6 +1,12 @@
 import Asset from "../models/Asset.js";
 import QRCode from "qrcode";
 import crypto from "crypto";
+import {
+  cleanUrl,
+  getLanIpv4,
+  isValidHttpUrl,
+  resolveScanBaseUrl,
+} from "../utils/networkUrl.js";
 
 const normalizeStatus = (status) => {
   const normalized = String(status || "AVAILABLE").toUpperCase().replace(/\s+/g, "_");
@@ -90,17 +96,9 @@ const appendTimeline = (asset, title, detail) => {
   });
 };
 
-const isLocalHost = (host = "") =>
-  host.includes("localhost") || host.includes("127.0.0.1") || host.includes("::1");
-
-const cleanUrl = (url = "") => String(url).trim().replace(/\/+$/, "");
-
 const getServerUrl = (req) => {
-  const scannerOrigin = cleanUrl(req.get("x-scanner-origin"));
-
-  if (scannerOrigin) {
-    return scannerOrigin;
-  }
+  const scanBaseUrl = resolveScanBaseUrl(req);
+  if (scanBaseUrl) return scanBaseUrl;
 
   const requestHost = req.get("host") || "";
   const protocol = (req.get("x-forwarded-proto") || req.protocol || "http").split(",")[0];
@@ -108,15 +106,27 @@ const getServerUrl = (req) => {
   return cleanUrl(`${protocol}://${requestHost}`);
 };
 
-const getClientUrl = (req) => {
-  const origin = req.get("x-client-origin") || req.get("origin");
-
-  return cleanUrl(origin || "http://localhost:5173");
+const buildQrUrl = (asset, req) => {
+  const scanBaseUrl = resolveScanBaseUrl(req);
+  return `${scanBaseUrl}/scan/${asset._id}?t=${asset.qrToken}`;
 };
 
-const buildQrUrl = (asset, req) => {
-  const serverUrl = getServerUrl(req);
-  return `${serverUrl}/api/scan/${asset._id}?t=${asset.qrToken}`;
+export const getQrScanBaseUrl = async (req, res) => {
+  try {
+    const scanBaseUrl = resolveScanBaseUrl(req);
+
+    res.status(200).json({
+      success: true,
+      scanBaseUrl,
+      lanIp: getLanIpv4(),
+      sampleScanUrl: `${scanBaseUrl}/scan/{assetId}?t={token}`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 const generateQrCode = async (asset, req) => {
@@ -704,7 +714,9 @@ export const getScanAsset = async (req, res) => {
     }
 
     if (wantsHtml) {
-      return res.status(200).send(renderScanAssetPage(asset));
+      const scanBase = resolveScanBaseUrl(req);
+      const token = encodeURIComponent(req.query.t || "");
+      return res.redirect(302, `${scanBase}/scan/${asset._id}?t=${token}`);
     }
 
     res.status(200).json(asset);
@@ -720,28 +732,30 @@ export const refreshQrCodes = async (req, res) => {
   try {
     const assets = await Asset.find();
 
-    await Promise.all(
-      assets.map(async (asset) => {
-        if (!asset.qrToken) {
-          asset.qrToken = crypto.randomBytes(16).toString("hex");
-        }
+    for (const asset of assets) {
+      if (!asset.qrToken) {
+        asset.qrToken = crypto.randomBytes(16).toString("hex");
+      }
 
-        asset.assetStatus = normalizeStatus(asset.assetStatus);
-        asset.qrCode = await generateQrCode(asset, req);
-        await asset.save();
-      }),
-    );
+      asset.assetStatus = normalizeStatus(asset.assetStatus);
+      asset.qrCode = await generateQrCode(asset, req);
+      await asset.save();
+    }
+
+    const scanBaseUrl = resolveScanBaseUrl(req);
 
     res.status(200).json({
       success: true,
-      message: "QR codes refreshed for backend scan page",
-      clientUrl: getClientUrl(req),
-      scannerUrl: getServerUrl(req),
+      message: "QR codes refreshed successfully",
+      clientUrl: scanBaseUrl,
+      scannerUrl: scanBaseUrl,
+      lanIp: getLanIpv4(),
       count: assets.length,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
+      message: error.message,
       error: error.message,
     });
   }
