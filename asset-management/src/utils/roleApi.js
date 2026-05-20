@@ -1,14 +1,23 @@
 import apiInstance from "../apis/apiConfig";
-import { ROLE_OPTIONS } from "./permissions";
+import { DEFAULT_ROLE_CONFIG, ROLE_OPTIONS } from "./permissions";
+
+const fallbackRoles = () =>
+  ROLE_OPTIONS.map((role) => ({
+    key: role.value,
+    label: role.label,
+    access: (DEFAULT_ROLE_CONFIG[role.value]?.sidebarAccess || []).join(", "),
+    sidebarAccess: DEFAULT_ROLE_CONFIG[role.value]?.sidebarAccess || [],
+    permissions: DEFAULT_ROLE_CONFIG[role.value]?.permissions || [],
+  }));
 
 export const fetchRoles = async () => {
   try {
     const response = await apiInstance.get("/roles");
     const roles = response.data?.roles || [];
-    if (!roles.length) return ROLE_OPTIONS.map((role) => ({ key: role.value, label: role.label, access: "" }));
+    if (!roles.length) return fallbackRoles();
     return roles;
   } catch {
-    return ROLE_OPTIONS.map((role) => ({ key: role.value, label: role.label, access: "" }));
+    return fallbackRoles();
   }
 };
 

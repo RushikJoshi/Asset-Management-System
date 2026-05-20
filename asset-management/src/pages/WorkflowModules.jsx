@@ -19,15 +19,14 @@ import {
   currency,
   dateText,
   getInventoryAssets,
-  getRequestRecords,
   groupByCount,
   repairCost,
   warrantyDays,
 } from "../utils/assetUtils";
-import { deleteAsset } from "../store/slices/assetSlice";
 import { useToast } from "../components/toast/toastStore";
 import { fetchRecommendedScanBaseUrl, getQrClientOrigin, getScanBaseUrl } from "../apis/apiConfig";
 import { createRole, deleteRole, fetchRoles, updateRole } from "../utils/roleApi";
+import { formatAccessLabels, MENU_ACCESS_OPTIONS, parseAccessLabels, PERMISSION_OPTIONS } from "../utils/permissions";
 import { exportReportCsv, exportReportPdf, exportReportWord } from "../utils/reportExport";
 import ConfirmDeleteModal from "../components/common/ConfirmDeleteModal";
 import "./RolesPage.css";
@@ -570,9 +569,9 @@ export function Reports() {
 export function Roles() {
   const { showToast } = useToast();
   const [roles, setRoles] = useState([]);
-  const [newRole, setNewRole] = useState({ label: "", access: "" });
+  const [newRole, setNewRole] = useState({ label: "", sidebarAccess: [], permissions: [] });
   const [editingKey, setEditingKey] = useState("");
-  const [editForm, setEditForm] = useState({ label: "", access: "" });
+  const [editForm, setEditForm] = useState({ label: "", sidebarAccess: [], permissions: [] });
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -583,6 +582,8 @@ export function Roles() {
         id: role.key,
         key: role.key,
         role: role.label,
+        sidebarAccess: role.sidebarAccess?.length ? role.sidebarAccess : parseAccessLabels(role.access),
+        permissions: role.permissions || [],
         access: role.access || "-",
         isSystem: Boolean(role.isSystem),
       })),
@@ -590,6 +591,7 @@ export function Roles() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadRoles();
   }, []);
 
@@ -604,9 +606,10 @@ export function Roles() {
     try {
       await createRole({
         label: newRole.label.trim(),
-        access: newRole.access.trim(),
+        sidebarAccess: newRole.sidebarAccess,
+        permissions: newRole.permissions,
       });
-      setNewRole({ label: "", access: "" });
+      setNewRole({ label: "", sidebarAccess: [], permissions: [] });
       await loadRoles();
       showToast({ title: "Role added", message: "New role is available in registration dropdown." });
     } catch (error) {
@@ -624,13 +627,14 @@ export function Roles() {
     setEditingKey(row.key);
     setEditForm({
       label: row.role === "-" ? "" : row.role,
-      access: row.access === "-" ? "" : row.access,
+      sidebarAccess: row.sidebarAccess || [],
+      permissions: row.permissions || [],
     });
   };
 
   const cancelEdit = () => {
     setEditingKey("");
-    setEditForm({ label: "", access: "" });
+    setEditForm({ label: "", sidebarAccess: [], permissions: [] });
   };
 
   const saveEdit = async (row) => {
@@ -643,7 +647,8 @@ export function Roles() {
     try {
       await updateRole(row.key, {
         label: editForm.label.trim(),
-        access: editForm.access.trim(),
+        sidebarAccess: editForm.sidebarAccess,
+        permissions: editForm.permissions,
       });
       cancelEdit();
       await loadRoles();
@@ -679,6 +684,44 @@ export function Roles() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const updateSelection = (currentSelection, value) => {
+    const selected = parseAccessLabels(currentSelection);
+    return selected.includes(value)
+      ? selected.filter((item) => item !== value)
+      : [...selected, value];
+  };
+
+  const renderMultiDropdown = ({ id, value, options, placeholder, onChange, getValue = (option) => option.label, getLabel = (option) => option.label }) => {
+    const selected = parseAccessLabels(value);
+    const selectedLabels = selected.map((item) => options.find((option) => getValue(option) === item))
+      .filter(Boolean)
+      .map((option) => getLabel(option));
+    const summary = selectedLabels.length ? formatAccessLabels(selectedLabels) : placeholder;
+
+    return (
+      <details className="role-access-dropdown">
+        <summary id={id}>
+          <span className="role-dropdown-summary-text">{summary}</span>
+        </summary>
+        <div className="role-access-menu" aria-labelledby={id}>
+          {options.map((option) => {
+            const optionValue = getValue(option);
+            return (
+            <label key={optionValue} className="role-access-option">
+              <input
+                type="checkbox"
+                checked={selected.includes(optionValue)}
+                onChange={() => onChange(updateSelection(value, optionValue))}
+              />
+              <span>{getLabel(option)}</span>
+            </label>
+          );
+          })}
+        </div>
+      </details>
+    );
   };
 
   return (
@@ -857,7 +900,7 @@ export function ScanDemo() {
       if (!silent) {
         showToast({
           title: "QR codes refreshed",
-          message: "Scanner ab asset details page kholega.",
+          message: "The scanner will now open the asset details page.",
         });
       }
     } catch (error) {
@@ -865,7 +908,7 @@ export function ScanDemo() {
       showToast({
         title: "QR refresh failed",
         message: isNetworkError
-          ? "Backend server band hai. Pehle backend start karein: cd backend && npm start"
+          ? "The backend server is not running. Start it with: cd backend && npm start"
           : error || "Unable to refresh QR codes.",
         type: "error",
       });
@@ -889,6 +932,7 @@ export function ScanDemo() {
     };
 
     initQrScan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

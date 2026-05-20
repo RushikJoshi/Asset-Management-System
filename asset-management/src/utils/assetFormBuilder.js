@@ -1,3 +1,5 @@
+import { mergeCategoryCatalog } from "./categoryCatalog";
+
 export const FORM_TYPES = {
   ASSET: "asset",
   REQUEST: "request",
@@ -29,7 +31,8 @@ export const assetFormSections = [
   },
   {
     title: "IP Configuration",
-    description: "Visible only for Laptop, PC, Desktop, or Computer assets.",
+    description:
+      "Visible for categories marked “Network / computer” in Master Editor → Category catalog (e.g. Laptop, PC).",
     fields: [
       { name: "ipAddress", label: "IP Address" },
       { name: "macAddress", label: "MAC Address" },
@@ -41,7 +44,7 @@ export const assetFormSections = [
   },
   {
     title: "Computer Specifications",
-    description: "Hardware and software details for computer-style assets.",
+    description: "Hardware and software details when the category is marked as network / computer in the catalog.",
     fields: [
       { name: "operatingSystem", label: "Operating System" },
       { name: "processor", label: "Processor" },
@@ -274,7 +277,10 @@ export const getAssetFormSections = (config = {}) => buildFormSections(FORM_TYPE
 
 export const getRequestFormSections = (config = {}) => buildFormSections(FORM_TYPES.REQUEST, config);
 
-export const getDefaultAssetFormConfig = () => ({ ...defaultAssetConfig });
+export const getDefaultAssetFormConfig = () => ({
+  ...defaultAssetConfig,
+  __categoryCatalog: mergeCategoryCatalog(null),
+});
 
 export const getDefaultRequestFormConfig = () => ({ ...defaultRequestConfig });
 
@@ -282,7 +288,12 @@ const loadConfigForType = (formType) => {
   const defaultConfig =
     formType === FORM_TYPES.REQUEST ? defaultRequestConfig : defaultAssetConfig;
 
-  if (typeof window === "undefined") return { ...defaultConfig };
+  const withCatalog = (base) => {
+    if (formType !== FORM_TYPES.ASSET) return { ...base };
+    return { ...base, __categoryCatalog: mergeCategoryCatalog(base.__categoryCatalog) };
+  };
+
+  if (typeof window === "undefined") return withCatalog({ ...defaultConfig });
 
   try {
     const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEYS[formType]) || "{}");
@@ -306,9 +317,12 @@ const loadConfigForType = (formType) => {
         ...(saved[field.name] || {}),
       };
     });
+    if (formType === FORM_TYPES.ASSET) {
+      config.__categoryCatalog = mergeCategoryCatalog(saved.__categoryCatalog);
+    }
     return config;
   } catch {
-    return { ...defaultConfig };
+    return withCatalog({ ...defaultConfig });
   }
 };
 

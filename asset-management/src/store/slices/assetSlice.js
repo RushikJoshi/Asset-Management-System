@@ -222,9 +222,11 @@ const assetListSlice = createSlice({
 
       .addCase(updateAsset.fulfilled, (state, action) => {
         state.loading = false;
-        state.singleAssetData = action.payload.asset;
+        const updated = action.payload?.asset ?? action.payload;
+        if (!updated?._id) return;
+        state.singleAssetData = updated;
         state.assetListData = state.assetListData.map((item) =>
-          item._id === action.payload.asset._id ? action.payload.asset : item,
+          String(item._id) === String(updated._id) ? updated : item,
         );
       })
 

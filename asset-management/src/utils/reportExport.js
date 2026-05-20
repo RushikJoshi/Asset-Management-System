@@ -1,9 +1,8 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { loadAssetFormConfig } from "./assetFormBuilder";
+import { isNetworkAssetCategory } from "./categoryCatalog";
 import { dateText, repairCost } from "./assetUtils";
-
-const isComputerAsset = (category) =>
-  ["laptop", "pc", "desktop", "computer"].includes(String(category || "").trim().toLowerCase());
 
 export const REPORT_HEADERS = [
   "Asset",
@@ -22,9 +21,18 @@ export const REPORT_HEADERS = [
   "Warranty End",
 ];
 
-export const buildReportRows = (assetListData = []) =>
-  assetListData.map((asset) => {
-    const computer = isComputerAsset(asset.category);
+export const buildReportRows = (assetListData = []) => {
+  let catalog = null;
+  try {
+    if (typeof window !== "undefined") {
+      catalog = loadAssetFormConfig().__categoryCatalog;
+    }
+  } catch {
+    catalog = null;
+  }
+
+  return assetListData.map((asset) => {
+    const computer = isNetworkAssetCategory(asset.category, catalog);
     return [
       asset.assetName,
       asset.assetCode,
@@ -42,6 +50,7 @@ export const buildReportRows = (assetListData = []) =>
       dateText(asset.warrantyEnd),
     ];
   });
+};
 
 const downloadBlob = (blob, fileName) => {
   const url = URL.createObjectURL(blob);

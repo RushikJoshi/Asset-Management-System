@@ -6,13 +6,13 @@ import {
   fetchSingleAsset,
   updateAsset,
 } from "../store/slices/assetSlice";
+import { loadAssetFormConfig } from "../utils/assetFormBuilder";
+import { isNetworkAssetCategory } from "../utils/categoryCatalog";
 import { useToast } from "./toast/toastStore";
 import "./AssetDetails.css";
 
 const currency = (value) => `Rs. ${Number(value || 0).toLocaleString()}`;
 const dateText = (value) => (value ? new Date(value).toLocaleDateString("en-IN") : "-");
-const isComputerAsset = (category) =>
-  ["laptop", "pc", "desktop", "computer"].includes(String(category || "").trim().toLowerCase());
 
 function AssetDetails() {
   const { id } = useParams();
@@ -37,7 +37,10 @@ function AssetDetails() {
   }, [dispatch, id, isScanPage, searchParams]);
 
   const asset = singleAssetData || {};
-  const showComputerDetails = isComputerAsset(asset.category);
+  const showComputerDetails = isNetworkAssetCategory(
+    asset.category,
+    loadAssetFormConfig().__categoryCatalog,
+  );
 
   const totalRepairCost = useMemo(
     () => asset.repairHistory?.reduce((sum, item) => sum + Number(item.repairCost || 0), 0) || 0,

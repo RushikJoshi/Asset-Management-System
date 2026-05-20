@@ -5,6 +5,7 @@ export const USER_ROLES = [
   "SUPER_ADMIN",
   "ADMIN",
   "IT_STAFF",
+  "MANAGER",
   "AUDITOR",
   "EMPLOYEE",
 ];
@@ -41,6 +42,10 @@ const userSchema = new mongoose.Schema(
     phoneNumber: {
       type: String,
       trim: true,
+    },
+    profilePhoto: {
+      type: String,
+      default: "",
     },
     role: {
       type: String,
@@ -95,6 +100,7 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
     status: this.status,
     department: this.department,
     phoneNumber: this.phoneNumber,
+    profilePhoto: this.profilePhoto,
   };
 };
 

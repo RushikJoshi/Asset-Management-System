@@ -1,0 +1,61 @@
+.approval-badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  text-transform: capitalize;
+}
+
+.approval-badge--pending {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #c2410c;
+}
+
+.approval-badge--approved {
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  color: #047857;
+}
+
+.approval-badge--rejected {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+}
+
+.request-row-actions {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.request-action-approved {
+  color: #047857;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.request-action-wait {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.request-action-done {
+  color: #03a4aa;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.request-action-rejected {
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.module-actions .module-button:disabled,
+.module-actions .module-button.danger:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}

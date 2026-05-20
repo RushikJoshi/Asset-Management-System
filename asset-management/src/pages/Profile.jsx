@@ -18,6 +18,7 @@ function Profile() {
     employeeId: user?.employeeId || "",
     department: user?.department || "",
     phoneNumber: user?.phoneNumber || "",
+    profilePhoto: user?.profilePhoto || "",
     newPassword: "",
     confirmPassword: "",
   });
@@ -28,6 +29,34 @@ function Profile() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast({ title: "Invalid Photo", message: "Please select an image file.", type: "error" });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 1500 * 1024) {
+      showToast({ title: "Photo Too Large", message: "Please select an image below 1.5 MB.", type: "error" });
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({ ...prev, profilePhoto: String(reader.result || "") }));
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const removePhoto = () => {
+    setFormData((prev) => ({ ...prev, profilePhoto: "" }));
   };
 
   const handleSave = async (e) => {
@@ -57,6 +86,7 @@ function Profile() {
         employeeId: formData.employeeId,
         department: formData.department,
         phoneNumber: formData.phoneNumber,
+        profilePhoto: formData.profilePhoto,
       };
 
       if (showPasswordSection && formData.newPassword) {

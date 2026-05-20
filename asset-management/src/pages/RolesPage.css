@@ -73,7 +73,7 @@
   align-items: end;
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .roles-add-form label {
@@ -98,6 +98,98 @@
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.1);
+}
+
+.role-access-dropdown {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.role-access-dropdown summary {
+  align-items: center;
+  background: #ffffff;
+  cursor: pointer;
+  display: flex;
+  font-size: 14px;
+  justify-content: space-between;
+  line-height: 1.35;
+  list-style: none;
+  min-height: 44px;
+  padding-right: 14px;
+  width: 100%;
+}
+
+.role-dropdown-summary-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+}
+
+.role-access-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.role-access-dropdown summary::after {
+  color: #64748b;
+  content: "v";
+  flex: 0 0 auto;
+  font-size: 11px;
+  margin-left: 12px;
+}
+
+.role-access-menu {
+  background: #ffffff;
+  border: 1px solid #dbe4ee;
+  border-radius: 10px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.16);
+  display: grid;
+  gap: 3px;
+  left: 0;
+  max-height: 238px;
+  overflow: auto;
+  padding: 8px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 80;
+}
+
+.role-access-menu .role-access-option {
+  align-items: center;
+  background: transparent;
+  border-radius: 8px;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 10px;
+  justify-content: flex-start;
+  line-height: 1.25;
+  margin: 0;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.role-access-menu .role-access-option:hover {
+  background: #ecfeff;
+}
+
+.role-access-menu .role-access-option input {
+  accent-color: #0ea5a8;
+  flex: 0 0 auto;
+  height: 16px;
+  margin: 0;
+  width: 16px;
+}
+
+.role-access-menu .role-access-option span {
+  flex: 1;
+  min-width: 0;
 }
 
 .roles-add-form button {
@@ -172,6 +264,10 @@
   margin: 0;
 }
 
+.role-permission-label {
+  margin-top: 10px;
+}
+
 .role-card-actions {
   display: flex;
   flex-wrap: wrap;
@@ -187,6 +283,7 @@
 .role-card-edit-fields {
   display: grid;
   gap: 10px;
+  min-width: 0;
 }
 
 .role-card-edit-fields input {
