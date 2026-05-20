@@ -109,7 +109,7 @@ export const currentUser = (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, email, employeeId, department, phoneNumber, newPassword } = req.body;
+    const { name, email, employeeId, department, phoneNumber, newPassword, profilePhoto } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -128,6 +128,16 @@ export const updateProfile = async (req, res) => {
     if (employeeId !== undefined) user.employeeId = employeeId;
     if (department !== undefined) user.department = department;
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+    if (profilePhoto !== undefined) {
+      const photo = String(profilePhoto || "");
+      if (photo && !photo.startsWith("data:image/")) {
+        return res.status(400).json({ success: false, message: "Profile photo must be an image" });
+      }
+      if (photo.length > 2_000_000) {
+        return res.status(400).json({ success: false, message: "Profile photo is too large" });
+      }
+      user.profilePhoto = photo;
+    }
 
     if (newPassword) {
       user.setPassword(newPassword);

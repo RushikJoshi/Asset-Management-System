@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 import AppLayout from "../components/layout/AppLayout";
@@ -10,6 +11,9 @@ import { Login, Register } from "../pages/Auth";
 import Dashboard from "../pages/Dashboard";
 import Profile from "../pages/Profile";
 import MasterEditor from "../pages/MasterEditor";
+import AssetFormMaster from "../pages/masters/AssetFormMaster";
+import RequestFormMaster from "../pages/masters/RequestFormMaster";
+import CategoryMaster from "../pages/masters/CategoryMaster";
 import {
   Assignments,
   Audit,
@@ -18,12 +22,13 @@ import {
   Maintenance,
   Offices,
   Reports,
-  Requests,
   Roles,
   ScanDemo,
   Warranty,
 } from "../pages/WorkflowModules";
+import { Requests } from "../pages/RequestsPage";
 import { canAccessRoute, getRoleHome } from "../utils/permissions";
+import { fetchRoles } from "../utils/roleApi";
 
 function AppRouter() {
   return (
@@ -45,6 +50,9 @@ function AppRouter() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/roles" element={<Roles />} />
           <Route path="/master-editor" element={<MasterEditor />} />
+          <Route path="/masters/asset-form" element={<AssetFormMaster />} />
+          <Route path="/masters/request-form" element={<RequestFormMaster />} />
+          <Route path="/masters/categories" element={<CategoryMaster />} />
           <Route path="/scan-demo" element={<ScanDemo />} />
           <Route path="/add-asset" element={<AddAsset />} />
           <Route path="/edit-asset/:id" element={<AddAsset />} />
@@ -62,13 +70,34 @@ function AppRouter() {
 function RequireAuth({ children }) {
   const location = useLocation();
   const { user, token } = useSelector((state) => state.auth);
+  const [roles, setRoles] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    if (!token) return undefined;
+
+    fetchRoles()
+      .then((data) => {
+        if (active) setRoles(data);
+      })
+      .catch(() => {
+        if (active) setRoles([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   if (!user || !token) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!canAccessRoute(user.role, location.pathname)) {
-    return <Navigate to={getRoleHome(user.role)} replace />;
+  const role = roles.find((item) => item.key === user.role);
+  const roleAccess = role?.sidebarAccess?.length ? role.sidebarAccess : role?.access || "";
+
+  if (!canAccessRoute(user.role, location.pathname, roleAccess)) {
+    return <Navigate to={getRoleHome(user.role, roleAccess)} replace />;
   }
 
   return children;

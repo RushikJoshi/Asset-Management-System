@@ -25,6 +25,8 @@ const computerCategories = ["laptop", "pc", "desktop", "computer"];
 const isComputerCategory = (category) =>
   computerCategories.includes(String(category || "").trim().toLowerCase());
 
+const generateReqId = () => `REQ-${Date.now()}`;
+
 const selectOptions = {
   requestType: ["Procurement", "Maintenance", "Transfer", "Return"],
   requestPriority: ["Low", "Medium", "High", "Urgent"],
@@ -178,7 +180,7 @@ function AddAsset() {
 
     if (isRequestMode) {
       payload.recordType = "REQUEST";
-      payload.requestId = data.requestId?.trim() || `REQ-${Date.now()}`;
+      payload.requestId = data.requestId?.trim() || generateReqId();
       payload.requestStatus = data.requestStatus || "Pending";
       payload.managerApproval = data.managerApproval || "Pending";
       payload.adminApproval = data.adminApproval || "Pending";
@@ -244,6 +246,43 @@ function AddAsset() {
     }
   };
 
+  const placeholders = {
+    ipAddress: "e.g., 192.168.1.10",
+    macAddress: "e.g., 00:1B:44:11:3A:B7",
+    serialNumber: "e.g., SN-88392019A",
+    assetCode: "e.g., AST-2026-0089",
+    brand: "e.g., Apple, Dell, HP",
+    model: "e.g., MacBook Pro, Latitude 5420",
+    ram: "e.g., 16 GB",
+    storage: "e.g., 512 GB SSD",
+    processor: "e.g., Apple M3 / Intel Core i7",
+    operatingSystem: "e.g., macOS Sequoia, Windows 11",
+    officePhone: "e.g., 9876543210",
+    employeeEmail: "e.g., username@company.com",
+    price: "e.g., 85000",
+    warrantyPeriod: "e.g., 36",
+    maintenancePeriod: "e.g., 12",
+    officeName: "e.g., Corporate Headquarters",
+    branchCode: "e.g., BR-DEL-01",
+    floor: "e.g., 4th Floor",
+    room: "e.g., Room 402",
+    department: "e.g., Engineering, HR, Finance",
+    city: "e.g., New Delhi",
+    state: "e.g., Delhi",
+    employeeId: "e.g., EMP-1049",
+    assignedTo: "e.g., John Doe",
+  };
+
+  const checkMandatory = (name) => {
+    if (["serialNumber", "assetCode", "officeName", "department"].includes(name)) {
+      return true;
+    }
+    if (["ipAddress", "macAddress"].includes(name) && showComputerFields) {
+      return true;
+    }
+    return isFieldRequired(name);
+  };
+
   const renderTextField = (inputLabel, inputname, extraProps = {}) =>
     isFieldVisible(inputname) ? (
       <FormUsersInputText
@@ -251,7 +290,8 @@ function AddAsset() {
         inputname={inputname}
         register={register}
         errors={errors}
-        mandatory={isFieldRequired(inputname)}
+        mandatory={checkMandatory(inputname)}
+        inputPlaceholder={placeholders[inputname]}
         {...extraProps}
       />
     ) : null;
@@ -261,7 +301,7 @@ function AddAsset() {
       <div className="input-wrapper">
         <label className="input-label">
           {fieldLabelMap[inputname] || inputLabel}
-          {isFieldRequired(inputname) && <span className="required">*</span>}
+          {checkMandatory(inputname) && <span className="required">*</span>}
         </label>
         <input type="date" {...register(inputname)} className="custom-input" />
         {errors[inputname] && <span className="field-error">{errors[inputname].message}</span>}
@@ -273,7 +313,7 @@ function AddAsset() {
       <div className="input-wrapper" key={field.name}>
         <label className="input-label">
           {fieldLabelMap[field.name] || field.label}
-          {isFieldRequired(field.name) && <span className="required">*</span>}
+          {checkMandatory(field.name) && <span className="required">*</span>}
         </label>
         <select {...register(field.name)} className="custom-input">
           {options.map((option) => (

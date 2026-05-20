@@ -17,6 +17,7 @@ function Profile() {
     employeeId: user?.employeeId || "",
     department: user?.department || "",
     phoneNumber: user?.phoneNumber || "",
+    profilePhoto: user?.profilePhoto || "",
     newPassword: "",
     confirmPassword: "",
   });
@@ -27,6 +28,34 @@ function Profile() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast({ title: "Invalid Photo", message: "Please select an image file.", type: "error" });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 1500 * 1024) {
+      showToast({ title: "Photo Too Large", message: "Please select an image below 1.5 MB.", type: "error" });
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({ ...prev, profilePhoto: String(reader.result || "") }));
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const removePhoto = () => {
+    setFormData((prev) => ({ ...prev, profilePhoto: "" }));
   };
 
   const handleSave = async (e) => {
@@ -56,6 +85,7 @@ function Profile() {
         employeeId: formData.employeeId,
         department: formData.department,
         phoneNumber: formData.phoneNumber,
+        profilePhoto: formData.profilePhoto,
       };
 
       if (showPasswordSection && formData.newPassword) {
@@ -106,12 +136,32 @@ function Profile() {
         <form onSubmit={handleSave} className="profile-card main-info-card">
           <div className="profile-avatar-banner">
             <div className="profile-large-avatar">
-              {getInitials(user?.name)}
+              {formData.profilePhoto ? (
+                <img src={formData.profilePhoto} alt="Profile" />
+              ) : (
+                getInitials(formData.name || user?.name)
+              )}
             </div>
             <div className="profile-avatar-details">
-              <h3>{user?.name || "User Name"}</h3>
+              <h3>{formData.name || user?.name || "User Name"}</h3>
               <p className="profile-role-badge">{ROLE_LABELS[user?.role] || user?.role}</p>
               <span className="profile-status-dot active">Active Account</span>
+              <div className="profile-photo-actions">
+                <label className="profile-photo-button" htmlFor="profilePhoto">
+                  Add Photo
+                  <input
+                    id="profilePhoto"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                  />
+                </label>
+                {formData.profilePhoto && (
+                  <button type="button" className="profile-photo-remove" onClick={removePhoto}>
+                    Remove
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

@@ -19,15 +19,14 @@ import {
   currency,
   dateText,
   getInventoryAssets,
-  getRequestRecords,
   groupByCount,
   repairCost,
   warrantyDays,
 } from "../utils/assetUtils";
-import { deleteAsset } from "../store/slices/assetSlice";
 import { useToast } from "../components/toast/toastStore";
 import { fetchRecommendedScanBaseUrl, getQrClientOrigin, getScanBaseUrl } from "../apis/apiConfig";
 import { createRole, deleteRole, fetchRoles, updateRole } from "../utils/roleApi";
+import { formatAccessLabels, MENU_ACCESS_OPTIONS, parseAccessLabels, PERMISSION_OPTIONS } from "../utils/permissions";
 import { exportReportCsv, exportReportPdf, exportReportWord } from "../utils/reportExport";
 import ConfirmDeleteModal from "../components/common/ConfirmDeleteModal";
 import "./RolesPage.css";
@@ -82,85 +81,6 @@ function useDemoLoader() {
       });
     }
   };
-}
-
-export function Requests() {
-  const { assetListData } = useModuleData();
-  const dispatch = useDispatch();
-  const { showToast } = useToast();
-  const navigate = useNavigate();
-  const requests = getRequestRecords(assetListData);
-
-  const removeRequest = async (id) => {
-    const confirmed = window.confirm("Delete this request?");
-    if (!confirmed) return;
-    try {
-      await dispatch(deleteAsset(id)).unwrap();
-      showToast({ title: "Request deleted", message: "The request was removed successfully." });
-    } catch (error) {
-      showToast({
-        title: "Delete failed",
-        message: error || "Unable to delete this request.",
-        type: "error",
-      });
-    }
-  };
-
-  const approve = async (asset, field) => {
-    try {
-      await dispatch(updateAsset({ id: asset._id, payload: { [field]: "Approved", requestStatus: "Approved" } })).unwrap();
-      showToast({
-        title: "Request approved",
-        message: `${asset.assetName || "Asset request"} approved successfully.`,
-      });
-    } catch (error) {
-      showToast({
-        title: "Approval failed",
-        message: error || "Unable to approve this request.",
-        type: "error",
-      });
-    }
-  };
-
-  return (
-    <>
-      <PageTitle
-        eyebrow="Asset Request"
-        title="Request & Approval Workflow"
-        description="Employee request, manager approval, IT/admin approval, and purchase handoff."
-        action={<button className="module-button" onClick={() => navigate("/add-request")}>Add Request</button>}
-      />
-      <KpiGrid items={[
-        { label: "Requests", value: requests.length },
-        { label: "Pending", value: requests.filter((item) => item.requestStatus !== "Approved").length },
-        { label: "Approved", value: requests.filter((item) => item.requestStatus === "Approved").length },
-      ]} />
-      <DataTable
-        columns={[
-          { key: "requestId", label: "Request ID" },
-          { key: "requestType", label: "Type" },
-          { key: "requestedBy", label: "Requested By" },
-          { key: "department", label: "Department" },
-          { key: "category", label: "Asset Type" },
-          { key: "requestPriority", label: "Priority" },
-          { key: "managerApproval", label: "Manager" },
-          { key: "adminApproval", label: "IT/Admin" },
-          {
-            key: "action",
-            label: "Action",
-            render: (row) => (
-              <div className="module-actions">
-                <button className="module-button" onClick={() => navigate(`/edit-request/${row._id}`)}>Edit</button>
-                <button className="module-button" onClick={() => approve(row, "adminApproval")}>Approve</button>
-                <button className="module-button danger" onClick={() => removeRequest(row._id)}>Delete</button>
-              </div>
-            ),
-          },
-        ]}
-        rows={requests}
-      />
-    </>
-  );
 }
 
 export function Inventory() {
@@ -544,9 +464,9 @@ export function Reports() {
 export function Roles() {
   const { showToast } = useToast();
   const [roles, setRoles] = useState([]);
-  const [newRole, setNewRole] = useState({ label: "", access: "" });
+  const [newRole, setNewRole] = useState({ label: "", sidebarAccess: [], permissions: [] });
   const [editingKey, setEditingKey] = useState("");
-  const [editForm, setEditForm] = useState({ label: "", access: "" });
+  const [editForm, setEditForm] = useState({ label: "", sidebarAccess: [], permissions: [] });
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -557,6 +477,8 @@ export function Roles() {
         id: role.key,
         key: role.key,
         role: role.label,
+        sidebarAccess: role.sidebarAccess?.length ? role.sidebarAccess : parseAccessLabels(role.access),
+        permissions: role.permissions || [],
         access: role.access || "-",
         isSystem: Boolean(role.isSystem),
       })),
@@ -564,6 +486,7 @@ export function Roles() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadRoles();
   }, []);
 
@@ -578,9 +501,10 @@ export function Roles() {
     try {
       await createRole({
         label: newRole.label.trim(),
-        access: newRole.access.trim(),
+        sidebarAccess: newRole.sidebarAccess,
+        permissions: newRole.permissions,
       });
-      setNewRole({ label: "", access: "" });
+      setNewRole({ label: "", sidebarAccess: [], permissions: [] });
       await loadRoles();
       showToast({ title: "Role added", message: "New role is available in registration dropdown." });
     } catch (error) {
@@ -598,13 +522,14 @@ export function Roles() {
     setEditingKey(row.key);
     setEditForm({
       label: row.role === "-" ? "" : row.role,
-      access: row.access === "-" ? "" : row.access,
+      sidebarAccess: row.sidebarAccess || [],
+      permissions: row.permissions || [],
     });
   };
 
   const cancelEdit = () => {
     setEditingKey("");
-    setEditForm({ label: "", access: "" });
+    setEditForm({ label: "", sidebarAccess: [], permissions: [] });
   };
 
   const saveEdit = async (row) => {
@@ -617,7 +542,8 @@ export function Roles() {
     try {
       await updateRole(row.key, {
         label: editForm.label.trim(),
-        access: editForm.access.trim(),
+        sidebarAccess: editForm.sidebarAccess,
+        permissions: editForm.permissions,
       });
       cancelEdit();
       await loadRoles();
@@ -655,6 +581,44 @@ export function Roles() {
     }
   };
 
+  const updateSelection = (currentSelection, value) => {
+    const selected = parseAccessLabels(currentSelection);
+    return selected.includes(value)
+      ? selected.filter((item) => item !== value)
+      : [...selected, value];
+  };
+
+  const renderMultiDropdown = ({ id, value, options, placeholder, onChange, getValue = (option) => option.label, getLabel = (option) => option.label }) => {
+    const selected = parseAccessLabels(value);
+    const selectedLabels = selected.map((item) => options.find((option) => getValue(option) === item))
+      .filter(Boolean)
+      .map((option) => getLabel(option));
+    const summary = selectedLabels.length ? formatAccessLabels(selectedLabels) : placeholder;
+
+    return (
+      <details className="role-access-dropdown">
+        <summary id={id}>
+          <span className="role-dropdown-summary-text">{summary}</span>
+        </summary>
+        <div className="role-access-menu" aria-labelledby={id}>
+          {options.map((option) => {
+            const optionValue = getValue(option);
+            return (
+            <label key={optionValue} className="role-access-option">
+              <input
+                type="checkbox"
+                checked={selected.includes(optionValue)}
+                onChange={() => onChange(updateSelection(value, optionValue))}
+              />
+              <span>{getLabel(option)}</span>
+            </label>
+          );
+          })}
+        </div>
+      </details>
+    );
+  };
+
   return (
     <div className="roles-page">
       <section className="roles-hero">
@@ -683,12 +647,25 @@ export function Roles() {
           </div>
           <div>
             <label htmlFor="new-role-access">Visible / Primary Access</label>
-            <input
-              id="new-role-access"
-              placeholder="Dashboard, Assets, Reports"
-              value={newRole.access}
-              onChange={(e) => setNewRole({ ...newRole, access: e.target.value })}
-            />
+            {renderMultiDropdown({
+              id: "new-role-access",
+              value: newRole.sidebarAccess,
+              options: MENU_ACCESS_OPTIONS,
+              placeholder: "Select sidebar menus",
+              onChange: (sidebarAccess) => setNewRole({ ...newRole, sidebarAccess }),
+            })}
+          </div>
+          <div>
+            <label htmlFor="new-role-permissions">Permissions</label>
+            {renderMultiDropdown({
+              id: "new-role-permissions",
+              value: newRole.permissions,
+              options: PERMISSION_OPTIONS,
+              placeholder: "Select permissions",
+              getValue: (option) => option.value,
+              getLabel: (option) => option.label,
+              onChange: (permissions) => setNewRole({ ...newRole, permissions }),
+            })}
           </div>
           <button type="submit" className="module-button" disabled={saving}>
             {saving ? "Adding..." : "Add Role"}
@@ -706,11 +683,22 @@ export function Roles() {
                   onChange={(e) => setEditForm({ ...editForm, label: e.target.value })}
                   placeholder="Role name"
                 />
-                <input
-                  value={editForm.access}
-                  onChange={(e) => setEditForm({ ...editForm, access: e.target.value })}
-                  placeholder="Visible / primary access"
-                />
+                {renderMultiDropdown({
+                  id: `edit-role-access-${row.key}`,
+                  value: editForm.sidebarAccess,
+                  options: MENU_ACCESS_OPTIONS,
+                  placeholder: "Select sidebar menus",
+                  onChange: (sidebarAccess) => setEditForm({ ...editForm, sidebarAccess }),
+                })}
+                {renderMultiDropdown({
+                  id: `edit-role-permissions-${row.key}`,
+                  value: editForm.permissions,
+                  options: PERMISSION_OPTIONS,
+                  placeholder: "Select permissions",
+                  getValue: (option) => option.value,
+                  getLabel: (option) => option.label,
+                  onChange: (permissions) => setEditForm({ ...editForm, permissions }),
+                })}
               </div>
             ) : (
               <>
@@ -720,7 +708,9 @@ export function Roles() {
                 </div>
                 <div>
                   <p className="role-access-label">Visible / Primary Access</p>
-                  <p className="role-access-text">{row.access}</p>
+                  <p className="role-access-text">{formatAccessLabels(row.sidebarAccess) || "-"}</p>
+                  <p className="role-access-label role-permission-label">Permissions</p>
+                  <p className="role-access-text">{row.permissions?.length || 0} permissions enabled</p>
                 </div>
               </>
             )}
@@ -803,7 +793,7 @@ export function ScanDemo() {
       if (!silent) {
         showToast({
           title: "QR codes refreshed",
-          message: "Scanner ab asset details page kholega.",
+          message: "The scanner will now open the asset details page.",
         });
       }
     } catch (error) {
@@ -811,7 +801,7 @@ export function ScanDemo() {
       showToast({
         title: "QR refresh failed",
         message: isNetworkError
-          ? "Backend server band hai. Pehle backend start karein: cd backend && npm start"
+          ? "The backend server is not running. Start it with: cd backend && npm start"
           : error || "Unable to refresh QR codes.",
         type: "error",
       });
@@ -835,6 +825,7 @@ export function ScanDemo() {
     };
 
     initQrScan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -854,8 +845,8 @@ export function ScanDemo() {
         <div>
           <h3>Scan URL (Auto)</h3>
           <p className="qr-scan-help">
-            System ab aapke WiFi ka IP auto detect karke QR banata hai (localhost phone par kaam nahi karta).
-            PC aur phone <strong>same WiFi</strong> par hone chahiye. URL change ho to &quot;Apply To QR Codes&quot; dabayein.
+            The system auto-detects your Wi-Fi IP to build QR codes (localhost does not work from a phone).
+            Your PC and phone must be on the <strong>same Wi-Fi</strong>. After changing the URL, click &quot;Apply To QR Codes&quot;.
           </p>
         </div>
         <input

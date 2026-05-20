@@ -1,8 +1,9 @@
 import * as yup from "yup";
 import { getAssetFormSections } from "../utils/assetFormBuilder";
+import { isNetworkAssetCategory } from "../utils/categoryCatalog";
 
-const isComputerAsset = (category) =>
-  ["laptop", "pc", "desktop", "computer"].includes(String(category || "").trim().toLowerCase());
+const isComputerAsset = (category, formConfig) =>
+  isNetworkAssetCategory(category, formConfig?.__categoryCatalog);
 
 const isVisible = (config, name) => config[name]?.visible !== false;
 const isRequired = (config, name) => config[name]?.required === true;
@@ -46,9 +47,9 @@ export const createAssetSchema = (formConfig = {}) => {
     otherwise: (schema) => schema.notRequired(),
   }),
 
-  serialNumber: stringField("serialNumber", "Serial Number"),
+  serialNumber: yup.string().required("Serial Number is required for tracking"),
 
-  assetCode: stringField("assetCode", "Asset Code"),
+  assetCode: yup.string().required("Asset Code is required for tracking"),
 
   purchaseDate: stringField("purchaseDate", "Purchase Date"),
 
@@ -63,26 +64,20 @@ export const createAssetSchema = (formConfig = {}) => {
   model: stringField("model", "Model"),
 
   ipAddress: yup.string().when("category", {
-    is: isComputerAsset,
+    is: (cat) => isComputerAsset(cat, formConfig),
     then: (schema) =>
-      applyRequiredWhenConfigured(
-        schema.matches(/^$|^((25[0-5]|2[0-4]\d|1?\d?\d)(\.|$)){4}$/, "Enter a valid IP address"),
-        formConfig,
-        "ipAddress",
-        labelFor("ipAddress", "IP Address"),
-      ),
+      schema
+        .required("IP Address is required for network assets")
+        .matches(/^((25[0-5]|2[0-4]\d|1?\d?\d)(\.|$)){4}$/, "Enter a valid IP address"),
     otherwise: (schema) => schema.notRequired(),
   }),
 
   macAddress: yup.string().when("category", {
-    is: isComputerAsset,
+    is: (cat) => isComputerAsset(cat, formConfig),
     then: (schema) =>
-      applyRequiredWhenConfigured(
-        schema.matches(/^$|^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/, "Enter a valid MAC address"),
-        formConfig,
-        "macAddress",
-        labelFor("macAddress", "MAC Address"),
-      ),
+      schema
+        .required("MAC Address is required for network assets")
+        .matches(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/, "Enter a valid MAC address"),
     otherwise: (schema) => schema.notRequired(),
   }),
 
@@ -111,13 +106,13 @@ export const createAssetSchema = (formConfig = {}) => {
 
   warrantyEnd: stringField("warrantyEnd", "Warranty End"),
 
-  officeName: stringField("officeName", "Office Name"),
+  officeName: yup.string().required("Office Name is required for tracking"),
 
   branchCode: stringField("branchCode", "Branch Code"),
 
   floor: stringField("floor", "Floor"),
 
-  department: stringField("department", "Department"),
+  department: yup.string().required("Department is required for tracking"),
 
   room: stringField("room", "Room/Cabin"),
 

@@ -58,6 +58,14 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(3, 164, 170, 0.2);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.profile-large-avatar img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
 }
 
 .profile-avatar-details h3 {
@@ -96,6 +104,49 @@
   background: #10b981;
   border-radius: 50%;
   box-shadow: 0 0 8px #10b981;
+}
+
+.profile-photo-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.profile-photo-button,
+.profile-photo-remove {
+  align-items: center;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 700;
+  min-height: 34px;
+  padding: 8px 12px;
+}
+
+.profile-photo-button {
+  background: #03a4aa;
+  border: 1px solid #03a4aa;
+  color: #ffffff;
+}
+
+.profile-photo-button input {
+  display: none;
+}
+
+.profile-photo-remove {
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.profile-photo-button:hover {
+  background: #02848a;
+}
+
+.profile-photo-remove:hover {
+  background: #fee2e2;
 }
 
 /* Fields Grid Styling */

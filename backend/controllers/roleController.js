@@ -1,6 +1,16 @@
 import Role, { ensureDefaultRoles } from "../models/Role.js";
 import User from "../models/User.js";
 
+const asCleanArray = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
 const toRoleKey = (label) =>
   String(label || "")
     .trim()
@@ -11,7 +21,11 @@ const toRoleKey = (label) =>
 export const listRoles = async (_req, res) => {
   try {
     await ensureDefaultRoles();
-    const roles = await Role.find().sort({ isSystem: -1, label: 1 }).lean();
+    const roles = (await Role.find().sort({ isSystem: -1, label: 1 }).lean()).map((role) => ({
+      ...role,
+      sidebarAccess: role.sidebarAccess?.length ? role.sidebarAccess : asCleanArray(role.access),
+      permissions: role.permissions || [],
+    }));
     res.status(200).json({ success: true, roles });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -21,7 +35,9 @@ export const listRoles = async (_req, res) => {
 export const createRole = async (req, res) => {
   try {
     const label = String(req.body.label || "").trim();
-    const access = String(req.body.access || "").trim();
+    const sidebarAccess = asCleanArray(req.body.sidebarAccess || req.body.access);
+    const permissions = asCleanArray(req.body.permissions);
+    const access = sidebarAccess.join(", ");
 
     if (!label) {
       return res.status(400).json({ success: false, message: "Role name is required" });
@@ -37,7 +53,7 @@ export const createRole = async (req, res) => {
       return res.status(409).json({ success: false, message: "Role already exists" });
     }
 
-    const role = await Role.create({ key, label, access, isSystem: false });
+    const role = await Role.create({ key, label, access, sidebarAccess, permissions, isSystem: false });
     res.status(201).json({ success: true, role });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -54,7 +70,9 @@ export const updateRole = async (req, res) => {
     }
 
     const label = String(req.body.label ?? role.label).trim();
-    const access = String(req.body.access ?? role.access ?? "").trim();
+    const sidebarAccess = asCleanArray(req.body.sidebarAccess ?? req.body.access ?? role.sidebarAccess ?? role.access);
+    const permissions = asCleanArray(req.body.permissions ?? role.permissions);
+    const access = sidebarAccess.join(", ");
 
     if (!label) {
       return res.status(400).json({ success: false, message: "Role name is required" });
@@ -67,6 +85,8 @@ export const updateRole = async (req, res) => {
 
     role.label = label;
     role.access = access;
+    role.sidebarAccess = sidebarAccess;
+    role.permissions = permissions;
     await role.save();
 
     res.status(200).json({ success: true, role });

@@ -7,6 +7,7 @@ import {
   isValidHttpUrl,
   resolveScanBaseUrl,
 } from "../utils/networkUrl.js";
+import { PERMISSIONS } from "../utils/permissionCatalog.js";
 
 const normalizeStatus = (status) => {
   const normalized = String(status || "AVAILABLE").toUpperCase().replace(/\s+/g, "_");
@@ -28,9 +29,13 @@ const normalizeStatus = (status) => {
 
 const normalizeAssetPayload = (payload) => {
   const data = { ...payload };
-  const isComputerAsset = ["laptop", "pc", "desktop", "computer"].includes(
+  const categoryKind = String(data.categoryKind || "").toUpperCase();
+  delete data.categoryKind;
+
+  const legacyNetwork = ["laptop", "pc", "desktop", "computer"].includes(
     String(data.category || "").trim().toLowerCase(),
   );
+  const isComputerAsset = categoryKind === "NETWORK" || legacyNetwork;
 
   if (!isComputerAsset) {
     [
@@ -354,6 +359,15 @@ export const getAllAssets = async (req, res) => {
 export const createAsset = async (req, res) => {
   try {
     const data = normalizeAssetPayload(req.body);
+    const isRequestRecord = data.recordType === "REQUEST";
+
+    if (isRequestRecord && !req.hasPermission?.(PERMISSIONS.REQUEST_CREATE)) {
+      return res.status(403).json({ success: false, message: "Permission denied" });
+    }
+
+    if (!isRequestRecord && !req.hasPermission?.(PERMISSIONS.ASSET_CREATE)) {
+      return res.status(403).json({ success: false, message: "Permission denied" });
+    }
 
     if (
       data.deviceOwnedBy === "Other" &&
@@ -382,7 +396,9 @@ export const createAsset = async (req, res) => {
     }
 
     const asset = await Asset.create(data);
-    asset.qrCode = await generateQrCode(asset, req);
+    if (asset.recordType !== "REQUEST") {
+      asset.qrCode = await generateQrCode(asset, req);
+    }
     await asset.save();
     res.status(201).json({
       success: true,
@@ -520,8 +536,29 @@ export const updateAsset = async (req, res) => {
       });
     }
 
+    const approvalKeys = ["managerApproval", "adminApproval", "requestStatus"];
+    const payloadKeys = Object.keys(data).filter((key) => data[key] !== undefined);
+    const approvalOnly = payloadKeys.length > 0 && payloadKeys.every((key) => approvalKeys.includes(key));
+    const hasRejectedValue = [data.managerApproval, data.adminApproval, data.requestStatus].includes("Rejected");
+    const isRequestRecord = asset.recordType === "REQUEST" || data.recordType === "REQUEST";
+
+    if (isRequestRecord && approvalOnly) {
+      const requiredPermission = hasRejectedValue ? PERMISSIONS.REQUEST_REJECT : PERMISSIONS.REQUEST_APPROVE;
+      if (!req.hasPermission?.(requiredPermission)) {
+        return res.status(403).json({ success: false, message: "Permission denied" });
+      }
+    } else if (data.assignedTo !== undefined || data.assignedDate !== undefined || data.employeeId !== undefined) {
+      if (!req.hasPermission?.(PERMISSIONS.ASSET_ASSIGN)) {
+        return res.status(403).json({ success: false, message: "Permission denied" });
+      }
+    } else if (!req.hasPermission?.(PERMISSIONS.ASSET_EDIT)) {
+      return res.status(403).json({ success: false, message: "Permission denied" });
+    }
+
     const previousStatus = asset.assetStatus;
     const previousAssignedTo = asset.assignedTo;
+    const previousManagerApproval = asset.managerApproval;
+    const previousAdminApproval = asset.adminApproval;
     Object.assign(asset, data);
 
     if (!asset.qrToken) {
@@ -540,7 +577,53 @@ export const updateAsset = async (req, res) => {
       appendTimeline(asset, "Asset Assigned", `Assigned to ${data.assignedTo}.`);
     }
 
-    asset.qrCode = await generateQrCode(asset, req);
+    if (
+      asset.managerApproval === "Approved" &&
+      previousManagerApproval !== "Approved"
+    ) {
+      appendTimeline(
+        asset,
+        "Manager Approved Request",
+        `Request ${asset.requestId || asset.assetName || ""} approved by manager.`,
+      );
+    }
+
+    if (
+      asset.managerApproval === "Rejected" &&
+      previousManagerApproval !== "Rejected"
+    ) {
+      appendTimeline(
+        asset,
+        "Manager Rejected Request",
+        `Request ${asset.requestId || asset.assetName || ""} rejected by manager.`,
+      );
+    }
+
+    if (
+      asset.adminApproval === "Approved" &&
+      previousAdminApproval !== "Approved"
+    ) {
+      appendTimeline(
+        asset,
+        "IT/Admin Approved Request",
+        `Request ${asset.requestId || asset.assetName || ""} approved by IT/Admin.`,
+      );
+    }
+
+    if (
+      asset.adminApproval === "Rejected" &&
+      previousAdminApproval !== "Rejected"
+    ) {
+      appendTimeline(
+        asset,
+        "IT/Admin Rejected Request",
+        `Request ${asset.requestId || asset.assetName || ""} rejected by IT/Admin.`,
+      );
+    }
+
+    if (asset.recordType !== "REQUEST") {
+      asset.qrCode = await generateQrCode(asset, req);
+    }
 
     const updatedAsset = await asset.save();
 
@@ -953,14 +1036,43 @@ export const seedWorkflowDemoData = async (req, res) => {
 
 export const deleteAsset = async (req, res) => {
   try {
-    const deletedAsset = await Asset.findByIdAndDelete(req.params.id);
+    const asset = await Asset.findById(req.params.id);
 
-    if (!deletedAsset) {
+    if (!asset) {
       return res.status(404).json({
         success: false,
         message: "Asset not found",
       });
     }
+
+    const isRequestRecord = asset.recordType === "REQUEST";
+    const canDeleteRecord = isRequestRecord
+      ? req.hasPermission?.(PERMISSIONS.REQUEST_CREATE) || req.hasPermission?.(PERMISSIONS.ASSET_DELETE)
+      : req.hasPermission?.(PERMISSIONS.ASSET_DELETE);
+
+    if (!canDeleteRecord) {
+      return res.status(403).json({
+        success: false,
+        message: "Permission denied",
+      });
+    }
+
+    const hasRequestDecision =
+      isRequestRecord &&
+      [
+        asset.managerApproval,
+        asset.adminApproval,
+        asset.requestStatus,
+      ].some((value) => ["Approved", "Rejected"].includes(value));
+
+    if (hasRequestDecision) {
+      return res.status(403).json({
+        success: false,
+        message: "Approved or rejected requests cannot be deleted",
+      });
+    }
+
+    await Asset.deleteOne({ _id: asset._id });
 
     res.status(200).json({
       success: true,
