@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import ConfirmDeleteModal from "../../../components/common/ConfirmDeleteModal";
 
 function FormBuilderView({ builder }) {
@@ -44,6 +44,23 @@ function FormBuilderView({ builder }) {
     addFieldToSection,
     setEditingSection,
   } = builder;
+
+  const [activeTab, setActiveTab] = useState(sections[0]?.key || null);
+
+  useEffect(() => {
+    if (sections.length > 0 && !sections.find((s) => s.key === activeTab)) {
+      setActiveTab(sections[0].key);
+    } else if (sections.length === 0 && activeTab !== null) {
+      setActiveTab(null);
+    }
+  }, [sections, activeTab]);
+
+  const handleAddCustomField = useCallback(() => {
+    addCustomField();
+    if (selectedSection && selectedSection !== "__new__") {
+      setActiveTab(selectedSection);
+    }
+  }, [addCustomField, selectedSection]);
 
   const handleAddFieldHere = useCallback(
     (section) => {
@@ -110,14 +127,30 @@ function FormBuilderView({ builder }) {
               placeholder="Enter field label"
             />
           </label>
-          <button type="button" className="save-master-btn cfb-add-btn" onClick={addCustomField}>
+          <button type="button" className="save-master-btn cfb-add-btn" onClick={handleAddCustomField}>
             Add Field
           </button>
         </div>
       </div>
 
+      {sections.length > 0 && (
+        <div className="master-form-tabs" style={{ marginBottom: "4px", overflowX: "auto", flexWrap: "wrap", border: "none", background: "transparent", padding: 0 }}>
+          {sections.map((sec) => (
+            <button
+              key={sec.key}
+              type="button"
+              className={activeTab === sec.key ? "active" : ""}
+              onClick={() => setActiveTab(sec.key)}
+              style={{ padding: "6px 14px", height: "auto", fontSize: "12.5px" }}
+            >
+              {sec.title}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="master-section-list">
-        {sections.map((section) => (
+        {sections.filter((s) => s.key === activeTab).map((section) => (
           <section
             className={`master-section ${dragItem?.sectionKey === section.key ? "is-dragging" : ""}`}
             draggable={editingSection !== section.key}
@@ -221,7 +254,6 @@ function FormBuilderView({ builder }) {
                           <strong>{field.label}</strong>
                         </div>
                       )}
-                      <span>{field.name}</span>
                     </div>
                     <div className="master-field-controls">
                       <label className="master-toggle">

@@ -3,7 +3,7 @@
 .dashboard-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 8px;
   animation: fadeInDashboard 0.4s ease-out;
 }
 
@@ -23,7 +23,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 0px;
 }
 
 .dashboard-header-row h1 {
@@ -37,7 +37,7 @@
 .dashboard-add-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   background: #0D9488; /* Deep Teal */
   border: none;
   color: #FFFFFF;
@@ -129,7 +129,7 @@
   background: #FFFFFF;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-  padding: 16px 20px;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -151,7 +151,7 @@
 
 .kpi-card-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: #6B7280;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -165,7 +165,7 @@
 
 .kpi-card-value {
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 600;
   color: #111827;
   line-height: 1.1;
 }
@@ -174,7 +174,7 @@
   background: #DCFCE7;
   color: #15803D;
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
   display: flex;
@@ -211,11 +211,11 @@
   background: #FFFFFF;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
-  min-height: 280px;
+  min-height: 260px;
 }
 
 .middle-card-header {
@@ -227,7 +227,7 @@
 
 .middle-card-header h3 {
   font-size: 14.5px;
-  font-weight: 700;
+  font-weight: 600;
   color: #111827;
   margin: 0;
 }
@@ -277,7 +277,7 @@
 .donut-legend-list {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 6px;
   flex: 1;
 }
 
@@ -309,7 +309,7 @@
 }
 
 .donut-legend-value {
-  font-weight: 700;
+  font-weight: 600;
   color: #111827;
   width: 30px;
   text-align: right;
@@ -325,7 +325,7 @@
 .category-bars-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 10px;
   flex: 1;
   justify-content: center;
 }
@@ -349,7 +349,7 @@
 }
 
 .category-bar-stats {
-  font-weight: 700;
+  font-weight: 600;
   color: #111827;
 }
 
@@ -371,7 +371,7 @@
 .activity-list-new {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 10px;
   flex: 1;
   padding: 4px 0 8px 0;
 }
@@ -409,7 +409,7 @@
 }
 
 .activity-item-name {
-  font-weight: 700;
+  font-weight: 600;
   color: #111827;
 }
 
@@ -426,7 +426,7 @@
 
 .middle-card-footer-link {
   border-top: 1px solid #E5E7EB;
-  padding-top: 16px;
+  padding-top: 8px;
   margin-top: auto;
   text-align: center;
 }
@@ -458,11 +458,11 @@
   background: #FFFFFF;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
-  min-height: 340px;
+  min-height: 300px;
 }
 
 /* Recent Assets Table styling */
@@ -480,18 +480,18 @@
 
 .table-new th {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: #6B7280;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-bottom: 1px solid #E5E7EB;
 }
 
 .table-new td {
   font-size: 13px;
   color: #374151;
-  padding: 12px;
+  padding: 8px 12px;
   border-bottom: 1px solid #F3F4F6;
   vertical-align: middle;
 }
@@ -504,7 +504,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 600;
+  font-weight: 500;
   color: #111827;
 }
 
@@ -522,7 +522,7 @@
 
 .status-pill-new {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 4px 8px;
   border-radius: 20px;
   display: inline-block;
@@ -569,7 +569,7 @@
 .warranty-alerts-list-new {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   margin-top: 6px;
 }
 
@@ -577,7 +577,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
+  padding: 6px 0;
   border-bottom: 1px solid #F3F4F6;
 }
 
@@ -612,7 +612,7 @@
 
 .warranty-alert-name {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: #111827;
 }
 
@@ -625,7 +625,7 @@
 .warranty-alert-days-badge {
   color: #EF4444;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 

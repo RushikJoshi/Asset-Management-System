@@ -34,6 +34,7 @@ import {
   subscribeNotifications,
   syncAssetNotifications,
 } from "../../utils/notificationStore";
+import { TopbarActionsProvider, useTopbarActions } from "./topbarActionsContext";
 import "./AppLayout.css";
 
 const navItems = [
@@ -248,6 +249,8 @@ function AppLayout() {
     return "Employee";
   };
 
+  const { actions: topbarActions } = useTopbarActions();
+
   return (
     <div className={`shell ${isCollapsed ? "collapsed" : ""}`}>
       {isSidebarOpen && (
@@ -342,14 +345,6 @@ function AppLayout() {
             );
           })}
         </nav>
-
-        {/* Dynamic collapse trigger placed at the bottom exactly as mockup */}
-        <div className="sidebar-footer">
-          <button className="sidebar-collapse-btn-new" onClick={() => setIsCollapsed(!isCollapsed)} aria-label="Toggle Sidebar">
-            {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
-            <span>Collapse</span>
-          </button>
-        </div>
       </aside>
 
       <div className="main-container">
@@ -367,6 +362,12 @@ function AppLayout() {
           </div>
           
           <div className="topbar-actions">
+            {topbarActions && (
+              <div className="topbar-master-actions">
+                <button type="button" className="reset-master-btn" onClick={topbarActions.onReset}>Reset Defaults</button>
+                <button type="button" className="save-master-btn" onClick={topbarActions.onSave}>Save</button>
+              </div>
+            )}
             <div className="notification-dropdown-container" ref={notifRef}>
               <button
                 type="button"
@@ -375,7 +376,6 @@ function AppLayout() {
                 onClick={toggleNotifications}
               >
                 <FaBell />
-                <span>Notifications</span>
                 {unreadCount > 0 ? (
                   <em className="notification-badge">
                     {unreadCount > 9 ? "9+" : unreadCount}
@@ -449,4 +449,12 @@ function AppLayout() {
   );
 }
 
-export default AppLayout;
+function AppLayoutWithProvider() {
+  return (
+    <TopbarActionsProvider>
+      <AppLayout />
+    </TopbarActionsProvider>
+  );
+}
+
+export default AppLayoutWithProvider;
