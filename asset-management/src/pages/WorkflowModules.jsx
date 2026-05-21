@@ -876,64 +876,27 @@ export function ScanDemo() {
   const { assetListData } = useModuleData();
   const dispatch = useDispatch();
   const { showToast } = useToast();
-  const [message, setMessage] = useState("");
-  const [scannerOrigin, setScannerOrigin] = useState(() => getQrClientOrigin());
+  const [searchTerm, setSearchTerm] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const currentOrigin = getQrClientOrigin();
 
-  const refreshForNetwork = async (silent = false, preferredUrl = "") => {
-    const scanBaseUrl = getScanBaseUrl(preferredUrl || scannerOrigin);
+  const refreshForNetwork = async () => {
+    const scanBaseUrl = getScanBaseUrl(getQrClientOrigin());
     setRefreshing(true);
-
     try {
-      const result = await dispatch(refreshQrCodes(scanBaseUrl)).unwrap();
+      await dispatch(refreshQrCodes(scanBaseUrl)).unwrap();
       await dispatch(fetchAssetList());
-
-      if (result?.scannerUrl) {
-        setMessage(`Phone scan URL: ${result.scannerUrl}/scan/{assetId}?t=token`);
-        setScannerOrigin(result.scannerUrl);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("assetproScanBaseUrl", result.scannerUrl);
-        }
-      }
-
-      if (!silent) {
-        showToast({
-          title: "QR codes refreshed",
-          message: "The scanner will now open the asset details page.",
-        });
-      }
+      showToast({ title: "QR Codes Generated", message: "QR codes have been generated successfully." });
     } catch (error) {
-      const isNetworkError = String(error || "").toLowerCase().includes("network");
-      showToast({
-        title: "QR refresh failed",
-        message: isNetworkError
-          ? "The backend server is not running. Start it with: cd backend && npm start"
-          : error || "Unable to refresh QR codes.",
-        type: "error",
-      });
+      showToast({ title: "Generation failed", message: error || "Unable to generate QR codes.", type: "error" });
     } finally {
       setRefreshing(false);
     }
   };
 
-  useEffect(() => {
-    const initQrScan = async () => {
-      try {
-        const recommendedUrl = await fetchRecommendedScanBaseUrl();
-        setScannerOrigin(recommendedUrl);
-        await refreshForNetwork(true, recommendedUrl);
-      } catch {
-        const savedUrl = typeof window !== "undefined"
-          ? localStorage.getItem("assetproScanBaseUrl")
-          : "";
-        await refreshForNetwork(true, savedUrl || getQrClientOrigin());
-      }
-    };
-
-    initQrScan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const filteredAssets = assetListData.filter(a => 
+    (a.assetName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (a.assetCode || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <>
@@ -941,93 +904,54 @@ export function ScanDemo() {
         eyebrow="QR Management"
         title="QR Scanner Console"
       />
-      {message && <p className="network-note">{message}</p>}
-      
-      {/* Live Scanner KPI Stats Card Section */}
-      <KpiGrid items={[
-        { 
-          label: "Scanner Status", 
-          value: (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#10b981", fontWeight: 600 }}>
-              <span className="pulse-dot"></span>Online
-            </span>
-          ) 
-        },
-        { label: "Linked Assets", value: assetListData.length },
-        { 
-          label: "QR Access URL", 
-          value: (
-            <code style={{ 
-              fontSize: "11px", 
-              padding: "4px 8px", 
-              borderRadius: "4px", 
-              background: "rgba(14, 165, 164, 0.06)", 
-              border: "1px solid rgba(14, 165, 164, 0.15)", 
-              fontFamily: "monospace", 
-              color: "var(--color-primary)", 
-              fontWeight: 600,
-              display: "inline-block",
-              maxWidth: "180px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap"
-            }}>
-              {scannerOrigin.replace("http://", "").replace("https://", "")}
-            </code>
-          )
-        }
-      ]} />
 
-      <div className="action-panel qr-scan-panel">
-        <div>
-          <h3>Configure Origin</h3>
+      <div className="action-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+        <div style={{ display: "flex", gap: "12px", flex: 1 }}>
+          <input 
+            type="text" 
+            placeholder="Search asset name or code..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ maxWidth: "300px" }}
+          />
         </div>
-        <input
-          type="text"
-          value={scannerOrigin}
-          onChange={(event) => setScannerOrigin(event.target.value)}
-          placeholder={currentOrigin}
-        />
-        <button 
-          type="button" 
-          className="secondary-button" 
-          style={{ height: "32px", margin: 0 }} 
-          onClick={() => {
-            navigator.clipboard.writeText(scannerOrigin);
-            showToast({ title: "Copied!", message: "Scan origin copied to clipboard." });
-          }}
-        >
-          Copy
-        </button>
-        <button 
-          type="button" 
-          className="secondary-button" 
-          disabled={refreshing}
-          style={{ height: "32px", margin: 0 }} 
-          onClick={() => refreshForNetwork(false)}
-        >
-          {refreshing ? "Refreshing..." : "Refresh"}
-        </button>
-        <button type="button" className="module-button" disabled={refreshing} onClick={() => refreshForNetwork(false)}>
-          Apply To QR Codes
-        </button>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button 
+            type="button" 
+            className="secondary-button" 
+            onClick={() => window.print()}
+            style={{ margin: 0 }}
+          >
+            Download QR PDF
+          </button>
+          <button 
+            type="button" 
+            className="module-button" 
+            disabled={refreshing} 
+            onClick={refreshForNetwork}
+            style={{ margin: 0 }}
+          >
+            {refreshing ? "Generating..." : "Generate Bulk QR"}
+          </button>
+        </div>
       </div>
+      
       <DataTable
         columns={[
           { key: "assetName", label: "Asset", render: (row) => <AssetLink asset={row} /> },
           { key: "assetCode", label: "Code" },
           { key: "serialNumber", label: "Serial" },
-          { 
-            key: "qrCode", 
-            label: "QR Code", 
+          {
+            key: "qrCode",
+            label: "QR Code",
             render: (row) => row.qrCode ? (
               <div className="qr-sticker-badge">
                 <img src={row.qrCode} alt="QR" />
               </div>
-            ) : "-" 
-          },
+            ) : "-"
+          }
         ]}
-        rows={assetListData}
+        rows={filteredAssets}
       />
     </>
   );

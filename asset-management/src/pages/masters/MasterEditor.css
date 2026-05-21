@@ -13,9 +13,10 @@
 
 .master-editor-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end; /* Align buttons to the right */
   align-items: center;
-  padding-bottom: 1rem;
+  padding-top: 12px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 1.5rem;
 }
@@ -47,6 +48,7 @@
 .master-editor-actions {
   display: flex;
   gap: 0.75rem;
+  justify-content: flex-end; /* ensure right alignment */
 }
 
 .master-editor-actions button {
@@ -59,17 +61,31 @@
 }
 
 .reset-master-btn {
-  background: var(--color-secondary);
-  color: #fff;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
 }
 
 .reset-master-btn:hover {
-  background: #3b8beb;
+  background: var(--border-color);
 }
 
 .save-master-btn {
-  background: var(--color-primary);
+  background: #009688; /* teal/green */
+  border: none;
   color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+}
+
+.save-master-btn:hover {
+  background: #00796b; /* darker teal */
 }
 
 .save-master-btn:hover {
