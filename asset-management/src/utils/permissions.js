@@ -132,6 +132,7 @@ export const DEFAULT_ROLE_CONFIG = {
       "qr.generate",
       "qr.scan",
       "request.view",
+      "request.create",
       "inventory.view",
       "maintenance.view",
       "maintenance.manage",

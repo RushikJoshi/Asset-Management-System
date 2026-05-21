@@ -370,15 +370,15 @@ function AppLayout() {
             <div className="notification-dropdown-container" ref={notifRef}>
               <button
                 type="button"
-                className="notification-btn"
+                className={`notification-btn ${isNotifOpen ? "active" : ""}`}
+                aria-label={`Notifications (${unreadCount} unread)`}
                 aria-expanded={isNotifOpen}
                 onClick={toggleNotifications}
               >
                 <FaBell />
-                <span>Notifications</span>
                 {unreadCount > 0 ? (
                   <em className="notification-badge">
-                    {unreadCount > 9 ? "9+" : unreadCount}
+                    {unreadCount > 99 ? "99+" : unreadCount}
                   </em>
                 ) : null}
               </button>

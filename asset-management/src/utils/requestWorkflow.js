@@ -82,6 +82,36 @@ export const canDeleteRequest = (request) =>
 
 export const canEditRequest = (request) => !isRequestFullyApproved(request);
 
+/** Get changeable approval step for manager/admin - allows changing even after approval/rejection. */
+export const getChangeableApprovalStep = (request, role) => {
+  if (!request) return null;
+
+  // Manager can always change their approval status
+  if (canManagerApprove(role)) {
+    return {
+      field: "managerApproval",
+      label: "Change Manager Approval",
+      stepName: "Manager",
+      currentValue: request.managerApproval || APPROVAL_PENDING,
+    };
+  }
+
+  // Admin/IT can change admin approval if manager already approved
+  if (
+    canAdminApprove(role) &&
+    request.managerApproval === APPROVAL_APPROVED
+  ) {
+    return {
+      field: "adminApproval",
+      label: "Change IT/Admin Approval",
+      stepName: "IT/Admin",
+      currentValue: request.adminApproval || APPROVAL_PENDING,
+    };
+  }
+
+  return null;
+};
+
 export const buildApprovalPayload = (request, approvalField) => {
   const managerApproval =
     approvalField === "managerApproval"
