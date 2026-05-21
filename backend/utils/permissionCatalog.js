@@ -138,6 +138,7 @@ export const DEFAULT_ROLE_SIDEBAR = {
     "Maintenance",
     "Warranty",
     "Reports",
+    "Masters",
   ],
   MANAGER: ["Dashboard", "Assets", "Requests", "Reports"],
   EMPLOYEE: ["Employee Portal", "Requests", "Warranty", "QR Console"],

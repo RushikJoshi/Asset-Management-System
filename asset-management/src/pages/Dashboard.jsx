@@ -298,11 +298,6 @@ function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      {/* Title Header */}
-      <div className="dashboard-header-row">
-        <h1>Dashboard</h1>
-      </div>
-
       {/* KPI Cards Row */}
       <div className="kpi-cards-grid">
         {[
@@ -385,8 +380,8 @@ function Dashboard() {
               className="donut-chart-wrapper-new"
               style={{
                 position: "relative",
-                width: "120px",
-                height: "120px",
+                width: "100px",
+                height: "100px",
                 flexShrink: 0,
               }}
             >
@@ -396,8 +391,8 @@ function Dashboard() {
                     data={statusChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={44}
-                    outerRadius={58}
+                    innerRadius={36}
+                    outerRadius={48}
                     paddingAngle={3}
                     dataKey="value"
                   >
@@ -425,7 +420,7 @@ function Dashboard() {
                   className="donut-center-value"
                   style={{
                     fontSize: "20px",
-                    fontWeight: "800",
+                    fontWeight: "600",
                     color: "#111827",
                     lineHeight: "1",
                   }}
@@ -436,7 +431,7 @@ function Dashboard() {
                   className="donut-center-text"
                   style={{
                     fontSize: "9px",
-                    fontWeight: "700",
+                    fontWeight: "500",
                     color: "#6B7280",
                     letterSpacing: "0.05em",
                     marginTop: "2px",
@@ -517,7 +512,7 @@ function Dashboard() {
           </div>
 
           <div className="activity-list-new">
-            {finalEvents.slice(0, 4).map((item, idx) => {
+            {finalEvents.slice(0, 3).map((item, idx) => {
               const styles = getStatusIconColor(item.status);
               return (
                 <div className="activity-item-new" key={idx}>
@@ -571,7 +566,7 @@ function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentAssetsList.map((row, idx) => (
+                {recentAssetsList.slice(0, 3).map((row, idx) => (
                   <tr key={idx}>
                     <td>
                       <div className="table-asset-name-block">

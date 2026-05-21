@@ -1,0 +1,205 @@
+/* Master Editor Styles - Premium UI */
+
+/* Root variables are already defined in index.css */
+
+.master-editor-page {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.master-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+.master-editor-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.master-editor-kicker {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.master-editor-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.master-editor-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.master-editor-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.master-editor-actions button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.reset-master-btn {
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.reset-master-btn:hover {
+  background: #3b8beb;
+}
+
+.save-master-btn {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.save-master-btn:hover {
+  background: var(--color-primary-dark);
+}
+
+/* Section List */
+.master-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.master-section {
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.master-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.section-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title-row .drag-handle {
+  cursor: grab;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.section-actions button {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.section-actions .field-edit-btn { background: var(--color-primary); }
+.section-actions .field-delete-btn { background: #e53935; }
+.section-actions .field-cancel-btn { background: #9e9e9e; }
+
+.section-actions button:hover { opacity: 0.9; }
+
+.master-field-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.master-field-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.master-field-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.master-toggle input {
+  margin-right: 0.25rem;
+}
+
+.field-edit-btn, .field-delete-btn, .field-cancel-btn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.field-delete-btn { background: #e53935; }
+.field-cancel-btn { background: #9e9e9e; }
+
+/* Highlight on drag */
+.is-dragging {
+  opacity: 0.6;
+  border: 2px dashed var(--color-primary);
+}
+
+/* Highlight for new field target */
+.is-highlight {
+  animation: highlightPulse 1.5s ease-in-out;
+}
+
+@keyframes highlightPulse {
+  0% { box-shadow: 0 0 0 0 rgba(33,133,243,0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(33,133,243,0); }
+  100% { box-shadow: 0 0 0 0 rgba(33,133,243,0); }
+}
+
+/* Reduce spacing and hide empty actions */
+.master-editor-actions:empty {
+  display: none;
+}
+.master-section-list {
+  gap: 0.75rem;
+}
+.master-section {
+  padding: 0.75rem;
+}
+.master-field-grid {
+  gap: 0.75rem;
+}
