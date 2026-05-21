@@ -1,18 +1,12 @@
-function MasterPageHeader({ kicker, title, subtitle, onReset, onSave }) {
+function MasterPageHeader({ kicker, title, onReset, onSave }) {
   return (
     <div className="master-editor-header">
-      <div>
-        <p>{kicker}</p>
-        <h2>{title}</h2>
-        {subtitle ? <span>{subtitle}</span> : null}
+      <div className="master-editor-title-block">
+        <h2 className="master-editor-title">{title}</h2>
       </div>
       <div className="master-editor-actions">
-        <button type="button" className="reset-master-btn" onClick={onReset}>
-          Reset Defaults
-        </button>
-        <button type="button" className="save-master-btn" onClick={onSave}>
-          Save
-        </button>
+        <button type="button" className="reset-master-btn" onClick={onReset}>Reset Defaults</button>
+        <button type="button" className="save-master-btn" onClick={onSave}>Save</button>
       </div>
     </div>
   );

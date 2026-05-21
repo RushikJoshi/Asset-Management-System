@@ -1,0 +1,100 @@
+/* Assets page styling */
+.assets-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.kpi-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.kpi-card-new {
+  background: linear-gradient(135deg, hsl(210, 60%, 98%), hsl(210, 40%, 95%));
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.kpi-card-new:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.kpi-card-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.kpi-card-value {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.table-new {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+}
+.table-new th, .table-new td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+.table-new th {
+  background: var(--bg-subtle);
+  font-weight: 500;
+  color: var(--text-muted);
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+}
+.table-new tbody tr {
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition-fast);
+}
+.table-new tbody tr:hover {
+  background: var(--bg-subtle);
+}
+.table-asset-name-block {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.table-asset-icon-box {
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+.status-pill-new {
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  color: #fff;
+}
+.status-pill-new.available { background: #22c55e; }
+.status-pill-new.assigned { background: #3b82f6; }
+.status-pill-new.unavailable { background: #ef4444; }
+.status-pill-new.repair { background: #f59e0b; }
+.status-pill-new.disposed { background: #9ca3af; }
+.assets-footer-link {
+  margin-top: 1rem;
+  text-align: right;
+}
+.assets-footer-link span {
+  cursor: pointer;
+  color: var(--color-primary);
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+.assets-footer-link span:hover {
+  color: var(--color-primary-dark);
+}

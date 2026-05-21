@@ -18,6 +18,7 @@ import {
   canDeleteRequest,
   canEditRequest,
   getNextApprovalStep,
+  getChangeableApprovalStep,
   isRequestFullyApproved,
   isRequestRejected,
 } from "../utils/requestWorkflow";
@@ -47,24 +48,151 @@ export function Requests() {
   const { assetListData } = useModuleData();
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [approvingId, setApprovingId] = useState("");
+  const [selectedAction, setSelectedAction] = useState({});
 
   const requests = getRequestRecords(assetListData);
   const pendingCount = requests.filter((item) => !isRequestFullyApproved(item)).length;
   const approvedCount = requests.filter((item) => isRequestFullyApproved(item)).length;
+  const hideStatusColumn = ["IT_STAFF", "MANAGER"].includes(user?.role);
+  const showActionDropdown = user?.role !== "IT_STAFF";
+
+  const requestColumns = [
+    { key: "requestId", label: "Request ID" },
+    { key: "requestType", label: "Type" },
+    { key: "requestedBy", label: "Requested By" },
+    { key: "department", label: "Department" },
+    { key: "category", label: "Asset Type" },
+    { key: "requestPriority", label: "Priority" },
+    {
+      key: "managerApproval",
+      label: "Manager",
+      render: (row) => <ApprovalBadge value={row.managerApproval} />,
+    },
+    {
+      key: "adminApproval",
+      label: "IT/Admin",
+      render: (row) => <ApprovalBadge value={row.adminApproval} />,
+    },
+  ];
+
+  if (!hideStatusColumn) {
+    requestColumns.push({
+      key: "requestStatus",
+      label: "Status",
+      render: (row) => <ApprovalBadge value={row.requestStatus} />,
+    });
+  }
+
+  requestColumns.push({
+    key: "action",
+    label: "Action",
+    render: (row) => {
+      const step = getNextApprovalStep(row, user?.role);
+      const changeStep = !step ? getChangeableApprovalStep(row, user?.role) : null;
+      const fullyApproved = isRequestFullyApproved(row);
+      const canDelete = canDeleteRequest(row);
+      const canEdit = canEditRequest(row);
+      const busy = approvingId === row._id;
+
+      return (
+        <div className="module-actions request-row-actions">
+          {canEdit ? (
+            <button
+              type="button"
+              className="module-button secondary-button"
+              onClick={() => navigate(`/edit-request/${row._id}`)}
+            >
+              Edit
+            </button>
+          ) : (
+            <span className="request-action-done">Completed</span>
+          )}
+
+          {(step || changeStep) && showActionDropdown ? (
+            <div className="request-action-dropdown-group">
+              <select
+                className="request-action-select"
+                value={selectedAction[row._id] || "none"}
+                disabled={busy}
+                onChange={(event) =>
+                  setSelectedAction((prev) => ({
+                    ...prev,
+                    [row._id]: event.target.value,
+                  }))
+                }
+              >
+                <option value="none">Select action</option>
+                <option value="approve">{step?.label || changeStep?.label}</option>
+                <option value="reject">Reject ({step?.stepName || changeStep?.stepName})</option>
+              </select>
+              <button
+                type="button"
+                className="module-button"
+                disabled={busy || !selectedAction[row._id] || selectedAction[row._id] === "none"}
+                onClick={() => handleSelectedAction(row, step || changeStep)}
+              >
+                {busy ? "Saving…" : "Apply"}
+              </button>
+            </div>
+          ) : step && !showActionDropdown ? (
+            <span className="request-action-wait">Action not available</span>
+          ) : fullyApproved ? (
+            <span className="request-action-approved">Approved</span>
+          ) : isRequestRejected(row) ? (
+            <span className="request-action-rejected">Rejected</span>
+          ) : (
+            <span className="request-action-wait" title="Waiting for manager approval first">
+              Awaiting manager
+            </span>
+          )}
+
+          {canDelete ? (
+            <button
+              type="button"
+              className="module-button danger"
+              onClick={() => setDeleteTarget(row)}
+            >
+              Delete
+            </button>
+          ) : (
+            <button type="button" className="module-button danger" disabled title="Cannot delete after approval">
+              Delete
+            </button>
+          )}
+        </div>
+      );
+    },
+  });
 
   const approveStep = async (request, step) => {
     if (!step?.field) return;
     setApprovingId(request._id);
     try {
+      const oldValue = request[step.field] || "Pending";
       const payload = buildApprovalPayload(request, step.field);
       await dispatch(updateAsset({ id: request._id, payload })).unwrap();
       await dispatch(fetchAssetList());
 
       const fullyApproved = payload.requestStatus === "Approved";
-      const title = fullyApproved ? "Request fully approved" : `${step.stepName} approval done`;
-      const message = fullyApproved
-        ? `${request.requestId || request.assetName || "Request"} is ready for next steps.`
-        : `${request.requestId || request.assetName || "Request"} — waiting for next approval.`;
+      const requestName = request.requestId || request.assetName || "Request";
+      
+      // Build notification message with state change info
+      let title = fullyApproved ? "✓ Request fully approved" : `✓ ${step.stepName} approved`;
+      let message = `${requestName}`;
+      
+      if (oldValue !== "Approved") {
+        // State changed
+        message += ` — ${step.stepName} status: ${oldValue} → Approved`;
+      } else {
+        // Reconfirmed same state
+        message += ` — ${step.stepName} status confirmed`;
+      }
+      
+      if (fullyApproved) {
+        message += ". Ready for next steps.";
+      } else {
+        message += ". Awaiting next approval.";
+      }
 
       showToast({ title, message, type: "success" });
       pushAppNotification({ title, message, type: "success", meta: { requestId: request._id } });
@@ -76,6 +204,7 @@ export function Requests() {
       });
     } finally {
       setApprovingId("");
+      setSelectedAction((prev) => ({ ...prev, [request._id]: "none" }));
     }
   };
 
@@ -83,12 +212,24 @@ export function Requests() {
     if (!step?.field) return;
     setApprovingId(request._id);
     try {
+      const oldValue = request[step.field] || "Pending";
       const payload = buildRejectionPayload(request, step.field);
       await dispatch(updateAsset({ id: request._id, payload })).unwrap();
       await dispatch(fetchAssetList());
 
-      const title = `${step.stepName} Request Rejected`;
-      const message = `${request.requestId || request.assetName || "Request"} has been rejected.`;
+      const requestName = request.requestId || request.assetName || "Request";
+      
+      // Build notification message with state change info
+      let title = `✗ ${step.stepName} rejected`;
+      let message = `${requestName}`;
+      
+      if (oldValue !== "Rejected") {
+        // State changed
+        message += ` — ${step.stepName} status: ${oldValue} → Rejected`;
+      } else {
+        // Reconfirmed same state
+        message += ` — ${step.stepName} rejection confirmed`;
+      }
 
       showToast({ title, message, type: "info" });
       pushAppNotification({ title, message, type: "info", meta: { requestId: request._id } });
@@ -100,6 +241,7 @@ export function Requests() {
       });
     } finally {
       setApprovingId("");
+      setSelectedAction((prev) => ({ ...prev, [request._id]: "none" }));
     }
   };
 
@@ -124,6 +266,15 @@ export function Requests() {
     }
   };
 
+  const handleSelectedAction = async (request, step) => {
+    const action = selectedAction[request._id];
+    if (action === "approve") {
+      await approveStep(request, step);
+    } else if (action === "reject") {
+      await rejectStep(request, step);
+    }
+  };
+
   return (
     <>
       <PageTitle
@@ -142,99 +293,7 @@ export function Requests() {
       />
 
       <DataTable
-        columns={[
-          { key: "requestId", label: "Request ID" },
-          { key: "requestType", label: "Type" },
-          { key: "requestedBy", label: "Requested By" },
-          { key: "department", label: "Department" },
-          { key: "category", label: "Asset Type" },
-          { key: "requestPriority", label: "Priority" },
-          {
-            key: "managerApproval",
-            label: "Manager",
-            render: (row) => <ApprovalBadge value={row.managerApproval} />,
-          },
-          {
-            key: "adminApproval",
-            label: "IT/Admin",
-            render: (row) => <ApprovalBadge value={row.adminApproval} />,
-          },
-          {
-            key: "requestStatus",
-            label: "Status",
-            render: (row) => <ApprovalBadge value={row.requestStatus} />,
-          },
-          {
-            key: "action",
-            label: "Action",
-            render: (row) => {
-              const step = getNextApprovalStep(row, user?.role);
-              const fullyApproved = isRequestFullyApproved(row);
-              const canDelete = canDeleteRequest(row);
-              const canEdit = canEditRequest(row);
-              const busy = approvingId === row._id;
-
-              return (
-                <div className="module-actions request-row-actions">
-                  {canEdit ? (
-                    <button
-                      type="button"
-                      className="module-button secondary-button"
-                      onClick={() => navigate(`/edit-request/${row._id}`)}
-                    >
-                      Edit
-                    </button>
-                  ) : (
-                    <span className="request-action-done">Completed</span>
-                  )}
-
-                  {step ? (
-                    <>
-                      <button
-                        type="button"
-                        className="module-button"
-                        disabled={busy}
-                        onClick={() => approveStep(row, step)}
-                      >
-                        {busy ? "Saving…" : step.label}
-                      </button>
-                      <button
-                        type="button"
-                        className="module-button danger"
-                        disabled={busy}
-                        onClick={() => rejectStep(row, step)}
-                      >
-                        {busy ? "Saving…" : `Reject (${step.stepName})`}
-                      </button>
-                    </>
-                  ) : fullyApproved ? (
-                    <span className="request-action-approved">Approved</span>
-                  ) : isRequestRejected(row) ? (
-                    <span className="request-action-rejected">Rejected</span>
-                  ) : (
-                    <span className="request-action-wait" title="Waiting for manager approval first">
-                      Awaiting manager
-                    </span>
-                  )}
-
-                  {canDelete ? (
-                    <button
-                      type="button"
-                      className="module-button danger"
-                      onClick={() => setDeleteTarget(row)}
-                    >
-                      Delete
-                    </button>
-                  ) : (
-                    <button type="button" className="module-button danger" disabled title="Cannot delete after approval">
-                      Delete
-                    </button>
-                  )}
-                </div>
-              );
-            },
-          },
-        ]}
+        columns={requestColumns}
         rows={requests}
       />
 

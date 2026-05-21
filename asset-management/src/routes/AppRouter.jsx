@@ -96,7 +96,7 @@ function RequireAuth({ children }) {
   const role = roles.find((item) => item.key === user.role);
   const roleAccess = role?.sidebarAccess?.length ? role.sidebarAccess : role?.access || "";
 
-  if (!canAccessRoute(user.role, location.pathname, roleAccess)) {
+  if (!canAccessRoute(user.role, location.pathname, roleAccess, role?.permissions || [])) {
     return <Navigate to={getRoleHome(user.role, roleAccess)} replace />;
   }
 
