@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { fetchAssetList } from "../store/slices/assetSlice";
 import { buildStats } from "../utils/assetUtils";
 import { FaLaptop, FaTv, FaKeyboard, FaChair, FaBoxOpen, FaEllipsisV } from "react-icons/fa";
@@ -18,8 +17,8 @@ function getAssetIcon(category) {
 
 function Assets() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { assetListData } = useSelector((state) => state.assetList);
+  const [showAllAssets, setShowAllAssets] = useState(false);
   const stats = buildStats(assetListData);
 
   useEffect(() => {
@@ -27,7 +26,8 @@ function Assets() {
   }, [dispatch]);
 
   // Prepare recent assets (limit to 3 rows)
-  const recentAssets = assetListData.slice(0, 3).map((a) => ({
+  const visibleAssets = showAllAssets ? assetListData : assetListData.slice(0, 3);
+  const recentAssets = visibleAssets.map((a) => ({
     assetName: a.assetName,
     serialNumber: a.serialNumber || "-",
     category: a.category || "IT Equipment",
@@ -56,7 +56,7 @@ function Assets() {
 
       {/* Recent Assets Table */}
       <div className="assets-table">
-        <h3>Recent Assets</h3>
+        <h3>{showAllAssets ? "All Assets" : "Recent Assets"}</h3>
         <table className="table-new">
           <thead>
             <tr>
@@ -87,7 +87,9 @@ function Assets() {
           </tbody>
         </table>
         <div className="assets-footer-link">
-          <span onClick={() => navigate("/assets")}>View all assets →</span>
+          <span onClick={() => setShowAllAssets((current) => !current)}>
+            {showAllAssets ? "Show recent assets" : "View all assets ->"}
+          </span>
         </div>
       </div>
     </div>

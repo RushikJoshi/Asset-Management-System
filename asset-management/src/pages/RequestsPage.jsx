@@ -10,7 +10,6 @@ import ConfirmDeleteModal from "../components/common/ConfirmDeleteModal";
 import { deleteAsset, fetchAssetList, updateAsset } from "../store/slices/assetSlice";
 import { getRequestRecords } from "../utils/assetUtils";
 import { useToast } from "../components/toast/toastStore";
-import { pushAppNotification } from "../utils/notificationStore";
 import {
   APPROVAL_PENDING,
   buildApprovalPayload,
@@ -195,7 +194,6 @@ export function Requests() {
       }
 
       showToast({ title, message, type: "success" });
-      pushAppNotification({ title, message, type: "success", meta: { requestId: request._id } });
     } catch (error) {
       showToast({
         title: "Approval failed",
@@ -232,7 +230,6 @@ export function Requests() {
       }
 
       showToast({ title, message, type: "info" });
-      pushAppNotification({ title, message, type: "info", meta: { requestId: request._id } });
     } catch (error) {
       showToast({
         title: "Rejection failed",
@@ -250,11 +247,6 @@ export function Requests() {
     try {
       await dispatch(deleteAsset(deleteTarget._id)).unwrap();
       showToast({ title: "Request deleted", message: "The request was removed." });
-      pushAppNotification({
-        title: "Request deleted",
-        message: `${deleteTarget.requestId || "Request"} removed.`,
-        type: "info",
-      });
     } catch (error) {
       showToast({
         title: "Delete failed",

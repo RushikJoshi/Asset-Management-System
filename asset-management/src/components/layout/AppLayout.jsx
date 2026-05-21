@@ -30,7 +30,11 @@ import { fetchRoles } from "../../utils/roleApi";
 import {
   getNotifications,
   getUnreadNotificationCount,
-  markAllNotificationsRead,
+  getUnreadNotificationCountsByMenu,
+  isNotificationUnread,
+  markUserNotificationRead,
+  markUserNotificationsReadByMenu,
+  markUserNotificationsRead,
   subscribeNotifications,
   syncAssetNotifications,
 } from "../../utils/notificationStore";
@@ -146,6 +150,19 @@ const getPageTitle = (pathname) => {
   return "AssetPro";
 };
 
+const getNotificationMenuForPath = (pathname) => {
+  const matches = navItems
+    .flatMap((item) => [
+      item.to ? { path: item.to, label: item.label } : null,
+      ...(item.children || []).map((child) => ({ path: child.to, label: item.label })),
+    ])
+    .filter(Boolean)
+    .filter(({ path }) => pathname === path || (path !== "/" && pathname.startsWith(`${path}/`)))
+    .sort((a, b) => b.path.length - a.path.length);
+
+  return matches[0]?.label || "";
+};
+
 function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -156,9 +173,12 @@ function AppLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState(() => getNotifications());
+  const [notifications, setNotifications] = useState(() => getNotifications(user));
   const [unreadCount, setUnreadCount] = useState(() =>
-    getUnreadNotificationCount(),
+    getUnreadNotificationCount(user),
+  );
+  const [sidebarNotificationCounts, setSidebarNotificationCounts] = useState(() =>
+    getUnreadNotificationCountsByMenu(user),
   );
   const [roles, setRoles] = useState([]);
   const [mastersOpen, setMastersOpen] = useState(
@@ -171,10 +191,11 @@ function AppLayout() {
 
   useEffect(() => {
     return subscribeNotifications(() => {
-      setNotifications(getNotifications());
-      setUnreadCount(getUnreadNotificationCount());
+      setNotifications(getNotifications(user));
+      setUnreadCount(getUnreadNotificationCount(user));
+      setSidebarNotificationCounts(getUnreadNotificationCountsByMenu(user));
     });
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchRoles()
@@ -185,9 +206,9 @@ function AppLayout() {
 
   useEffect(() => {
     if (user?.role && assetListData.length) {
-      syncAssetNotifications(assetListData, user.role);
+      syncAssetNotifications(assetListData, user);
     }
-  }, [assetListData, user?.role]);
+  }, [assetListData, user]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -206,16 +227,44 @@ function AppLayout() {
 
   const toggleNotifications = () => {
     setIsNotifOpen((open) => {
-      const next = !open;
-      if (next) {
-        markAllNotificationsRead();
-        setUnreadCount(0);
-        setNotifications(getNotifications());
-      }
-      return next;
+      return !open;
     });
     setIsDropdownOpen(false);
   };
+
+  const refreshNotificationState = () => {
+    setNotifications(getNotifications(user));
+    setUnreadCount(getUnreadNotificationCount(user));
+    setSidebarNotificationCounts(getUnreadNotificationCountsByMenu(user));
+  };
+
+  const markAllCurrentNotificationsRead = () => {
+    markUserNotificationsRead(user);
+    refreshNotificationState();
+  };
+
+  const openNotification = (item) => {
+    markUserNotificationRead(item.id, user);
+    setIsNotifOpen(false);
+    refreshNotificationState();
+    if (item.meta?.route) {
+      navigate(item.meta.route);
+    }
+  };
+
+  const getMenuNotificationCount = (label) => sidebarNotificationCounts[label] || 0;
+
+  useEffect(() => {
+    refreshNotificationState();
+  }, [user]);
+
+  useEffect(() => {
+    const menuLabel = getNotificationMenuForPath(location.pathname);
+    if (!menuLabel) return;
+
+    markUserNotificationsReadByMenu(menuLabel, user);
+    refreshNotificationState();
+  }, [location.pathname, user]);
 
   const role = roles.find((item) => item.key === user?.role);
   const roleAccess = role?.sidebarAccess?.length
@@ -250,6 +299,12 @@ function AppLayout() {
   };
 
   const { actions: topbarActions } = useTopbarActions();
+
+  const renderSidebarBadge = (label) => {
+    const count = getMenuNotificationCount(label);
+    if (!count) return null;
+    return <em className="nav-notification-badge">{count > 99 ? "99+" : count}</em>;
+  };
 
   return (
     <div className={`shell ${isCollapsed ? "collapsed" : ""}`}>
@@ -304,6 +359,7 @@ function AppLayout() {
                   >
                     {item.icon}
                     <span>{item.label}</span>
+                    {renderSidebarBadge(item.label)}
                     <FaChevronDown
                       className={`nav-chevron ${mastersOpen ? "open" : ""}`}
                     />
@@ -341,6 +397,7 @@ function AppLayout() {
               >
                 {item.icon}
                 <span>{item.label}</span>
+                {renderSidebarBadge(item.label)}
               </NavLink>
             );
           })}
@@ -386,17 +443,42 @@ function AppLayout() {
               {isNotifOpen && (
                 <div className="notification-dropdown-menu">
                   <div className="notification-dropdown-head">
-                    <strong>Notifications</strong>
-                    <span>{notifications.length} total</span>
+                    <div>
+                      <strong>Notifications</strong>
+                      <span>{unreadCount} unread / {notifications.length} total</span>
+                    </div>
+                    {unreadCount > 0 ? (
+                      <button
+                        type="button"
+                        className="notification-mark-read-btn"
+                        onClick={markAllCurrentNotificationsRead}
+                      >
+                        Mark all read
+                      </button>
+                    ) : null}
                   </div>
                   {notifications.length ? (
                     <ul className="notification-list">
                       {notifications.slice(0, 12).map((item) => (
                         <li
                           key={item.id}
-                          className={`notification-item notification-item--${item.type || "info"}`}
+                          className={`notification-item notification-item--${item.type || "info"} ${isNotificationUnread(item, user) ? "unread" : ""}`}
+                          onClick={() => openNotification(item)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              openNotification(item);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
                         >
-                          <strong>{item.title}</strong>
+                          <div className="notification-item-title-row">
+                            <strong>{item.title}</strong>
+                            {item.meta?.menuLabel ? (
+                              <span>{item.meta.menuLabel}</span>
+                            ) : null}
+                          </div>
                           <p>{item.message}</p>
                           <time>
                             {new Date(item.createdAt).toLocaleString("en-IN")}
@@ -417,7 +499,15 @@ function AppLayout() {
                 aria-label="Profile menu"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <FaUser className="profile-avatar-icon" />
+                {user?.profilePhoto ? (
+                  <img
+                    src={user.profilePhoto}
+                    alt="Profile"
+                    className="profile-trigger-photo"
+                  />
+                ) : (
+                  <FaUser className="profile-avatar-icon" />
+                )}
               </button>
 
               {isDropdownOpen && (

@@ -38,7 +38,7 @@ router.get("/reports", authenticate, allowPermissions(PERMISSIONS.REPORT_VIEW), 
 router.post("/qr/refresh", authenticate, allowPermissions(PERMISSIONS.QR_GENERATE), refreshQrCodes);
 router.post("/demo/warranty-maintenance", authenticate, allowPermissions(PERMISSIONS.MAINTENANCE_MANAGE), seedWorkflowDemoData);
 router.get("/asset/:id", authenticate, allowPermissions(PERMISSIONS.ASSET_VIEW), getAsset);
-router.put("/asset/update/:id", authenticate, allowPermissions(PERMISSIONS.ASSET_EDIT, PERMISSIONS.ASSET_ASSIGN, PERMISSIONS.REQUEST_APPROVE, PERMISSIONS.REQUEST_REJECT, PERMISSIONS.AUDIT_MANAGE), updateAsset);
+router.put("/asset/update/:id", authenticate, allowPermissions(PERMISSIONS.ASSET_EDIT, PERMISSIONS.ASSET_ASSIGN, PERMISSIONS.REQUEST_APPROVE, PERMISSIONS.REQUEST_REJECT, PERMISSIONS.AUDIT_MANAGE, PERMISSIONS.AUDIT_VIEW), updateAsset);
 router.post("/asset/create", authenticate, allowPermissions(PERMISSIONS.ASSET_CREATE, PERMISSIONS.REQUEST_CREATE), createAsset);
 router.post("/asset/:id/workflow/:workflow", authenticate, allowPermissions(PERMISSIONS.AUDIT_MANAGE, PERMISSIONS.MAINTENANCE_MANAGE), createWorkflowEvent);
 router.delete("/asset/delete/:id", authenticate, allowPermissions(PERMISSIONS.ASSET_DELETE, PERMISSIONS.REQUEST_CREATE), deleteAsset);

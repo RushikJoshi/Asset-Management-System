@@ -21,6 +21,7 @@ function AssetDetails() {
   const dispatch = useDispatch();
   const { showToast } = useToast();
   const { singleAssetData, loading, error } = useSelector((state) => state.assetList);
+  const { user } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState("overview");
   const [repairForm, setRepairForm] = useState({ status: "OPEN", priority: "Medium" });
   const [transferForm, setTransferForm] = useState({ transferType: "Employee Transfer", approvalStatus: "Pending" });
@@ -120,14 +121,20 @@ function AssetDetails() {
 
   const addAudit = async (event) => {
     event.preventDefault();
+    const auditEntry = {
+      ...auditForm,
+      auditDate: auditForm.auditDate || new Date().toISOString(),
+      verifiedBy: auditForm.verifiedBy || user?.name || user?.email || "Auditor",
+      physicalStatus: auditForm.physicalStatus || "Verified",
+    };
     try {
       await saveWorkflow({
-        auditLogs: [...(asset.auditLogs || []), auditForm],
+        auditLogs: [...(asset.auditLogs || []), auditEntry],
         lifecycleTimeline: [
           ...(asset.lifecycleTimeline || []),
           {
             title: "Audit Verification",
-            detail: `${auditForm.physicalStatus || "Verified"} by ${auditForm.verifiedBy || "auditor"}.`,
+            detail: `${auditEntry.physicalStatus} by ${auditEntry.verifiedBy}.`,
             date: new Date(),
           },
         ],
@@ -292,6 +299,7 @@ function AssetDetails() {
           columns={["auditDate", "verifiedBy", "physicalStatus", "locationVerified", "notes"]}
         >
           <form className="workflow-form" onSubmit={addAudit}>
+            <input type="date" value={auditForm.auditDate || ""} onChange={(e) => setAuditForm({ ...auditForm, auditDate: e.target.value })} />
             <input placeholder="Verified By" value={auditForm.verifiedBy || ""} onChange={(e) => setAuditForm({ ...auditForm, verifiedBy: e.target.value })} />
             <select value={auditForm.physicalStatus} onChange={(e) => setAuditForm({ ...auditForm, physicalStatus: e.target.value })}>
               <option>Verified</option>
@@ -337,7 +345,11 @@ function AssetDetails() {
               <h3>Company Asset</h3>
               <strong>{asset.assetCode || asset._id}</strong>
               <p>{asset.assetName}</p>
-              <img src={asset.qrCode} alt="Asset QR" />
+              {asset.qrCode ? (
+                <img src={asset.qrCode} alt="Asset QR" />
+              ) : (
+                <div className="qr-sticker-empty">QR not generated</div>
+              )}
               <span>Scan For Details</span>
             </div>
 

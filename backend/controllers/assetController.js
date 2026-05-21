@@ -378,6 +378,11 @@ export const createAsset = async (req, res) => {
         message: "Owner Name is required",
       });
     }
+    if (isRequestRecord) {
+      data.requestedBy = data.requestedBy || req.user?.name || req.user?.username || "";
+      data.employeeEmail = data.employeeEmail || req.user?.email || "";
+      data.employeeId = data.employeeId || req.user?.employeeId || "";
+    }
     data.qrToken = crypto.randomBytes(16).toString("hex");
     data.lifecycleTimeline = [
       {
@@ -504,6 +509,19 @@ export const getAsset = async (req, res) => {
       });
     }
 
+    let qrUpdated = false;
+    if (!asset.qrToken) {
+      asset.qrToken = crypto.randomBytes(16).toString("hex");
+      qrUpdated = true;
+    }
+    if (asset.recordType !== "REQUEST" && !asset.qrCode) {
+      asset.qrCode = await generateQrCode(asset, req);
+      qrUpdated = true;
+    }
+    if (qrUpdated) {
+      await asset.save();
+    }
+
     res.status(200).json(asset);
   } catch (error) {
     res.status(500).json({
@@ -537,14 +555,20 @@ export const updateAsset = async (req, res) => {
     }
 
     const approvalKeys = ["managerApproval", "adminApproval", "requestStatus"];
+    const auditKeys = ["auditLogs", "lifecycleTimeline"];
     const payloadKeys = Object.keys(data).filter((key) => data[key] !== undefined);
     const approvalOnly = payloadKeys.length > 0 && payloadKeys.every((key) => approvalKeys.includes(key));
+    const auditOnly = payloadKeys.length > 0 && payloadKeys.every((key) => auditKeys.includes(key));
     const hasRejectedValue = [data.managerApproval, data.adminApproval, data.requestStatus].includes("Rejected");
     const isRequestRecord = asset.recordType === "REQUEST" || data.recordType === "REQUEST";
 
     if (isRequestRecord && approvalOnly) {
       const requiredPermission = hasRejectedValue ? PERMISSIONS.REQUEST_REJECT : PERMISSIONS.REQUEST_APPROVE;
       if (!req.hasPermission?.(requiredPermission)) {
+        return res.status(403).json({ success: false, message: "Permission denied" });
+      }
+    } else if (auditOnly) {
+      if (!req.hasPermission?.(PERMISSIONS.AUDIT_MANAGE) && !req.hasPermission?.(PERMISSIONS.AUDIT_VIEW)) {
         return res.status(403).json({ success: false, message: "Permission denied" });
       }
     } else if (data.assignedTo !== undefined || data.assignedDate !== undefined || data.employeeId !== undefined) {

@@ -444,11 +444,54 @@ export function Offices() {
 
 export function Audit() {
   const { assetListData } = useModuleData();
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { showToast } = useToast();
+  const { user } = useSelector((state) => state.auth);
+  const [verifyingId, setVerifyingId] = useState("");
   const auditRows = assetListData.map((asset) => ({
     ...asset,
     lastAudit: asset.auditLogs?.[asset.auditLogs.length - 1],
   }));
+  const verifyAsset = async (asset) => {
+    const auditEntry = {
+      auditDate: new Date().toISOString(),
+      verifiedBy: user?.name || user?.email || "Auditor",
+      physicalStatus: "Verified",
+      locationVerified: "Yes",
+      notes: "Verified from Audit Session",
+    };
+
+    try {
+      setVerifyingId(asset._id);
+      await dispatch(updateAsset({
+        id: asset._id,
+        payload: {
+          auditLogs: [...(asset.auditLogs || []), auditEntry],
+          lifecycleTimeline: [
+            ...(asset.lifecycleTimeline || []),
+            {
+              title: "Audit Verification",
+              detail: `Verified by ${auditEntry.verifiedBy}.`,
+              date: new Date().toISOString(),
+            },
+          ],
+        },
+      })).unwrap();
+      await dispatch(fetchAssetList());
+      showToast({
+        title: "Asset verified",
+        message: `${asset.assetName || "Asset"} audit status updated.`,
+      });
+    } catch (error) {
+      showToast({
+        title: "Verification failed",
+        message: error || "Unable to verify this asset.",
+        type: "error",
+      });
+    } finally {
+      setVerifyingId("");
+    }
+  };
 
   return (
     <>
@@ -466,7 +509,21 @@ export function Audit() {
           { key: "officeName", label: "Office" },
           { key: "lastAudit", label: "Last Status", render: (row) => row.lastAudit?.physicalStatus || "Pending" },
           { key: "auditDate", label: "Audit Date", render: (row) => dateText(row.lastAudit?.auditDate) },
-          { key: "action", label: "Action", render: (row) => <button className="module-button" onClick={() => navigate(`/asset-details/${row._id}`)}>Verify</button> },
+          {
+            key: "action",
+            label: "Action",
+            render: (row) => (
+              <button
+                className="module-button"
+                disabled={verifyingId === row._id || row.lastAudit?.physicalStatus === "Verified"}
+                onClick={() => verifyAsset(row)}
+              >
+                {row.lastAudit?.physicalStatus === "Verified"
+                  ? "Verified"
+                  : verifyingId === row._id ? "Saving..." : "Verify"}
+              </button>
+            ),
+          },
         ]}
         rows={auditRows}
       />
@@ -578,15 +635,18 @@ export function Roles() {
   const loadRoles = async () => {
     const data = await fetchRoles();
     setRoles(
-      data.map((role) => ({
-        id: role.key,
-        key: role.key,
-        role: role.label,
-        sidebarAccess: role.sidebarAccess?.length ? role.sidebarAccess : parseAccessLabels(role.access),
-        permissions: role.permissions || [],
-        access: role.access || "-",
-        isSystem: Boolean(role.isSystem),
-      })),
+      data.map((role) => {
+        const sidebarAccess = role.sidebarAccess?.length ? role.sidebarAccess : parseAccessLabels(role.access);
+        return {
+          id: role.key,
+          key: role.key,
+          role: role.label,
+          sidebarAccess,
+          permissions: role.permissions || [],
+          access: formatAccessLabels(sidebarAccess) || "-",
+          isSystem: Boolean(role.isSystem),
+        };
+      }),
     );
   };
 
@@ -599,6 +659,10 @@ export function Roles() {
     event.preventDefault();
     if (!newRole.label.trim()) {
       showToast({ title: "Role required", message: "Enter a role name.", type: "error" });
+      return;
+    }
+    if (!newRole.sidebarAccess.length) {
+      showToast({ title: "Access required", message: "Select at least one visible menu for this role.", type: "error" });
       return;
     }
 
@@ -640,6 +704,10 @@ export function Roles() {
   const saveEdit = async (row) => {
     if (!editForm.label.trim()) {
       showToast({ title: "Role required", message: "Enter a role name.", type: "error" });
+      return;
+    }
+    if (!editForm.sidebarAccess.length) {
+      showToast({ title: "Access required", message: "Select at least one visible menu for this role.", type: "error" });
       return;
     }
 
@@ -724,6 +792,26 @@ export function Roles() {
     );
   };
 
+  const renderAccessPicker = (id, value, onChange) =>
+    renderMultiDropdown({
+      id,
+      value,
+      options: MENU_ACCESS_OPTIONS,
+      placeholder: "Select visible menus",
+      onChange,
+    });
+
+  const renderPermissionPicker = (id, value, onChange) =>
+    renderMultiDropdown({
+      id,
+      value,
+      options: PERMISSION_OPTIONS,
+      placeholder: "Select permissions",
+      onChange,
+      getValue: (option) => option.value,
+      getLabel: (option) => `${option.group} - ${option.label}`,
+    });
+
   return (
     <>
       <PageTitle
@@ -756,7 +844,7 @@ export function Roles() {
           onSubmit={addRole}
           style={{ 
             display: "grid", 
-            gridTemplateColumns: "1fr 1fr auto", 
+            gridTemplateColumns: "1fr 1fr 1fr auto", 
             gap: "16px", 
             alignItems: "end" 
           }}
@@ -774,14 +862,15 @@ export function Roles() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <label htmlFor="new-role-access" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Visible / Primary Access</label>
-            <input
-              id="new-role-access"
-              className="custom-input"
-              style={{ height: "36px", padding: "0 12px", fontSize: "13px", boxSizing: "border-box" }}
-              placeholder="Dashboard, Assets, Reports"
-              value={newRole.access}
-              onChange={(e) => setNewRole({ ...newRole, access: e.target.value })}
-            />
+            {renderAccessPicker("new-role-access", newRole.sidebarAccess, (next) =>
+              setNewRole({ ...newRole, sidebarAccess: next })
+            )}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label htmlFor="new-role-permissions" style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase" }}>Permissions</label>
+            {renderPermissionPicker("new-role-permissions", newRole.permissions, (next) =>
+              setNewRole({ ...newRole, permissions: next })
+            )}
           </div>
           <button 
             type="submit" 
@@ -794,68 +883,74 @@ export function Roles() {
         </form>
       </section>
 
-      <DataTable
-        columns={[
-          { 
-            key: "role", 
-            label: "Role", 
-            render: (row) => editingKey === row.key ? (
-              <input 
-                className="custom-input" 
-                style={{ height: "30px", fontSize: "13px", padding: "0 8px", width: "100%", boxSizing: "border-box" }} 
-                value={editForm.label} 
-                onChange={(e) => setEditForm({ ...editForm, label: e.target.value })} 
-              />
-            ) : row.role 
-          },
-          { 
-            key: "access", 
-            label: "Visible / Primary Access", 
-            render: (row) => editingKey === row.key ? (
-              <input 
-                className="custom-input" 
-                style={{ height: "30px", fontSize: "13px", padding: "0 8px", width: "100%", boxSizing: "border-box" }} 
-                value={editForm.access} 
-                onChange={(e) => setEditForm({ ...editForm, access: e.target.value })} 
-              />
-            ) : row.access 
-          },
-          { 
-            key: "type", 
-            label: "Type", 
-            render: (row) => row.isSystem ? (
-              <span className="role-system-tag" style={{ background: "var(--bg-subtle)", color: "var(--text-muted)", padding: "4px 8px", borderRadius: "var(--radius-sm)", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>System</span>
-            ) : (
-              <span className="role-custom-tag" style={{ background: "rgba(14,165,164,0.1)", color: "var(--color-primary)", padding: "4px 8px", borderRadius: "var(--radius-sm)", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>Custom</span>
-            ) 
-          },
-          { 
-            key: "actions", 
-            label: "Actions", 
-            render: (row) => editingKey === row.key ? (
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button type="button" className="module-button" style={{ padding: "0 12px", height: "28px", fontSize: "12px", borderRadius: "var(--radius-sm)" }} onClick={() => saveEdit(row)}>Save</button>
-                <button type="button" className="module-button secondary-button" style={{ padding: "0 12px", height: "28px", fontSize: "12px", borderRadius: "var(--radius-sm)" }} onClick={cancelEdit}>Cancel</button>
-              </div>
-            ) : (
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button type="button" className="module-button" style={{ padding: "0 12px", height: "28px", fontSize: "12px", borderRadius: "var(--radius-sm)" }} onClick={() => startEdit(row)}>Edit</button>
-                {!row.isSystem && (
-                  <button 
-                    type="button" 
-                    className="module-button danger" 
-                    style={{ padding: "0 12px", height: "28px", fontSize: "12px", background: "#FEF2F2", borderColor: "#FECACA", color: "#DC2626", borderRadius: "var(--radius-sm)" }} 
-                    onClick={() => setDeleteTarget(row)}
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            ) 
-          }
-        ]}
-        rows={roles}
-      />
+      <div className="roles-table-shell">
+        <DataTable
+          columns={[
+            { 
+              key: "role", 
+              label: "Role", 
+              render: (row) => editingKey === row.key ? (
+                <input 
+                  className="custom-input" 
+                  style={{ height: "36px", fontSize: "13px", padding: "0 10px", width: "100%", boxSizing: "border-box" }} 
+                  value={editForm.label} 
+                  onChange={(e) => setEditForm({ ...editForm, label: e.target.value })} 
+                />
+              ) : row.role 
+            },
+            { 
+              key: "access", 
+              label: "Visible / Primary Access", 
+              render: (row) => editingKey === row.key ? (
+                <div className="role-edit-access-stack">
+                  {renderAccessPicker(`edit-role-access-${row.key}`, editForm.sidebarAccess, (next) =>
+                    setEditForm({ ...editForm, sidebarAccess: next })
+                  )}
+                  {renderPermissionPicker(`edit-role-permissions-${row.key}`, editForm.permissions, (next) =>
+                    setEditForm({ ...editForm, permissions: next })
+                  )}
+                </div>
+              ) : (
+                <span className="role-table-access-text">{row.access}</span>
+              ) 
+            },
+            { 
+              key: "type", 
+              label: "Type", 
+              render: (row) => row.isSystem ? (
+                <span className="role-system-tag" style={{ background: "var(--bg-subtle)", color: "var(--text-muted)", padding: "4px 8px", borderRadius: "var(--radius-sm)", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>System</span>
+              ) : (
+                <span className="role-custom-tag" style={{ background: "rgba(14,165,164,0.1)", color: "var(--color-primary)", padding: "4px 8px", borderRadius: "var(--radius-sm)", fontSize: "11px", fontWeight: "600", textTransform: "uppercase" }}>Custom</span>
+              ) 
+            },
+            { 
+              key: "actions", 
+              label: "Actions", 
+              render: (row) => editingKey === row.key ? (
+                <div className="role-row-actions">
+                  <button type="button" className="module-button" style={{ padding: "0 12px", height: "34px", fontSize: "12px", borderRadius: "var(--radius-sm)" }} onClick={() => saveEdit(row)}>Save</button>
+                  <button type="button" className="module-button secondary-button" style={{ padding: "0 12px", height: "34px", fontSize: "12px", borderRadius: "var(--radius-sm)" }} onClick={cancelEdit}>Cancel</button>
+                </div>
+              ) : (
+                <div className="role-row-actions">
+                  <button type="button" className="module-button" style={{ padding: "0 12px", height: "34px", fontSize: "12px", borderRadius: "var(--radius-sm)" }} onClick={() => startEdit(row)}>Edit</button>
+                  {!row.isSystem && (
+                    <button 
+                      type="button" 
+                      className="module-button danger" 
+                      style={{ padding: "0 12px", height: "34px", fontSize: "12px", background: "#FEF2F2", borderColor: "#FECACA", color: "#DC2626", borderRadius: "var(--radius-sm)" }} 
+                      onClick={() => setDeleteTarget(row)}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              ) 
+            }
+          ]}
+          rows={roles}
+        />
+      </div>
 
       <ConfirmDeleteModal
         open={Boolean(deleteTarget)}
