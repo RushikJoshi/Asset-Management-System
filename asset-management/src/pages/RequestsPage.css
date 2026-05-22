@@ -105,6 +105,8 @@
   flex-direction: column;
   gap: 16px;
   animation: fadeInRequests 0.4s ease-out;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 @keyframes fadeInRequests {
@@ -233,6 +235,8 @@
   flex-direction: column;
   min-height: 300px;
   gap: 16px;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 /* Toolbar search and status filters */
@@ -335,9 +339,34 @@
 
 /* Table Responsive wrapper */
 .table-responsive-new {
-  width: 100%;
-  overflow-x: auto;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
   border-radius: 8px;
+}
+
+/* Custom Scrollbar for horizontal scrolling */
+.table-responsive-new::-webkit-scrollbar,
+.requests-page-container .module-table-wrap::-webkit-scrollbar {
+  height: 8px !important;
+}
+
+.table-responsive-new::-webkit-scrollbar-track,
+.requests-page-container .module-table-wrap::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 10px !important;
+}
+
+.table-responsive-new::-webkit-scrollbar-thumb,
+.requests-page-container .module-table-wrap::-webkit-scrollbar-thumb {
+  background: #0d9488 !important;
+  border-radius: 10px !important;
+  border: 2px solid #f1f5f9 !important;
+}
+
+.table-responsive-new::-webkit-scrollbar-thumb:hover,
+.requests-page-container .module-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #0f766e !important;
 }
 
 /* Action button improvements inside Requests Page */
@@ -445,5 +474,67 @@
   .filter-wrapper, .status-filter-premium {
     width: 100%;
   }
+}
+
+/* Table layout adjustments to prevent horizontal column cropping */
+.requests-page-container .module-table-wrap {
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+
+.requests-page-container .module-table {
+  min-width: 1200px !important;
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.requests-page-container .module-table td {
+  white-space: normal !important;
+  word-break: break-word !important;
+  vertical-align: middle !important;
+}
+
+/* Request ID column */
+.requests-page-container .module-table th:nth-child(1),
+.requests-page-container .module-table td:nth-child(1) {
+  width: 120px !important;
+}
+
+/* Requested By column */
+.requests-page-container .module-table th:nth-child(2),
+.requests-page-container .module-table td:nth-child(2) {
+  width: 185px !important;
+}
+
+/* Reporting To column (forces breaking of very long emails/names) */
+.requests-page-container .module-table th:nth-child(3),
+.requests-page-container .module-table td:nth-child(3) {
+  width: 200px !important;
+  word-break: break-all !important;
+}
+
+/* Products List column */
+.requests-page-container .module-table th:nth-child(4),
+.requests-page-container .module-table td:nth-child(4) {
+  width: 285px !important;
+}
+
+/* Requested Date column */
+.requests-page-container .module-table th:nth-child(5),
+.requests-page-container .module-table td:nth-child(5) {
+  width: 130px !important;
+}
+
+/* Status column */
+.requests-page-container .module-table th:nth-child(6),
+.requests-page-container .module-table td:nth-child(6) {
+  width: 120px !important;
+}
+
+/* Action column (ensures buttons are always inline on a single line) */
+.requests-page-container .module-table th:nth-child(7),
+.requests-page-container .module-table td:nth-child(7) {
+  width: 160px !important;
+  white-space: nowrap !important;
 }
 

@@ -31,6 +31,11 @@ import Procurements from "../pages/Procurements";
 import POSummary from "../pages/POSummary";
 import ApprovalsPage from "../pages/ApprovalsPage";
 import WorkOrdersPage from "../pages/WorkOrdersPage";
+import UsersPage from "../pages/setup/UsersPage";
+import VendorsPage from "../pages/setup/VendorsPage";
+import ProductsPage from "../pages/setup/ProductsPage";
+import PreferencesPage from "../pages/setup/PreferencesPage";
+import AddRequestPage from "../pages/AddRequestPage";
 import { canAccessRoute, getRoleHome } from "../utils/permissions";
 import { fetchRoles } from "../utils/roleApi";
 
@@ -64,10 +69,14 @@ function AppRouter() {
           <Route path="/scan-demo" element={<ScanDemo />} />
           <Route path="/add-asset" element={<AddAsset />} />
           <Route path="/edit-asset/:id" element={<AddAsset />} />
-          <Route path="/add-request" element={<AddAsset />} />
-          <Route path="/edit-request/:id" element={<AddAsset />} />
+           <Route path="/add-request" element={<AddRequestPage />} />
+          <Route path="/edit-request/:id" element={<AddRequestPage />} />
           <Route path="/asset-details/:id" element={<AssetDetails />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/setup/users" element={<UsersPage />} />
+          <Route path="/setup/vendors" element={<VendorsPage />} />
+          <Route path="/setup/products" element={<ProductsPage />} />
+          <Route path="/setup/preferences" element={<PreferencesPage />} />
         </Route>
         <Route path="/scan/:id" element={<AssetDetails />} />
       </Routes>

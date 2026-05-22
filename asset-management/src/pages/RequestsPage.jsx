@@ -30,104 +30,126 @@ import {
 } from "react-icons/fa";
 import "./RequestsPage.css";
 
-function ApprovalBadge({ value }) {
-  const normalized = String(value || APPROVAL_PENDING).toLowerCase();
-  return <span className={`approval-badge approval-badge--${normalized}`}>{value || APPROVAL_PENDING}</span>;
-}
-
-function useModuleData() {
+export function Requests() {
   const dispatch = useDispatch();
-  const { assetListData, loading } = useSelector((state) => state.assetList);
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const { assetListData } = useSelector(
+    (state) => state.assetList
+  );
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
     dispatch(fetchAssetList());
   }, [dispatch]);
 
-  return { assetListData, loading };
-}
+  const rawRequests = getRequestRecords(assetListData);
 
-export function Requests() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { showToast } = useToast();
-  const { user } = useSelector((state) => state.auth);
-  const { assetListData } = useModuleData();
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [approvingId, setApprovingId] = useState("");
-  const [selectedAction, setSelectedAction] = useState({});
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  // Group requests by requestId
+  const groupedRequests = [];
+  const requestGroups = {};
 
-  const requests = getRequestRecords(assetListData);
-  const pendingCount = requests.filter((item) => !isRequestFullyApproved(item) && !isRequestRejected(item)).length;
-  const approvedCount = requests.filter((item) => isRequestFullyApproved(item)).length;
-  const rejectedCount = requests.filter((item) => isRequestRejected(item)).length;
-  
-  const hideStatusColumn = ["IT_STAFF", "MANAGER"].includes(user?.role);
-  const showActionDropdown = user?.role !== "IT_STAFF";
+  rawRequests.forEach((item) => {
+    const reqId = item.requestId || "Unknown";
+    if (!requestGroups[reqId]) {
+      requestGroups[reqId] = {
+        _id: item._id, // Keep one ID for keying/modals if needed
+        requestId: reqId,
+        requestedBy: item.requestedBy || "Unknown",
+        requestDate: item.requestDate || item.createdAt,
+        reportingTo: item.reportingTo || "Admin\ncreatorindustrysolutions",
+        items: [],
+      };
+    }
+    requestGroups[reqId].items.push(item);
+  });
 
-  // Filter requests based on search and statusFilter
-  const filteredRequests = requests.filter((item) => {
+  const getGroupStatus = (group) => {
+    const allApproved = group.items.every(item => item.requestStatus === "Approved" || (item.managerApproval === "Approved" && item.adminApproval === "Approved"));
+    const anyRejected = group.items.some(item => item.requestStatus === "Rejected" || item.managerApproval === "Rejected" || item.adminApproval === "Rejected");
+    const anyPORaised = group.items.some(item => String(item.purchaseStatus || item.requestStatus).toLowerCase().includes("po") || String(item.purchaseStatus || item.requestStatus).toLowerCase().includes("progress"));
+    const anyCompleted = group.items.every(item => item.requestStatus === "Completed" || item.requestStatus === "Delivered");
+
+    if (anyCompleted) return "Completed";
+    if (anyRejected) return "Rejected";
+    if (anyPORaised) return "PO Raised";
+    if (allApproved) return "Approved";
+    return "Requested";
+  };
+
+  Object.keys(requestGroups).forEach((key) => {
+    const group = requestGroups[key];
+    group.status = getGroupStatus(group);
+    groupedRequests.push(group);
+  });
+
+  // Sort groups descending by numeric request ID if possible
+  groupedRequests.sort((a, b) => {
+    const numA = parseInt(a.requestId.replace(/\D/g, ""), 10) || 0;
+    const numB = parseInt(b.requestId.replace(/\D/g, ""), 10) || 0;
+    if (numA && numB) return numB - numA;
+    return new Date(b.requestDate) - new Date(a.requestDate);
+  });
+
+  // Date Formatter matching Zoho: e.g. "18-May-26"
+  const formatDate = (dateVal) => {
+    if (!dateVal) return "-";
+    const d = new Date(dateVal);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear().toString().substr(-2);
+    return `${day}-${month}-${year}`;
+  };
+
+  // KPI Calculations
+  const requestedCount = groupedRequests.filter((item) => item.status === "Requested" || item.status === "Pending").length;
+  const approvedCount = groupedRequests.filter((item) => item.status === "Approved").length;
+  const inProgressCount = groupedRequests.filter((item) => item.status === "PO Raised" || item.status === "In Progress").length;
+  const completedCount = groupedRequests.filter((item) => item.status === "Completed").length;
+  const totalCount = groupedRequests.length;
+
+  // Filtering based on search and status filter
+  const filteredRequests = groupedRequests.filter((group) => {
     // 1. Status Filter
     let matchesStatus = true;
-    if (statusFilter === "PENDING") {
-      matchesStatus = !isRequestFullyApproved(item) && !isRequestRejected(item);
-    } else if (statusFilter === "APPROVED") {
-      matchesStatus = isRequestFullyApproved(item);
-    } else if (statusFilter === "REJECTED") {
-      matchesStatus = isRequestRejected(item);
+    if (statusFilter !== "ALL") {
+      if (statusFilter === "Requested") {
+        matchesStatus = group.status === "Requested" || group.status === "Pending";
+      } else if (statusFilter === "Approved") {
+        matchesStatus = group.status === "Approved";
+      } else if (statusFilter === "In Progress") {
+        matchesStatus = group.status === "PO Raised" || group.status === "In Progress";
+      } else if (statusFilter === "Completed") {
+        matchesStatus = group.status === "Completed";
+      } else {
+        matchesStatus = group.status === statusFilter;
+      }
     }
 
     // 2. Search Text
     const searchLower = search.toLowerCase();
     const matchesSearch =
-      String(item.requestId || "").toLowerCase().includes(searchLower) ||
-      String(item.requestedBy || "").toLowerCase().includes(searchLower) ||
-      String(item.department || "").toLowerCase().includes(searchLower) ||
-      String(item.category || "").toLowerCase().includes(searchLower) ||
-      String(item.requestType || "").toLowerCase().includes(searchLower);
+      group.requestId.toLowerCase().includes(searchLower) ||
+      group.requestedBy.toLowerCase().includes(searchLower) ||
+      group.items.some(
+        (item) =>
+          String(item.brand || "").toLowerCase().includes(searchLower) ||
+          String(item.category || "").toLowerCase().includes(searchLower) ||
+          String(item.subCategory || "").toLowerCase().includes(searchLower) ||
+          String(item.assetName || "").toLowerCase().includes(searchLower)
+      );
 
     return matchesStatus && matchesSearch;
   });
 
   const renderRequestId = (id) => (
-    <strong style={{ color: "#0d9488", fontFamily: "monospace", fontSize: "13px" }}>
-      {id || "-"}
+    <strong style={{ color: "#0ea5e9", fontFamily: "monospace", fontSize: "14px", fontWeight: "600" }}>
+      {id}
     </strong>
   );
-
-  const renderType = (type) => (
-    <span style={{ fontWeight: "600", color: "#1e293b", textTransform: "capitalize" }}>
-      {String(type || "").toLowerCase()}
-    </span>
-  );
-
-  const renderPriority = (priority) => {
-    const p = String(priority || "low").toLowerCase();
-    let style = { color: "#64748b", background: "#f1f5f9", border: "1px solid #cbd5e1" };
-    if (p.includes("high") || p.includes("critical")) {
-      style = { color: "#ef4444", background: "#fef2f2", border: "1px solid #fca5a5" };
-    } else if (p.includes("medium")) {
-      style = { color: "#f59e0b", background: "#fffbeb", border: "1px solid #fde68a" };
-    } else if (p.includes("low")) {
-      style = { color: "#3b82f6", background: "#eff6ff", border: "1px solid #bfdbfe" };
-    }
-    return (
-      <span 
-        style={{ 
-          fontSize: "11px", 
-          fontWeight: "600", 
-          padding: "3px 8px", 
-          borderRadius: "12px", 
-          textTransform: "capitalize",
-          display: "inline-block",
-          ...style 
-        }}
-      >
-        {priority || "Low"}
-      </span>
-    );
-  };
 
   const requestColumns = [
     {
@@ -136,220 +158,166 @@ export function Requests() {
       render: (row) => renderRequestId(row.requestId),
     },
     {
-      key: "requestType",
-      label: "Type",
-      render: (row) => renderType(row.requestType),
+      key: "requestedBy",
+      label: "Requested By",
+      render: (row) => (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            backgroundColor: "#eff6ff",
+            color: "#1e40af",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: "bold",
+            fontSize: "12px"
+          }}>
+            {row.requestedBy.substring(0, 2).toUpperCase()}
+          </div>
+          <span style={{ fontWeight: "500", color: "#1e293b" }}>{row.requestedBy}</span>
+        </div>
+      )
     },
-    { key: "requestedBy", label: "Requested By" },
-    { key: "department", label: "Department" },
-    { key: "category", label: "Asset Type" },
     {
-      key: "requestPriority",
-      label: "Priority",
-      render: (row) => renderPriority(row.requestPriority),
+      key: "reportingTo",
+      label: "Reporting To",
+      render: (row) => (
+        <div style={{ fontSize: "13px", color: "#64748b", whiteSpace: "pre-line", lineHeight: "1.4", maxWidth: "160px", wordBreak: "break-word" }}>
+          {row.reportingTo}
+        </div>
+      )
     },
     {
-      key: "managerApproval",
-      label: "Manager",
-      render: (row) => <ApprovalBadge value={row.managerApproval} />,
+      key: "productsList",
+      label: "Products List",
+      render: (row) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxWidth: "260px", whiteSpace: "normal" }}>
+          {row.items.map((item, idx) => (
+            <div key={idx} style={{ fontSize: "13px", color: "#334155", lineHeight: "1.5", whiteSpace: "normal" }}>
+              {item.brand || "Generic"} | {item.assetName || item.category} - {item.subCategory || item.category} | {item.quantity || 1} | <span style={{
+                color: item.requestStatus === "Approved" ? "#10b981" : item.requestStatus === "Rejected" ? "#ef4444" : "#f59e0b",
+                fontWeight: "600",
+                fontSize: "12px",
+                whiteSpace: "nowrap"
+              }}>{item.requestStatus || "Requested"}</span>
+            </div>
+          ))}
+        </div>
+      )
     },
     {
-      key: "adminApproval",
-      label: "IT/Admin",
-      render: (row) => <ApprovalBadge value={row.adminApproval} />,
+      key: "requestDate",
+      label: "Requested Date",
+      render: (row) => (
+        <span style={{ fontSize: "13px", color: "#334155", fontWeight: "500" }}>
+          {formatDate(row.requestDate)}
+        </span>
+      )
     },
-  ];
-
-  if (!hideStatusColumn) {
-    requestColumns.push({
-      key: "requestStatus",
+    {
+      key: "status",
       label: "Status",
-      render: (row) => <ApprovalBadge value={row.requestStatus} />,
-    });
-  }
-
-  requestColumns.push({
-    key: "action",
-    label: "Action",
-    render: (row) => {
-      const step = getNextApprovalStep(row, user?.role);
-      const changeStep = !step ? getChangeableApprovalStep(row, user?.role) : null;
-      const fullyApproved = isRequestFullyApproved(row);
-      const canDelete = canDeleteRequest(row);
-      const canEdit = canEditRequest(row);
-      const busy = approvingId === row._id;
-
-      return (
-        <div className="module-actions request-row-actions">
-          {canEdit ? (
+      render: (row) => {
+        const s = row.status;
+        let style = { color: "#64748b", background: "#f1f5f9", border: "1px solid #cbd5e1" };
+        if (s === "Approved") {
+          style = { color: "#10b981", background: "#ecfdf5", border: "1px solid #a7f3d0" };
+        } else if (s === "PO Raised" || s === "In Progress") {
+          style = { color: "#f59e0b", background: "#fffbeb", border: "1px solid #fef3c7" };
+        } else if (s === "Completed") {
+          style = { color: "#0ea5e9", background: "#f0f9ff", border: "1px solid #bae6fd" };
+        } else if (s === "Rejected") {
+          style = { color: "#ef4444", background: "#fef2f2", border: "1px solid #fecaca" };
+        } else if (s === "Requested" || s === "Pending") {
+          style = { color: "#0d9488", background: "#f0fdfa", border: "1px solid #ccfbf1" };
+        }
+        return (
+          <span style={{
+            fontSize: "12px",
+            fontWeight: "600",
+            padding: "4px 10px",
+            borderRadius: "12px",
+            display: "inline-block",
+            ...style
+          }}>
+            {s}
+          </span>
+        );
+      }
+    },
+    {
+      key: "action",
+      label: "Action",
+      render: (row) => {
+        const isEditable = row.status === "Requested" || row.status === "Pending";
+        return (
+          <div style={{ display: "flex", gap: "8px" }}>
             <button
-              type="button"
-              className="module-button secondary-button"
-              onClick={() => navigate(`/edit-request/${row._id}`)}
+              onClick={() => {
+                if (isEditable) {
+                  navigate(`/edit-request/${row.requestId}`);
+                }
+              }}
+              disabled={!isEditable}
+              style={{
+                backgroundColor: isEditable ? "#eff6ff" : "#f1f5f9",
+                color: isEditable ? "#2563eb" : "#94a3b8",
+                border: `1px solid ${isEditable ? "#bfdbfe" : "#cbd5e1"}`,
+                padding: "6px 12px",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: "600",
+                cursor: isEditable ? "pointer" : "not-allowed",
+                transition: "all 0.15s ease",
+              }}
+              title={isEditable ? "Edit Request" : "Processed request cannot be edited"}
             >
               Edit
             </button>
-          ) : (
-            <span className="request-action-done">Completed</span>
-          )}
-
-          {(step || changeStep) && showActionDropdown ? (
-            <div className="request-action-dropdown-group">
-              <select
-                className="request-action-select"
-                value={selectedAction[row._id] || "none"}
-                disabled={busy}
-                onChange={(event) =>
-                  setSelectedAction((prev) => ({
-                    ...prev,
-                    [row._id]: event.target.value,
-                  }))
-                }
-              >
-                <option value="none">Select action</option>
-                <option value="approve">{step?.label || changeStep?.label}</option>
-                <option value="reject">Reject ({step?.stepName || changeStep?.stepName})</option>
-              </select>
-              <button
-                type="button"
-                className="module-button"
-                disabled={busy || !selectedAction[row._id] || selectedAction[row._id] === "none"}
-                onClick={() => handleSelectedAction(row, step || changeStep)}
-              >
-                {busy ? "Saving…" : "Apply"}
-              </button>
-            </div>
-          ) : step && !showActionDropdown ? (
-            <span className="request-action-wait">Action not available</span>
-          ) : fullyApproved ? (
-            <span className="request-action-approved">Approved</span>
-          ) : isRequestRejected(row) ? (
-            <span className="request-action-rejected">Rejected</span>
-          ) : (
-            <span className="request-action-wait" title="Waiting for manager approval first">
-              Awaiting manager
-            </span>
-          )}
-
-          {canDelete ? (
             <button
-              type="button"
-              className="module-button danger"
-              onClick={() => setDeleteTarget(row)}
+              onClick={() => {
+                if (isEditable) {
+                  setDeleteTarget(row);
+                }
+              }}
+              disabled={!isEditable}
+              style={{
+                backgroundColor: isEditable ? "#fef2f2" : "#f1f5f9",
+                color: isEditable ? "#ef4444" : "#94a3b8",
+                border: `1px solid ${isEditable ? "#fecaca" : "#cbd5e1"}`,
+                padding: "6px 12px",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: "600",
+                cursor: isEditable ? "pointer" : "not-allowed",
+                transition: "all 0.15s ease",
+              }}
+              title={isEditable ? "Delete Request" : "Processed request cannot be deleted"}
             >
               Delete
             </button>
-          ) : (
-            <button type="button" className="module-button danger" disabled title="Cannot delete after approval">
-              Delete
-            </button>
-          )}
-        </div>
-      );
-    },
-  });
-
-  const approveStep = async (request, step) => {
-    if (!step?.field) return;
-    setApprovingId(request._id);
-    try {
-      const oldValue = request[step.field] || "Pending";
-      const payload = buildApprovalPayload(request, step.field);
-      await dispatch(updateAsset({ id: request._id, payload })).unwrap();
-      await dispatch(fetchAssetList());
-
-      const fullyApproved = payload.requestStatus === "Approved";
-      const requestName = request.requestId || request.assetName || "Request";
-      
-      // Build notification message with state change info
-      let title = fullyApproved ? "✓ Request fully approved" : `✓ ${step.stepName} approved`;
-      let message = `${requestName}`;
-      
-      if (oldValue !== "Approved") {
-        // State changed
-        message += ` — ${step.stepName} status: ${oldValue} → Approved`;
-      } else {
-        // Reconfirmed same state
-        message += ` — ${step.stepName} status confirmed`;
+          </div>
+        );
       }
-      
-      if (fullyApproved) {
-        message += ". Ready for next steps.";
-      } else {
-        message += ". Awaiting next approval.";
-      }
-
-      showToast({ title, message, type: "success" });
-    } catch (error) {
-      showToast({
-        title: "Approval failed",
-        message: error || "Could not approve this request.",
-        type: "error",
-      });
-    } finally {
-      setApprovingId("");
-      setSelectedAction((prev) => ({ ...prev, [request._id]: "none" }));
     }
-  };
-
-  const rejectStep = async (request, step) => {
-    if (!step?.field) return;
-    setApprovingId(request._id);
-    try {
-      const oldValue = request[step.field] || "Pending";
-      const payload = buildRejectionPayload(request, step.field);
-      await dispatch(updateAsset({ id: request._id, payload })).unwrap();
-      await dispatch(fetchAssetList());
-
-      const requestName = request.requestId || request.assetName || "Request";
-      
-      // Build notification message with state change info
-      let title = `✗ ${step.stepName} rejected`;
-      let message = `${requestName}`;
-      
-      if (oldValue !== "Rejected") {
-        // State changed
-        message += ` — ${step.stepName} status: ${oldValue} → Rejected`;
-      } else {
-        // Reconfirmed same state
-        message += ` — ${step.stepName} rejection confirmed`;
-      }
-
-      showToast({ title, message, type: "info" });
-    } catch (error) {
-      showToast({
-        title: "Rejection failed",
-        message: error || "Could not reject this request.",
-        type: "error",
-      });
-    } finally {
-      setApprovingId("");
-      setSelectedAction((prev) => ({ ...prev, [request._id]: "none" }));
-    }
-  };
+  ];
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await dispatch(deleteAsset(deleteTarget._id)).unwrap();
-      showToast({ title: "Request deleted", message: "The request was removed." });
+      const deletePromises = deleteTarget.items.map(item => dispatch(deleteAsset(item._id)).unwrap());
+      await Promise.all(deletePromises);
+      showToast({ title: "Request deleted", message: "The request group was removed successfully." });
     } catch (error) {
       showToast({
         title: "Delete failed",
-        message: error || "Unable to delete this request.",
+        message: error || "Unable to delete request.",
         type: "error",
       });
     } finally {
       setDeleteTarget(null);
-    }
-  };
-
-  const handleSelectedAction = async (request, step) => {
-    const action = selectedAction[request._id];
-    if (action === "approve") {
-      await approveStep(request, step);
-    } else if (action === "reject") {
-      await rejectStep(request, step);
     }
   };
 
@@ -358,59 +326,79 @@ export function Requests() {
       {/* Header Row */}
       <div className="dashboard-header-row">
         <div className="hero-text-block">
-          <h2>Request & Approval Workflow</h2>
-          <p>Employee asset requests, manager checks, and IT/Admin approvals.</p>
+          <h2>Requests</h2>
+          <p>View and manage all organization asset procurement requests.</p>
         </div>
         <button 
           type="button" 
           className="dashboard-add-btn" 
           onClick={() => navigate("/add-request")}
+          style={{
+            backgroundColor: "#4f46e5",
+            color: "#ffffff",
+            padding: "8px 16px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            border: "none",
+            cursor: "pointer",
+            boxShadow: "0 2px 4px rgba(79, 70, 229, 0.15)"
+          }}
         >
-          <FaPlus style={{ marginRight: '6px' }} /> Add Request
+          <FaPlus style={{ fontSize: '12px' }} /> Add Request
         </button>
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="kpi-cards-grid">
+      <div className="kpi-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
         {[
           {
-            label: "Total Requests",
-            value: requests.length,
-            icon: <FaClipboardCheck />,
-            color: "#0EA5E9",
-            subtext: "Total submitted requests",
-          },
-          {
-            label: "Pending",
-            value: pendingCount,
+            label: "Requested",
+            value: requestedCount,
             icon: <FaSyncAlt />,
-            color: "#F59E0B",
-            subtext: "Awaiting approval decision",
+            color: "#0d9488",
+            subtext: "Awaiting review",
           },
           {
             label: "Approved",
             value: approvedCount,
             icon: <FaCheckCircle />,
-            color: "#10B981",
-            subtext: "Ready for procurement/handoff",
+            color: "#3b82f6",
+            subtext: "Ready for purchase",
           },
           {
-            label: "Rejected",
-            value: rejectedCount,
-            icon: <FaTimes />,
-            color: "#EF4444",
-            subtext: "Declined requests",
+            label: "In Progress",
+            value: inProgressCount,
+            icon: <FaSyncAlt className="spinning-icon" />,
+            color: "#f59e0b",
+            subtext: "PO Raised / Ordered",
           },
-        ].map((kpi) => (
-          <div className="kpi-card-new" key={kpi.label}>
+          {
+            label: "Completed",
+            value: completedCount,
+            icon: <FaClipboardCheck />,
+            color: "#10b981",
+            subtext: "Fulfilled requests",
+          },
+          {
+            label: "All Requests",
+            value: totalCount,
+            icon: <FaClipboardCheck />,
+            color: "#4f46e5",
+            subtext: "Cumulative requests",
+          },
+        ].map((kpi, idx) => (
+          <div className="kpi-card-new" key={idx} style={{ borderLeft: `4px solid ${kpi.color}` }}>
             <div className="kpi-card-content">
-              <span className="kpi-card-label">{kpi.label}</span>
-              <strong className="kpi-card-value">{kpi.value}</strong>
+              <span className="kpi-card-label" style={{ color: '#64748b' }}>{kpi.label}</span>
+              <strong className="kpi-card-value" style={{ color: kpi.color, fontSize: '26px' }}>{kpi.value}</strong>
               <span className="kpi-card-subtext">{kpi.subtext}</span>
             </div>
             <div
               className="kpi-card-icon-container"
-              style={{ color: kpi.color, backgroundColor: `${kpi.color}15` }}
+              style={{ color: kpi.color, backgroundColor: `${kpi.color}10` }}
             >
               {kpi.icon}
             </div>
@@ -426,7 +414,7 @@ export function Requests() {
               <FaSearch className="search-icon" />
               <input
                 type="text"
-                placeholder="Search by ID, name, department, category..."
+                placeholder="Requested By, Product, Request ID, etc..."
                 className="search-input-premium"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -434,22 +422,23 @@ export function Requests() {
             </div>
             <div className="filter-wrapper">
               <span className="filter-label">
-                <FaFilter style={{ fontSize: '11px' }} /> Status:
+                <FaFilter style={{ fontSize: '11px' }} /> Filter By:
               </span>
               <select
                 className="status-filter-premium"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
-                <option value="ALL">All Statuses</option>
-                <option value="PENDING">Pending</option>
-                <option value="APPROVED">Approved</option>
-                <option value="REJECTED">Rejected</option>
+                <option value="ALL">- Status -</option>
+                <option value="Requested">Requested</option>
+                <option value="Approved">Approved</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
               </select>
             </div>
           </div>
           <div className="requests-toolbar-right">
-            Showing {filteredRequests.length} of {requests.length} records
+            Showing {filteredRequests.length} of {groupedRequests.length} requests
           </div>
         </div>
 
@@ -464,10 +453,10 @@ export function Requests() {
 
       <ConfirmDeleteModal
         open={Boolean(deleteTarget)}
-        title="DELETE REQUEST?"
+        title="DELETE REQUEST GROUP?"
         message={
           deleteTarget
-            ? `Delete request "${deleteTarget.requestId || deleteTarget.assetName}" permanently?`
+            ? `Delete request group "${deleteTarget.requestId}" permanently? This will remove all items in this request.`
             : ""
         }
         onCancel={() => setDeleteTarget(null)}

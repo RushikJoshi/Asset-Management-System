@@ -43,6 +43,14 @@ const requestOwnerKeys = (asset = {}) =>
 const hasAnyMatch = (left = [], right = []) =>
   left.some((item) => right.includes(item));
 
+const parseReportingTo = (reportingToString) => {
+  if (!reportingToString) return [];
+  return reportingToString
+    .split(/[\n,;]+/)
+    .map(val => val.trim().toLowerCase())
+    .filter(Boolean);
+};
+
 const isNotificationForUser = (item, user = {}) => {
   const meta = item.meta || {};
   const targets = meta.targetUsers || [];
@@ -52,6 +60,7 @@ const isNotificationForUser = (item, user = {}) => {
   const currentRole = user?.role || "";
 
   if (excluded.length && hasAnyMatch(currentKeys, excluded)) return false;
+  if (currentRole === "SUPER_ADMIN" || currentRole === "ADMIN") return true;
   if (targets.length) return hasAnyMatch(currentKeys, targets);
   if (targetRoles.length) return targetRoles.includes(currentRole);
   return true;
@@ -117,21 +126,18 @@ export function pushAppNotification({ title, message, type = "success", meta = {
   writeAll(items);
 }
 
-export function syncAssetNotifications(assets = [], user = {}) {
-  const role = user?.role || "";
+export function syncAssetNotifications(assets = []) {
   const today = new Date();
   const items = [];
-  const managedPrefixes = ["sys_request_owner_manager_", "sys_request_owner_admin_"];
-
-  if (["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(role)) {
-    managedPrefixes.push("sys_request_manager_");
-  }
-  if (["SUPER_ADMIN", "ADMIN", "IT_STAFF"].includes(role)) {
-    managedPrefixes.push("sys_request_admin_", "sys_warranty_", "sys_maintenance_");
-  }
-  if (["SUPER_ADMIN", "AUDITOR"].includes(role)) {
-    managedPrefixes.push("sys_audit_");
-  }
+  const managedPrefixes = [
+    "sys_request_owner_manager_",
+    "sys_request_owner_admin_",
+    "sys_request_manager_",
+    "sys_request_admin_",
+    "sys_warranty_",
+    "sys_maintenance_",
+    "sys_audit_"
+  ];
 
   assets.forEach((asset) => {
     const assetName = asset.assetCode || asset.assetName || asset.requestId || "Record";
@@ -139,8 +145,7 @@ export function syncAssetNotifications(assets = [], user = {}) {
 
     if (
       asset.recordType === "REQUEST" &&
-      asset.managerApproval !== "Approved" &&
-      ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(role)
+      asset.managerApproval !== "Approved"
     ) {
       items.push({
         id: `sys_request_manager_${asset._id}`,
@@ -151,6 +156,7 @@ export function syncAssetNotifications(assets = [], user = {}) {
           requestId: asset._id,
           menuLabel: "Requests",
           route: "/requests",
+          targetUsers: parseReportingTo(asset.reportingTo),
           targetRoles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
           excludeUsers: ownerKeys,
         },
@@ -162,8 +168,7 @@ export function syncAssetNotifications(assets = [], user = {}) {
     if (
       asset.recordType === "REQUEST" &&
       asset.managerApproval === "Approved" &&
-      asset.adminApproval !== "Approved" &&
-      ["SUPER_ADMIN", "ADMIN", "IT_STAFF"].includes(role)
+      asset.adminApproval !== "Approved"
     ) {
       items.push({
         id: `sys_request_admin_${asset._id}`,
@@ -182,7 +187,7 @@ export function syncAssetNotifications(assets = [], user = {}) {
       });
     }
 
-    if (asset.warrantyEnd && ["SUPER_ADMIN", "ADMIN", "IT_STAFF"].includes(role)) {
+    if (asset.warrantyEnd) {
       const daysLeft = Math.ceil((new Date(asset.warrantyEnd) - today) / 86400000);
       const reminderDays = Number(asset.warrantyReminderDays || 10);
       if (daysLeft >= 0 && daysLeft <= reminderDays) {
@@ -206,8 +211,7 @@ export function syncAssetNotifications(assets = [], user = {}) {
     if (
       asset.recordType !== "REQUEST" &&
       asset.purchaseDate &&
-      asset.maintenancePeriod &&
-      ["SUPER_ADMIN", "ADMIN", "IT_STAFF"].includes(role)
+      asset.maintenancePeriod
     ) {
       const dueDate = new Date(asset.purchaseDate);
       dueDate.setMonth(dueDate.getMonth() + Number(asset.maintenancePeriod));
@@ -235,8 +239,7 @@ export function syncAssetNotifications(assets = [], user = {}) {
 
     if (
       asset.recordType !== "REQUEST" &&
-      (!asset.auditLogs?.length || asset.auditLogs[asset.auditLogs.length - 1]?.physicalStatus !== "Verified") &&
-      ["SUPER_ADMIN", "AUDITOR"].includes(role)
+      (!asset.auditLogs?.length || asset.auditLogs[asset.auditLogs.length - 1]?.physicalStatus !== "Verified")
     ) {
       items.push({
         id: `sys_audit_${asset._id}`,
