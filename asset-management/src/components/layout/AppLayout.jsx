@@ -157,28 +157,23 @@ const navItems = [
 ];
 
 const getPageTitle = (pathname) => {
-  if (pathname === "/setup/users") return "Users Setup";
-  if (pathname === "/setup/vendors") return "Vendors Directory";
-  if (pathname === "/setup/products") return "Products SKU Catalog";
-  if (pathname === "/setup/preferences") return "System Preferences";
-  if (pathname === "/audit") return "Audit Session";
-  if (pathname === "/reports") return "Reports";
-  if (pathname === "/roles") return "Users & Access";
-  if (pathname === "/masters/asset-form") return "Asset Form";
-  if (pathname === "/masters/request-form") return "Request Form";
-  if (pathname === "/masters/categories") return "Categories";
-  if (pathname.startsWith("/masters") || pathname === "/master-editor")
-    return "Masters";
-  if (pathname === "/scan-demo") return "QR Console";
   if (pathname === "/add-asset") return "Add Asset";
   if (pathname.startsWith("/edit-asset/")) return "Edit Asset";
   if (pathname === "/profile") return "My Profile";
   if (pathname.startsWith("/asset-details/")) return "Asset Details";
   if (pathname === "/add-request") return "New Asset Request";
   if (pathname.startsWith("/edit-request/")) return "Edit Request";
-  if (pathname === "/approvals") return "Approvals";
-  if (pathname === "/work-orders") return "Work Orders";
-  return "Asset Management System";
+
+  const matches = navItems
+    .flatMap((item) => [
+      item.to ? { path: item.to, label: item.label } : null,
+      ...(item.children || []).map((child) => ({ path: child.to, label: child.label })),
+    ])
+    .filter(Boolean)
+    .filter(({ path }) => pathname === path || (path !== "/" && pathname.startsWith(`${path}/`)))
+    .sort((a, b) => b.path.length - a.path.length);
+
+  return matches[0]?.label || "Asset Management System";
 };
 
 const getNotificationMenuForPath = (pathname) => {
@@ -395,12 +390,14 @@ function AppLayout() {
             </span>
           </div>
           <button
+            type="button"
             className="sidebar-collapse-btn"
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
             {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
           </button>
           <button
+            type="button"
             className="sidebar-close"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -477,6 +474,7 @@ function AppLayout() {
         <header className="topbar">
           <div className="topbar-left">
             <button
+              type="button"
               className="sidebar-toggle"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
@@ -564,6 +562,7 @@ function AppLayout() {
 
             <div className="profile-dropdown-container" ref={dropdownRef}>
               <button
+                type="button"
                 className="profile-trigger-btn"
                 aria-label="Profile menu"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -582,6 +581,7 @@ function AppLayout() {
               {isDropdownOpen && (
                 <div className="profile-dropdown-menu">
                   <button
+                    type="button"
                     className="dropdown-item"
                     onClick={() => {
                       setIsDropdownOpen(false);
@@ -591,7 +591,7 @@ function AppLayout() {
                     My Profile
                   </button>
                   <div className="dropdown-divider"></div>
-                  <button className="dropdown-item logout" onClick={logoutUser}>
+                  <button type="button" className="dropdown-item logout" onClick={logoutUser}>
                     Logout
                   </button>
                 </div>

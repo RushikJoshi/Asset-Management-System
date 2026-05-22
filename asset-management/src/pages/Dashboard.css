@@ -146,8 +146,8 @@
   left: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, var(--color-primary), var(--color-secondary));
-  opacity: 0.8;
+  background: linear-gradient(180deg, #10b981, #3b82f6) !important;
+  opacity: 1;
   transition: opacity 0.2s ease;
 }
 

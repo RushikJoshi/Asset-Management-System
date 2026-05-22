@@ -390,7 +390,7 @@ export function Requests() {
             subtext: "Cumulative requests",
           },
         ].map((kpi, idx) => (
-          <div className="kpi-card-new" key={idx} style={{ borderLeft: `4px solid ${kpi.color}` }}>
+          <div className="kpi-card-new" key={idx}>
             <div className="kpi-card-content">
               <span className="kpi-card-label" style={{ color: '#64748b' }}>{kpi.label}</span>
               <strong className="kpi-card-value" style={{ color: kpi.color, fontSize: '26px' }}>{kpi.value}</strong>
