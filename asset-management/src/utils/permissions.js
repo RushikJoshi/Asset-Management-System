@@ -75,6 +75,11 @@ export const MENU_ACCESS_OPTIONS = [
   { label: "Audit Session", routes: ["/audit"] },
   { label: "Reports", routes: ["/reports"] },
   { label: "Users & Access", routes: ["/roles"] },
+  { label: "Setup", routes: ["/setup/users", "/setup/vendors", "/setup/products", "/setup/preferences"] },
+  { label: "Users", routes: ["/setup/users"] },
+  { label: "Vendors", routes: ["/setup/vendors"] },
+  { label: "Products", routes: ["/setup/products"] },
+  { label: "Preferences", routes: ["/setup/preferences"] },
 ];
 
 export const DEFAULT_ROLE_CONFIG = {
@@ -101,6 +106,11 @@ export const DEFAULT_ROLE_CONFIG = {
       "Audit Session",
       "Reports",
       "Users & Access",
+      "Setup",
+      "Users",
+      "Vendors",
+      "Products",
+      "Preferences",
     ],
     permissions: [
       "dashboard.view",
@@ -129,10 +139,27 @@ export const DEFAULT_ROLE_CONFIG = {
       "audit.view",
       "procurement.manage",
       "workorders.manage",
+      "system.settings",
     ],
   },
   IT_STAFF: {
-    sidebarAccess: ["Dashboard", "Assets", "QR Console", "Requests", "Procurements", "Inventory", "Work Orders", "Assignments", "Maintenance", "Warranty", "Reports", "Masters"],
+    sidebarAccess: [
+      "Dashboard",
+      "Assets",
+      "QR Console",
+      "Requests",
+      "Procurements",
+      "Inventory",
+      "Work Orders",
+      "Assignments",
+      "Maintenance",
+      "Warranty",
+      "Reports",
+      "Masters",
+      "Setup",
+      "Vendors",
+      "Products",
+    ],
     permissions: [
       "dashboard.view",
       "asset.view",
@@ -153,7 +180,7 @@ export const DEFAULT_ROLE_CONFIG = {
     ],
   },
   MANAGER: {
-    sidebarAccess: ["Dashboard", "Assets", "Requests", "Approvals", "Reports"],
+    sidebarAccess: ["Dashboard", "Assets", "Requests", "Approvals", "Reports", "Setup", "Products"],
     permissions: ["dashboard.view", "asset.view", "request.view", "request.approve", "request.reject", "report.view"],
   },
   EMPLOYEE: {
@@ -161,7 +188,7 @@ export const DEFAULT_ROLE_CONFIG = {
     permissions: ["employee.portal", "asset.view", "request.create", "request.view", "warranty.view", "qr.scan"],
   },
   AUDITOR: {
-    sidebarAccess: ["Audit Session", "Reports", "Assets"],
+    sidebarAccess: ["Audit Session", "Reports", "Assets", "Setup", "Products"],
     permissions: ["audit.view", "report.view", "asset.view"],
   },
 };
@@ -191,6 +218,10 @@ export const ROUTE_ROLES = {
   "/profile": ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "MANAGER", "AUDITOR", "EMPLOYEE"],
   "/procurements": ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
   "/work-orders": ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
+  "/setup/users": ["SUPER_ADMIN", "ADMIN"],
+  "/setup/vendors": ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
+  "/setup/products": ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "MANAGER", "AUDITOR"],
+  "/setup/preferences": ["SUPER_ADMIN", "ADMIN"],
 };
 
 export const ROUTE_PERMISSIONS = {
@@ -218,6 +249,10 @@ export const ROUTE_PERMISSIONS = {
   "/profile": [],
   "/procurements": ["procurement.manage"],
   "/work-orders": ["workorders.manage"],
+  "/setup/users": ["user.manage"],
+  "/setup/vendors": ["procurement.manage", "user.manage"],
+  "/setup/products": ["asset.view"],
+  "/setup/preferences": ["system.settings"],
 };
 
 export const parseAccessLabels = (access = "") =>

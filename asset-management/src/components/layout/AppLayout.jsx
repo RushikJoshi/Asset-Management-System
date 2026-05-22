@@ -42,6 +42,7 @@ import {
   syncAssetNotifications,
 } from "../../utils/notificationStore";
 import { TopbarActionsProvider, useTopbarActions } from "./topbarActionsContext";
+import brandLogo from "../../images/logo.jpeg";
 import "./AppLayout.css";
 
 const navItems = [
@@ -141,27 +142,38 @@ const navItems = [
     icon: <FaShieldAlt />,
     menuRoles: ["SUPER_ADMIN"],
   },
+  {
+    key: "setup",
+    label: "Setup",
+    icon: <FaTools />,
+    menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "MANAGER", "AUDITOR"],
+    children: [
+      { to: "/setup/users", label: "Users", icon: <FaUser />, menuRoles: ["SUPER_ADMIN", "ADMIN"] },
+      { to: "/setup/vendors", label: "Vendors", icon: <FaBuilding />, menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"] },
+      { to: "/setup/products", label: "Products", icon: <FaBoxes />, menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "MANAGER", "AUDITOR"] },
+      { to: "/setup/preferences", label: "Preferences", icon: <FaWrench />, menuRoles: ["SUPER_ADMIN", "ADMIN"] },
+    ],
+  },
 ];
 
 const getPageTitle = (pathname) => {
-  if (pathname === "/audit") return "Audit Session";
-  if (pathname === "/reports") return "Reports";
-  if (pathname === "/roles") return "Users & Access";
-  if (pathname === "/masters/asset-form") return "Asset Form";
-  if (pathname === "/masters/request-form") return "Request Form";
-  if (pathname === "/masters/categories") return "Categories";
-  if (pathname.startsWith("/masters") || pathname === "/master-editor")
-    return "Masters";
-  if (pathname === "/scan-demo") return "QR Console";
   if (pathname === "/add-asset") return "Add Asset";
   if (pathname.startsWith("/edit-asset/")) return "Edit Asset";
   if (pathname === "/profile") return "My Profile";
   if (pathname.startsWith("/asset-details/")) return "Asset Details";
   if (pathname === "/add-request") return "New Asset Request";
   if (pathname.startsWith("/edit-request/")) return "Edit Request";
-  if (pathname === "/approvals") return "Approvals";
-  if (pathname === "/work-orders") return "Work Orders";
-  return "AssetPro";
+
+  const matches = navItems
+    .flatMap((item) => [
+      item.to ? { path: item.to, label: item.label } : null,
+      ...(item.children || []).map((child) => ({ path: child.to, label: child.label })),
+    ])
+    .filter(Boolean)
+    .filter(({ path }) => pathname === path || (path !== "/" && pathname.startsWith(`${path}/`)))
+    .sort((a, b) => b.path.length - a.path.length);
+
+  return matches[0]?.label || "Asset Management System";
 };
 
 const getNotificationMenuForPath = (pathname) => {
@@ -199,6 +211,9 @@ function AppLayout() {
     () =>
       location.pathname.startsWith("/masters") ||
       location.pathname === "/master-editor",
+  );
+  const [setupOpen, setSetupOpen] = useState(
+    () => location.pathname.startsWith("/setup"),
   );
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
@@ -284,9 +299,20 @@ function AppLayout() {
   const roleAccess = role?.sidebarAccess?.length
     ? role.sidebarAccess
     : role?.access || "";
-  const visibleNavItems = navItems.filter((item) => {
+
+  const visibleNavItems = navItems.map((item) => {
+    if (item.children) {
+      const filteredChildren = item.children.filter((child) => {
+        if (roleHasMenuAccess(user?.role, child.label, roleAccess)) return true;
+        return !roleAccess && child.menuRoles?.includes(user?.role);
+      });
+      return { ...item, children: filteredChildren };
+    }
+    return item;
+  }).filter((item) => {
+    if (item.children?.length === 0) return false;
     if (roleHasMenuAccess(user?.role, item.label, roleAccess)) return true;
-    return !roleAccess && item.menuRoles.includes(user?.role);
+    return !roleAccess && item.menuRoles?.includes(user?.role);
   });
 
   const logoutUser = () => {
@@ -333,23 +359,45 @@ function AppLayout() {
         className={`sidebar ${isSidebarOpen ? "open" : ""} ${isCollapsed ? "collapsed" : ""}`}
       >
         <div className="brand-block">
-          <div className="brand-mark-svg">
-            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="32" height="32" rx="8" fill="#0D9488"/>
-              <path d="M16 7C11.0294 7 7 11.0294 7 16C7 20.9706 11.0294 25 16 25C20.9706 25 25 20.9706 25 16C25 13.5 24 11.2 22 9.7M16 11C13.2386 11 11 13.2386 11 16C11 18.7614 13.2386 21 16 21C18.7614 21 21 18.7614 21 16" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-            </svg>
+          <div className="brand-mark-svg" style={{
+            background: "#eff6ff",
+            border: "1px solid #dbeafe",
+            padding: "5px",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px"
+          }}>
+            <img 
+              src={brandLogo} 
+              alt="Asset Management Logo" 
+              style={{ 
+                width: "100%", 
+                height: "100%", 
+                objectFit: "contain", 
+                mixBlendMode: "multiply" 
+              }} 
+            />
           </div>
-          <div className="brand-text">
-            <h2>AssetPro</h2>
-            <p>Lifecycle ERP</p>
+          <div className="brand-text" style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+            <span style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-main)", lineHeight: "1.2", letterSpacing: "-0.01em" }}>
+              Asset Management
+            </span>
+            <span style={{ fontSize: "10px", fontWeight: "700", color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              System
+            </span>
           </div>
           <button
+            type="button"
             className="sidebar-collapse-btn"
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
             {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
           </button>
           <button
+            type="button"
             className="sidebar-close"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -360,25 +408,29 @@ function AppLayout() {
         <nav className="side-nav">
           {visibleNavItems.map((item) => {
             if (item.children?.length) {
-              const mastersActive =
-                location.pathname.startsWith("/masters") ||
-                location.pathname === "/master-editor";
+              const isMasters = item.key === "masters";
+              const isSetup = item.key === "setup";
+              const isOpen = isMasters ? mastersOpen : (isSetup ? setupOpen : false);
+              const setOpen = isMasters ? setMastersOpen : (isSetup ? setSetupOpen : () => {});
+              const isActive = isMasters
+                ? (location.pathname.startsWith("/masters") || location.pathname === "/master-editor")
+                : (isSetup ? location.pathname.startsWith("/setup") : false);
               return (
                 <div className="nav-group" key={item.key || item.label}>
                   <button
                     type="button"
-                    className={`nav-link nav-group-toggle ${mastersActive ? "active" : ""}`}
-                    onClick={() => setMastersOpen((open) => !open)}
-                    aria-expanded={mastersOpen}
+                    className={`nav-link nav-group-toggle ${isActive ? "active" : ""}`}
+                    onClick={() => setOpen((open) => !open)}
+                    aria-expanded={isOpen}
                   >
                     {item.icon}
                     <span>{item.label}</span>
                     {renderSidebarBadge(item.label)}
                     <FaChevronDown
-                      className={`nav-chevron ${mastersOpen ? "open" : ""}`}
+                      className={`nav-chevron ${isOpen ? "open" : ""}`}
                     />
                   </button>
-                  {mastersOpen && (
+                  {isOpen && (
                     <div className="nav-sub-list">
                       {item.children.map((child) => (
                         <NavLink
@@ -422,6 +474,7 @@ function AppLayout() {
         <header className="topbar">
           <div className="topbar-left">
             <button
+              type="button"
               className="sidebar-toggle"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
@@ -509,6 +562,7 @@ function AppLayout() {
 
             <div className="profile-dropdown-container" ref={dropdownRef}>
               <button
+                type="button"
                 className="profile-trigger-btn"
                 aria-label="Profile menu"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -527,6 +581,7 @@ function AppLayout() {
               {isDropdownOpen && (
                 <div className="profile-dropdown-menu">
                   <button
+                    type="button"
                     className="dropdown-item"
                     onClick={() => {
                       setIsDropdownOpen(false);
@@ -536,7 +591,7 @@ function AppLayout() {
                     My Profile
                   </button>
                   <div className="dropdown-divider"></div>
-                  <button className="dropdown-item logout" onClick={logoutUser}>
+                  <button type="button" className="dropdown-item logout" onClick={logoutUser}>
                     Logout
                   </button>
                 </div>
