@@ -144,6 +144,26 @@
   cursor: not-allowed;
 }
 
+.field-error {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.field-group input.error,
+.field-group select.error,
+.field-group textarea.error {
+  border: 1px solid #ef4444 !important;
+}
+
+.field-group input.error:focus,
+.field-group select.error:focus,
+.field-group textarea.error:focus {
+  border: 1px solid #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
 @media (max-width: 1024px) {
   .section-fields-grid {
     grid-template-columns: repeat(2, 1fr);

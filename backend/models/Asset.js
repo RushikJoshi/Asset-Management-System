@@ -85,12 +85,10 @@ const assetSchema = new mongoose.Schema(
     // Asset Information
     assetName: {
       type: String,
-      required: true,
     },
 
     category: {
       type: String,
-      required: true,
     },
 
     subCategory: {
@@ -99,7 +97,6 @@ const assetSchema = new mongoose.Schema(
 
     assetStatus: {
       type: String,
-      required: true,
       enum: [
         "AVAILABLE",
         "ASSIGNED",

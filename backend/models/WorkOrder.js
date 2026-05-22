@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema(
   {
-    taskName: { type: String, required: true },
+    taskName: { type: String },
     description: { type: String, default: "" },
   },
   { _id: false }
@@ -10,7 +10,7 @@ const taskSchema = new mongoose.Schema(
 
 const checklistSchema = new mongoose.Schema(
   {
-    checkName: { type: String, required: true },
+    checkName: { type: String },
     description: { type: String, default: "" },
   },
   { _id: false }
@@ -18,14 +18,14 @@ const checklistSchema = new mongoose.Schema(
 
 const workOrderSchema = new mongoose.Schema(
   {
-    complaintId: { type: String, required: true, unique: true },
-    complaintDate: { type: Date, required: true, default: Date.now },
-    assetId: { type: String, required: true },
-    assetName: { type: String, required: true },
-    complaintType: { type: String, required: true },
+    complaintId: { type: String, unique: true },
+    complaintDate: { type: Date, default: Date.now },
+    assetId: { type: String },
+    assetName: { type: String },
+    complaintType: { type: String },
     complaintTitle: { type: String, default: "" },
     priority: { type: String, enum: ["Low", "Medium", "High"], default: "Medium" },
-    raisedBy: { type: String, required: true },
+    raisedBy: { type: String },
     status: { type: String, enum: ["Open", "In Progress", "Completed"], default: "Open" },
     assignedTo: { type: String, default: "" },
     workOrderSelection: { type: String, default: "" },
