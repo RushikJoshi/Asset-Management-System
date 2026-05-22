@@ -15,8 +15,27 @@ export default function AddRequestPage() {
   const { user } = useSelector((state) => state.auth);
   const { assetListData } = useSelector((state) => state.assetList);
   
-  const [formConfig] = useState(() => loadRequestFormConfig());
+  const [formConfig, setFormConfig] = useState(() => loadRequestFormConfig());
   const formSections = getRequestFormSections(formConfig);
+
+  useEffect(() => {
+    const syncBuilderConfig = () => {
+      setFormConfig(loadRequestFormConfig());
+    };
+    const syncStorageConfig = (e) => {
+      if (e.key === "formConfig_REQUEST") {
+        setFormConfig(loadRequestFormConfig());
+      }
+    };
+    window.addEventListener("form-builder-updated", syncBuilderConfig);
+    window.addEventListener("asset-form-builder-updated", syncBuilderConfig);
+    window.addEventListener("storage", syncStorageConfig);
+    return () => {
+      window.removeEventListener("form-builder-updated", syncBuilderConfig);
+      window.removeEventListener("asset-form-builder-updated", syncBuilderConfig);
+      window.removeEventListener("storage", syncStorageConfig);
+    };
+  }, []);
   
   const [formData, setFormData] = useState({
     requestType: "Procurement",
@@ -25,6 +44,8 @@ export default function AddRequestPage() {
     adminApproval: "Pending",
     purchaseStatus: "Pending"
   });
+
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     dispatch(fetchAssetList());
@@ -68,6 +89,13 @@ export default function AddRequestPage() {
   const handleChange = (e, field) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name] && value.trim() !== "") {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const isFieldVisible = (name) => formConfig[name]?.visible !== false;
@@ -89,22 +117,20 @@ export default function AddRequestPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const missingRequired = [];
+
+    const missingRequired = {};
     formSections.forEach(section => {
       section.fields.forEach(field => {
-        if (isFieldVisible(field.name) && isFieldRequired(field.name) && !formData[field.name]) {
-          missingRequired.push(field.label);
+        const value = formData[field.name];
+        const isEmpty = value === undefined || value === null || String(value).trim() === "";
+        if (isFieldVisible(field.name) && isFieldRequired(field.name) && isEmpty) {
+          missingRequired[field.name] = `${field.label} is required`;
         }
       });
     });
 
-    if (missingRequired.length > 0) {
-      showToast({
-        title: "Missing Fields",
-        message: `Please fill in required fields: ${missingRequired.join(", ")}`,
-        type: "error"
-      });
+    if (Object.keys(missingRequired).length > 0) {
+      setErrors(missingRequired);
       return;
     }
 
@@ -169,7 +195,7 @@ export default function AddRequestPage() {
             name={field.name}
             value={formData[field.name] || ""}
             onChange={(e) => handleChange(e, field)}
-            required={isFieldRequired(field.name)}
+            className={errors[field.name] ? "error" : ""}
           >
             <option value="">Select...</option>
             {field.name === "requestPriority" && (
@@ -203,7 +229,7 @@ export default function AddRequestPage() {
             onChange={(e) => handleChange(e, field)}
             placeholder={`Enter ${field.label}`}
             rows={3}
-            required={isFieldRequired(field.name)}
+            className={errors[field.name] ? "error" : ""}
           />
         ) : (
           <input
@@ -212,9 +238,10 @@ export default function AddRequestPage() {
             value={formData[field.name] || ""}
             onChange={(e) => handleChange(e, field)}
             placeholder={`e.g., ${field.label}`}
-            required={isFieldRequired(field.name)}
+            className={errors[field.name] ? "error" : ""}
           />
         )}
+        {errors[field.name] && <span className="field-error">{errors[field.name]}</span>}
       </div>
     );
   };
@@ -229,13 +256,13 @@ export default function AddRequestPage() {
           <button type="button" className="cancel-btn" onClick={() => navigate("/requests")}>
             Cancel
           </button>
-          <button type="button" className="submit-btn" onClick={handleSubmit}>
+          <button type="submit" form="add-request-form" className="submit-btn">
             Submit
           </button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <form id="add-request-form" onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {formSections.map((section, index) => {
           const visibleFields = section.fields.filter(f => isFieldVisible(f.name));
           if (visibleFields.length === 0) return null;
