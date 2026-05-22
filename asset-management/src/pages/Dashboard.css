@@ -678,3 +678,182 @@
     justify-content: space-between;
   }
 }
+
+/* --- New Zoho Layout Styles --- */
+
+.kpi-value-money {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #F3F4F6;
+  font-size: 11px;
+  color: #6B7280;
+}
+
+.kpi-value-money strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.dashboard-two-col-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.z-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.z-card-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.z-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.z-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #6B7280;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.z-tab.active {
+  background: #F3F4F6;
+  color: #4F46E5; /* Indigo/Purple color for active */
+  border: 1px solid #E0E7FF;
+}
+
+/* Donut & Table layout */
+.z-donut-table-flex {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.z-donut-wrapper {
+  flex: 1;
+  position: relative;
+  min-width: 150px;
+}
+
+.z-donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.z-table-wrapper {
+  flex: 2;
+}
+
+.z-assets-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.z-assets-table th {
+  text-align: left;
+  font-size: 11.5px;
+  color: #6B7280;
+  font-weight: 500;
+  padding: 8px;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.z-assets-table td {
+  padding: 12px 8px;
+  font-size: 12.5px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.z-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+/* Recent Activities */
+.z-activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.z-activity-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid #F3F4F6;
+  border-radius: 8px;
+  align-items: flex-start;
+}
+
+.z-act-date {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  color: #6B7280;
+  line-height: 1.4;
+  min-width: 65px;
+}
+
+.z-act-icon {
+  background: #F9FAFB;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.z-act-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.z-act-details strong {
+  font-size: 13px;
+  color: #111827;
+}
+
+.z-act-details span {
+  font-size: 11.5px;
+  color: #4B5563;
+}
