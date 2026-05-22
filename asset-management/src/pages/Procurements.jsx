@@ -374,8 +374,9 @@ function Procurements() {
                     <button
                       className="add-btn raise-po-btn"
                       onClick={() => handleOpenAddPO(vendor)}
+                      style={{ backgroundColor: "#2563eb", color: "#ffffff", border: "none" }}
                     >
-                      <FaPlus /> Raise Purchase Order
+                      Raise Purchase Order
                     </button>
                   </div>
                 </motion.div>

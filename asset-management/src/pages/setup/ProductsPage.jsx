@@ -268,7 +268,7 @@ export default function ProductsPage() {
           <button
             onClick={() => setShowAddModal(true)}
             style={{
-              backgroundColor: "#5B50EC",
+              backgroundColor: "#2563eb",
               color: "#ffffff",
               border: "none",
               borderRadius: "6px",
@@ -279,13 +279,13 @@ export default function ProductsPage() {
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              boxShadow: "0 2px 4px rgba(91, 80, 236, 0.2)",
+              boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)",
               transition: "all 0.2s"
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#4f46e5"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#5B50EC"}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#1d4ed8"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#2563eb"}
           >
-            <FaPlus /> Add Product
+            Add Product
           </button>
           
           <button
@@ -628,7 +628,7 @@ export default function ProductsPage() {
                 <button
                   type="submit"
                   style={{
-                    backgroundColor: "#5B50EC",
+                    backgroundColor: "#2563eb",
                     color: "#ffffff",
                     border: "none",
                     borderRadius: "6px",
@@ -636,7 +636,7 @@ export default function ProductsPage() {
                     fontWeight: "600",
                     fontSize: "13px",
                     cursor: "pointer",
-                    boxShadow: "0 2px 4px rgba(91, 80, 236, 0.15)"
+                    boxShadow: "0 2px 4px rgba(37, 99, 235, 0.15)"
                   }}
                 >
                   Add Product

@@ -129,7 +129,7 @@ export function Requests() {
         description="Employee request, manager approval, IT/admin approval, and purchase handoff."
       />
       <KpiGrid 
-        action={<button className="module-button" onClick={() => navigate("/add-request")}>Add Request</button>}
+        action={<button className="module-button" onClick={() => navigate("/add-request")} style={{ backgroundColor: "#2563eb", color: "#ffffff", border: "none" }}>Add Request</button>}
         items={[
           { label: "Requests", value: requests.length },
           { label: "Pending", value: requests.filter((item) => item.requestStatus !== "Approved").length },

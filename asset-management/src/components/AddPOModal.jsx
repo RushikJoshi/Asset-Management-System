@@ -290,8 +290,9 @@ function AddPOModal({ isOpen, onClose, onSuccess, vendor }) {
                   type="button"
                   className="add-row-btn"
                   onClick={handleAddRow}
+                  style={{ backgroundColor: "#2563eb", color: "#ffffff", border: "none" }}
                 >
-                  <FaPlus /> Add Line Item
+                  Add Line Item
                 </button>
               </div>
 

@@ -314,9 +314,9 @@ export default function VendorsPage() {
               <button
                 className="module-button"
                 onClick={() => setShowAddModal(true)}
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                style={{ display: "flex", alignItems: "center", gap: "8px", backgroundColor: "#2563eb", color: "#ffffff", border: "none" }}
               >
-                <FaPlus /> Add Vendor
+                Add Vendor
               </button>
             }
           />

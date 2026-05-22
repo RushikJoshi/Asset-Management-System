@@ -334,7 +334,7 @@ export function Requests() {
           className="dashboard-add-btn" 
           onClick={() => navigate("/add-request")}
           style={{
-            backgroundColor: "#4f46e5",
+            backgroundColor: "#2563eb",
             color: "#ffffff",
             padding: "8px 16px",
             borderRadius: "8px",
@@ -344,10 +344,10 @@ export function Requests() {
             gap: "8px",
             border: "none",
             cursor: "pointer",
-            boxShadow: "0 2px 4px rgba(79, 70, 229, 0.15)"
+            boxShadow: "0 2px 4px rgba(37, 99, 235, 0.15)"
           }}
         >
-          <FaPlus style={{ fontSize: '12px' }} /> Add Request
+          Add Request
         </button>
       </div>
 

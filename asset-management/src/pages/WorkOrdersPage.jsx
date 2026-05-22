@@ -623,8 +623,9 @@ function WorkOrdersPage() {
                       type="button"
                       className="add-subrow-btn"
                       onClick={handleAddTask}
+                      style={{ backgroundColor: "#2563eb", color: "#ffffff", border: "none" }}
                     >
-                      <FaPlus /> Add New Task
+                      Add New Task
                     </button>
                   </div>
                   
@@ -687,8 +688,9 @@ function WorkOrdersPage() {
                       type="button"
                       className="add-subrow-btn"
                       onClick={handleAddChecklist}
+                      style={{ backgroundColor: "#2563eb", color: "#ffffff", border: "none" }}
                     >
-                      <FaPlus /> Add New Check
+                      Add New Check
                     </button>
                   </div>
                   
