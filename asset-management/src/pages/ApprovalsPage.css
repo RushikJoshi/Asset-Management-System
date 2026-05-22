@@ -1,0 +1,336 @@
+/* Approvals Workspace Style Sheets */
+
+.approvals-page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+}
+
+.approvals-header {
+  background-color: #ffffff;
+  padding: 20px 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.approvals-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.approvals-header p {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Tabs Navigation styling mirroring Zoho */
+.approvals-tabs-nav {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #e2e8f0;
+  background-color: transparent;
+  padding: 0 8px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 24px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.tab-btn:hover {
+  color: #0d9488;
+}
+
+.tab-btn.active {
+  color: #0d9488;
+  border-bottom-color: #0d9488;
+}
+
+/* Panel Content styling */
+.approvals-tab-panel {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  padding: 24px;
+}
+
+.approvals-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Filters & Toolbars */
+.approvals-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.toolbar-search-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 420px;
+  min-width: 280px;
+}
+
+.toolbar-search-wrapper .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.toolbar-search-wrapper input {
+  width: 100%;
+  padding: 10px 14px 10px 42px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 24px;
+  font-size: 13.5px;
+  color: #1e293b;
+  outline: none;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.toolbar-search-wrapper input:focus {
+  border-color: #0d9488;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.toolbar-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.toolbar-filter-wrapper select {
+  padding: 8px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #334155;
+  background-color: #ffffff;
+  outline: none;
+  cursor: pointer;
+  min-width: 140px;
+  transition: border-color 0.2s ease;
+}
+
+.toolbar-filter-wrapper select:focus {
+  border-color: #0d9488;
+}
+
+/* Zoho Spec Approvals Table */
+.approvals-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.zoho-approvals-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.zoho-approvals-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  padding: 14px 16px;
+  border-bottom: 2px solid #e2e8f0;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.zoho-approvals-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  transition: background-color 0.15s ease;
+}
+
+.zoho-approvals-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+.zoho-approvals-table tr.row-approved td {
+  background-color: #f0fdf450;
+}
+
+.zoho-approvals-table tr.row-approved:hover td {
+  background-color: #dcfce750;
+}
+
+/* Table columns styling */
+.col-req-id {
+  font-weight: 600;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.2px;
+}
+
+.col-requested-by {
+  font-weight: 500;
+  color: #334155;
+}
+
+/* Stacked products list inside cell matching Zoho multi-product layout */
+.products-list-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.product-row-stack {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  background-color: #f8fafc;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #cbd5e1;
+  display: inline-block;
+  max-width: max-content;
+}
+
+.col-req-date {
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.col-status {
+  font-weight: 600;
+}
+
+.status-label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-label.text-requested {
+  color: #f59e0b;
+}
+
+.status-label.text-approved {
+  color: #10b981;
+}
+
+.status-label.text-rejected {
+  color: #f43f5e;
+}
+
+/* Premium Direct Actions buttons matching Zoho format */
+.btn-zoho {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: transparent;
+  outline: none;
+  min-width: 90px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-zoho:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Green border outline Approve style */
+.btn-zoho-approve {
+  border: 1.5px solid #10b981;
+  color: #10b981;
+}
+
+.btn-zoho-approve:hover:not(:disabled) {
+  background-color: #10b98112;
+}
+
+.btn-zoho-approve.active {
+  background-color: #10b981;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+}
+
+/* Pink/red border outline Reject style */
+.btn-zoho-reject {
+  border: 1.5px solid #f43f5e;
+  color: #f43f5e;
+}
+
+.btn-zoho-reject:hover:not(:disabled) {
+  background-color: #f43f5e12;
+}
+
+.btn-zoho-reject.active {
+  background-color: #f43f5e;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(244, 63, 94, 0.25);
+  border-color: #f43f5e;
+}
+
+/* Spinner loader details */
+.loading-spinner {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(13, 148, 136, 0.15);
+  border-radius: 50%;
+  border-top-color: #0d9488;
+  animation: spin-approvals 0.8s linear infinite;
+}
+
+@keyframes spin-approvals {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsiveness settings */
+@media (max-width: 768px) {
+  .approvals-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbar-search-wrapper {
+    max-width: 100%;
+  }
+}

@@ -53,6 +53,8 @@ export const PERMISSION_OPTIONS = [
   { value: "audit.view", label: "Audit Session View", group: "Audit" },
   { value: "audit.manage", label: "Audit Session Management", group: "Audit" },
   { value: "system.settings", label: "System Settings Access", group: "System" },
+  { value: "procurement.manage", label: "Procurement Management", group: "Procurements" },
+  { value: "workorders.manage", label: "Work Orders Management", group: "Work Orders" },
 ];
 
 export const MENU_ACCESS_OPTIONS = [
@@ -61,7 +63,10 @@ export const MENU_ACCESS_OPTIONS = [
   { label: "Masters", routes: ["/masters", "/master-editor", "/masters/asset-form", "/masters/request-form", "/masters/categories"] },
   { label: "QR Console", routes: ["/scan-demo"] },
   { label: "Requests", routes: ["/requests", "/add-request", "/edit-request"] },
+  { label: "Approvals", routes: ["/approvals"] },
+  { label: "Procurements", routes: ["/procurements"] },
   { label: "Inventory", routes: ["/inventory"] },
+  { label: "Work Orders", routes: ["/work-orders"] },
   { label: "Employee Portal", routes: ["/employees"] },
   { label: "Assignments", routes: ["/assignments"] },
   { label: "Maintenance", routes: ["/maintenance"] },
@@ -84,7 +89,10 @@ export const DEFAULT_ROLE_CONFIG = {
       "Masters",
       "QR Console",
       "Requests",
+      "Approvals",
+      "Procurements",
       "Inventory",
+      "Work Orders",
       "Employee Portal",
       "Assignments",
       "Maintenance",
@@ -119,10 +127,12 @@ export const DEFAULT_ROLE_CONFIG = {
       "report.view",
       "report.export",
       "audit.view",
+      "procurement.manage",
+      "workorders.manage",
     ],
   },
   IT_STAFF: {
-    sidebarAccess: ["Dashboard", "Assets", "QR Console", "Requests", "Inventory", "Assignments", "Maintenance", "Warranty", "Reports", "Masters"],
+    sidebarAccess: ["Dashboard", "Assets", "QR Console", "Requests", "Procurements", "Inventory", "Work Orders", "Assignments", "Maintenance", "Warranty", "Reports", "Masters"],
     permissions: [
       "dashboard.view",
       "asset.view",
@@ -138,10 +148,12 @@ export const DEFAULT_ROLE_CONFIG = {
       "maintenance.manage",
       "warranty.view",
       "report.view",
+      "procurement.manage",
+      "workorders.manage",
     ],
   },
   MANAGER: {
-    sidebarAccess: ["Dashboard", "Assets", "Requests", "Reports"],
+    sidebarAccess: ["Dashboard", "Assets", "Requests", "Approvals", "Reports"],
     permissions: ["dashboard.view", "asset.view", "request.view", "request.approve", "request.reject", "report.view"],
   },
   EMPLOYEE: {
@@ -158,6 +170,7 @@ export const ROUTE_ROLES = {
   "/": ["SUPER_ADMIN", "ADMIN"],
   "/assets": ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
   "/requests": ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "MANAGER"],
+  "/approvals": ["SUPER_ADMIN", "ADMIN", "MANAGER"],
   "/inventory": ["SUPER_ADMIN"],
   "/employees": ["SUPER_ADMIN", "EMPLOYEE"],
   "/assignments": ["SUPER_ADMIN"],
@@ -176,12 +189,15 @@ export const ROUTE_ROLES = {
   "/edit-request": ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "MANAGER"],
   "/asset-details": ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "AUDITOR"],
   "/profile": ["SUPER_ADMIN", "ADMIN", "IT_STAFF", "MANAGER", "AUDITOR", "EMPLOYEE"],
+  "/procurements": ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
+  "/work-orders": ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
 };
 
 export const ROUTE_PERMISSIONS = {
   "/": ["dashboard.view"],
   "/assets": ["asset.view"],
   "/requests": ["request.view"],
+  "/approvals": ["request.approve"],
   "/inventory": ["inventory.view", "inventory.manage"],
   "/employees": ["employee.portal"],
   "/assignments": ["asset.assign"],
@@ -200,6 +216,8 @@ export const ROUTE_PERMISSIONS = {
   "/edit-request": ["request.create"],
   "/asset-details": ["asset.view"],
   "/profile": [],
+  "/procurements": ["procurement.manage"],
+  "/work-orders": ["workorders.manage"],
 };
 
 export const parseAccessLabels = (access = "") =>

@@ -242,6 +242,10 @@ const assetSchema = new mongoose.Schema(
     employeeEmail: String,
     expectedReturn: Date,
     assignedBy: String,
+    quantity: {
+      type: Number,
+      default: 1,
+    },
 
     // Lifecycle workflows
     repairHistory: [repairHistorySchema],

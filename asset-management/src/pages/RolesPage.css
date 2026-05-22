@@ -109,14 +109,17 @@
 .role-access-dropdown summary {
   align-items: center;
   background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
   cursor: pointer;
   display: flex;
-  font-size: 14px;
+  font-size: 13px;
   justify-content: space-between;
   line-height: 1.35;
   list-style: none;
-  min-height: 44px;
-  padding-right: 14px;
+  min-height: 36px;
+  padding: 0 12px;
   width: 100%;
 }
 
@@ -156,6 +159,60 @@
   right: 0;
   top: calc(100% + 6px);
   z-index: 80;
+}
+
+.role-edit-access-stack {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.roles-table-shell {
+  min-width: 0;
+}
+
+.roles-table-shell .module-table-wrap {
+  overflow-x: visible;
+}
+
+.roles-table-shell .module-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.roles-table-shell .module-table th,
+.roles-table-shell .module-table td {
+  white-space: normal;
+  vertical-align: middle;
+}
+
+.roles-table-shell .module-table th:nth-child(1),
+.roles-table-shell .module-table td:nth-child(1) {
+  width: 18%;
+}
+
+.roles-table-shell .module-table th:nth-child(3),
+.roles-table-shell .module-table td:nth-child(3) {
+  width: 112px;
+}
+
+.roles-table-shell .module-table th:nth-child(4),
+.roles-table-shell .module-table td:nth-child(4) {
+  width: 160px;
+}
+
+.role-table-access-text {
+  display: block;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.role-row-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .role-access-menu .role-access-option {

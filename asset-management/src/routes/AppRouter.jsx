@@ -27,6 +27,10 @@ import {
   Warranty,
 } from "../pages/WorkflowModules";
 import { Requests } from "../pages/RequestsPage";
+import Procurements from "../pages/Procurements";
+import POSummary from "../pages/POSummary";
+import ApprovalsPage from "../pages/ApprovalsPage";
+import WorkOrdersPage from "../pages/WorkOrdersPage";
 import { canAccessRoute, getRoleHome } from "../utils/permissions";
 import { fetchRoles } from "../utils/roleApi";
 
@@ -40,6 +44,10 @@ function AppRouter() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/assets" element={<Assets />} />
           <Route path="/requests" element={<Requests />} />
+          <Route path="/approvals" element={<ApprovalsPage />} />
+          <Route path="/work-orders" element={<WorkOrdersPage />} />
+          <Route path="/procurements" element={<Procurements />} />
+          <Route path="/procurements/:id" element={<POSummary />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/assignments" element={<Assignments />} />

@@ -1,0 +1,500 @@
+/* ========================================================
+   PURCHASE ORDER SUMMARY DETAILS STYLING
+   ======================================================== */
+
+.po-summary-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Actions Toolbar (Hidden during print) */
+.summary-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 14px;
+}
+
+.back-breadcrumb-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color var(--transition-fast);
+}
+
+.back-breadcrumb-btn:hover {
+  color: var(--color-primary);
+}
+
+.action-buttons-group {
+  display: flex;
+  gap: 8px;
+}
+
+.action-print-btn, .action-pdf-btn {
+  height: 36px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.action-print-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}
+
+.action-print-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.action-pdf-btn {
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: #ffffff;
+}
+
+.action-pdf-btn:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+/* Main Printable Sheet */
+.po-document-sheet {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  color: #1e293b;
+  position: relative;
+  min-height: 800px;
+  max-width: 900px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Sheet header section */
+.doc-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 20px;
+}
+
+.brand-logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-badge {
+  width: 42px;
+  height: 42px;
+  background: #0f172a;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-text h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  color: #0f172a;
+}
+
+.brand-text span {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-top: 1px;
+}
+
+.doc-meta-section {
+  text-align: right;
+}
+
+.doc-meta-section h1 {
+  font-size: 26px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+.po-badge-number {
+  display: inline-block;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #3b82f6;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 800;
+  padding: 4px 12px;
+  letter-spacing: 0.02em;
+}
+
+/* Metadata Bar */
+.po-info-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  gap: 20px;
+}
+
+.info-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.info-stat .icon {
+  font-size: 18px;
+  color: #0d9488;
+}
+
+.info-stat .details span {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin-bottom: 2px;
+}
+
+.info-stat .details strong {
+  font-size: 13.5px;
+  color: #0f172a;
+}
+
+/* Shipping / Vendor grid */
+.doc-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.details-card-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.details-card-box .card-title-header {
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.details-card-box .card-title-header h3 {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.details-card-box .card-title-header .icon {
+  color: #0d9488;
+  font-size: 12px;
+}
+
+.card-info-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.info-item .label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.info-item .value {
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+  max-width: 60%;
+  overflow-wrap: anywhere;
+}
+
+.info-item .bold-val {
+  color: #0d9488;
+  font-weight: 700;
+}
+
+/* Items Table */
+.doc-items-table-wrapper {
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.doc-items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.doc-items-table th {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+}
+
+.doc-items-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.doc-items-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-product-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.table-req-badge {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.table-direct-label {
+  color: #94a3b8;
+  font-size: 11.5px;
+  font-style: italic;
+}
+
+/* Financial summary details */
+.doc-totals-section {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.totals-box-panel {
+  width: 280px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.totals-row span {
+  color: #64748b;
+}
+
+.totals-row strong {
+  color: #0f172a;
+}
+
+.totals-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 4px 0;
+}
+
+.net-total-highlight {
+  font-size: 14px;
+}
+
+.net-total-highlight span {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.net-total-highlight strong {
+  color: #0d9488;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+/* Footer Section */
+.doc-footer-legal {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 20px;
+}
+
+.signature-area {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sig-line {
+  width: 100%;
+  height: 1px;
+  background: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.signature-area span {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.legal-notes {
+  flex: 1;
+  max-width: 480px;
+  padding-left: 30px;
+}
+
+.legal-notes p {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Loading & Error States */
+.po-summary-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 12px;
+}
+
+.po-summary-error {
+  text-align: center;
+  padding: 60px 40px;
+  max-width: 500px;
+  margin: 40px auto;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+/* ========================================================
+   PRINT MODE MEDIA STYLES
+   ======================================================== */
+
+@media print {
+  /* Hide the entire sidebar, top bar, breadcrumb header, and any non-PO items */
+  body, .shell, .sidebar, .top-bar, .app-container, .summary-actions-bar, .sidebar-backdrop {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Target exact elements to hide */
+  aside.sidebar, 
+  header.topbar, 
+  .summary-actions-bar,
+  .brand-block, 
+  .sidebar-collapse-btn {
+    display: none !important;
+  }
+
+  /* Make sure container fills screen */
+  .shell {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  main.content, .po-summary-page {
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Center PO Sheet and strip standard borders */
+  .po-document-sheet {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .po-badge-number {
+    border-color: #000000 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+
+  .po-info-bar, .details-card-box, .totals-box-panel, .doc-items-table th {
+    background: #ffffff !important;
+    border-color: #000000 !important;
+  }
+}
