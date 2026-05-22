@@ -383,6 +383,21 @@
   width: 190px;
 }
 
+.qr-sticker-empty {
+  align-items: center;
+  background: var(--bg-subtle);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  height: 190px;
+  justify-content: center;
+  margin: 12px auto;
+  width: 190px;
+}
+
 .qr-sticker span {
   color: var(--text-main);
   font-weight: 700;

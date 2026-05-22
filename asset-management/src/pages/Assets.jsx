@@ -1,10 +1,12 @@
 import { useDispatch, useSelector } from "react-redux";
+import { FaLaptop, FaTv, FaKeyboard, FaChair, FaBoxOpen, FaEllipsisV } from "react-icons/fa";
+import { motion } from "framer-motion";
 import { addAsset, fetchAssetList, deleteAsset } from "../store/slices/assetSlice";
 import "./Assets.css";
 import { useEffect, useRef, useState } from "react";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
-import { FaDownload, FaEdit, FaEye, FaFileCsv, FaFileImport, FaTags, FaTimes, FaTrash, FaBoxOpen, FaCheckCircle, FaUserCheck, FaWrench, FaShieldAlt } from "react-icons/fa";
+import { FaDownload, FaEdit, FaEye, FaFileCsv, FaFileImport, FaTags, FaTimes, FaTrash, FaCheckCircle, FaUserCheck, FaWrench, FaShieldAlt } from "react-icons/fa";
 import deleteModelImage from "../images/deleteModalImage.svg";
 import logoImage from "../images/logo.jpeg";
 import {
