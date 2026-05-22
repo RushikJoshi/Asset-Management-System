@@ -22,15 +22,15 @@
 
 /* Banner area */
 .procurement-header-banner {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 24px 30px;
-  color: #f8fafc;
+  color: #1e293b;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .banner-left h1 {
@@ -38,11 +38,11 @@
   font-weight: 700;
   margin: 0 0 6px;
   letter-spacing: -0.02em;
-  color: #ffffff;
+  color: #0f172a;
 }
 
 .banner-left p {
-  color: #94a3b8;
+  color: #475569;
   font-size: 14px;
   margin: 0;
   max-width: 600px;

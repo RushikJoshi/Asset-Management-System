@@ -15,6 +15,7 @@ import {
   FaSlidersH,
   FaArrowRight
 } from "react-icons/fa";
+import { useSelector } from "react-redux";
 import "./WorkOrdersPage.css";
 
 const ASSIGNEE_OPTIONS = [
@@ -53,8 +54,12 @@ const CATEGORY_OPTIONS = [
 
 function WorkOrdersPage() {
   const { showToast } = useToast();
+  const user = useSelector((state) => state.auth?.user);
   const [workOrders, setWorkOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // RBAC Check
+  const isAdminOrManager = user?.role === "admin" || user?.role === "manager";
 
   // Filters & State
   const [activeKpi, setActiveKpi] = useState("All"); // All, Open, Ongoing, Completed
@@ -101,8 +106,10 @@ function WorkOrdersPage() {
   };
 
   useEffect(() => {
-    fetchWorkOrders();
-  }, []);
+    if (isAdminOrManager) {
+      fetchWorkOrders();
+    }
+  }, [isAdminOrManager]);
 
   // Sync Drawer editable state when selectedWO changes
   useEffect(() => {
@@ -282,6 +289,19 @@ function WorkOrdersPage() {
         return "status-badge default";
     }
   };
+
+  if (!isAdminOrManager) {
+    return (
+      <div className="app-container work-orders-page">
+        <div className="procurement-empty-state" style={{ marginTop: '100px' }}>
+          <FaWrench style={{ fontSize: '48px', color: '#94a3b8', marginBottom: '16px' }} />
+          <h3>Access Restricted</h3>
+          <p>Work Orders are generated automatically when employees submit Complaints in the Requests module.</p>
+          <p style={{ marginTop: '8px' }}>Only Administrators and Maintenance Managers have permission to review, assign, and update Work Orders.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container work-orders-page">
