@@ -22,6 +22,9 @@ import {
   FaChevronDown,
   FaUser,
   FaTags,
+  FaShoppingCart,
+  FaCheckSquare,
+  FaWrench,
 } from "react-icons/fa";
 import { logout } from "../../store/slices/authSlice";
 import { fetchAssetList } from "../../store/slices/assetSlice";
@@ -81,7 +84,25 @@ const navItems = [
     icon: <FaClipboardCheck />,
     menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
   },
+  {
+    to: "/approvals",
+    label: "Approvals",
+    icon: <FaCheckSquare />,
+    menuRoles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
+  },
+  {
+    to: "/procurements",
+    label: "Procurements",
+    icon: <FaShoppingCart />,
+    menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
+  },
   { to: "/inventory", label: "Inventory", icon: <FaBoxes />, menuRoles: [] },
+  {
+    to: "/work-orders",
+    label: "Work Orders",
+    icon: <FaWrench />,
+    menuRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
+  },
   {
     to: "/employees",
     label: "Employee Portal",
@@ -123,15 +144,6 @@ const navItems = [
 ];
 
 const getPageTitle = (pathname) => {
-  if (pathname === "/") return "Dashboard";
-  if (pathname === "/assets") return "Assets";
-  if (pathname === "/requests") return "Requests";
-  if (pathname === "/inventory") return "Inventory";
-  if (pathname === "/employees") return "Employee Portal";
-  if (pathname === "/assignments") return "Assignments";
-  if (pathname === "/maintenance") return "Maintenance";
-  if (pathname === "/warranty") return "Warranty";
-  if (pathname === "/offices") return "Offices";
   if (pathname === "/audit") return "Audit Session";
   if (pathname === "/reports") return "Reports";
   if (pathname === "/roles") return "Users & Access";
@@ -147,6 +159,8 @@ const getPageTitle = (pathname) => {
   if (pathname.startsWith("/asset-details/")) return "Asset Details";
   if (pathname === "/add-request") return "New Asset Request";
   if (pathname.startsWith("/edit-request/")) return "Edit Request";
+  if (pathname === "/approvals") return "Approvals";
+  if (pathname === "/work-orders") return "Work Orders";
   return "AssetPro";
 };
 

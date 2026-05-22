@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   FORM_TYPES,
   getDefaultFormConfig,
@@ -292,13 +292,13 @@ export function useFormBuilder(formType) {
     });
   };
 
-  const saveChanges = () => {
+  const saveChanges = useCallback(() => {
     saveFormConfig(formType, config);
     showToast({
       title: "Saved",
       message: `${formType === FORM_TYPES.REQUEST ? "Request" : "Asset"} form saved.`,
     });
-  };
+  }, [formType, config, showToast]);
 
   const addCustomField = () => {
     const label = newFieldLabel.trim();
@@ -355,13 +355,13 @@ export function useFormBuilder(formType) {
     setNewSectionDescription("");
   };
 
-  const resetDefaults = () => {
+  const resetDefaults = useCallback(() => {
     resetFormConfig(formType);
     setConfig(getDefaultFormConfig(formType));
     setSelectedSection(defaultSection);
     setEditingField(null);
     setEditingSection(null);
-  };
+  }, [formType, defaultSection]);
 
   return {
     formType,

@@ -1,0 +1,597 @@
+/* ========================================================
+   PROCUREMENT PAGE STYLING
+   ======================================================== */
+
+.procurements-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Banner area */
+.procurement-header-banner {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px 30px;
+  color: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-md);
+}
+
+.banner-left h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.banner-left p {
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 0;
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+/* Tabs */
+.procurement-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 2px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  transition: all var(--transition-fast);
+}
+
+.tab-btn:hover {
+  color: var(--text-main);
+  background: var(--bg-subtle);
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+}
+
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* Filters Row */
+.procurement-filters-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 1 1 350px;
+}
+
+.search-box input {
+  width: 100%;
+  height: 40px;
+  padding: 0 16px 0 40px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 13px;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.search-box input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.08);
+  outline: none;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 13px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.po-status-dropdown {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 13px;
+  height: 40px;
+  padding: 0 14px;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+  min-width: 180px;
+}
+
+.po-status-dropdown:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.08);
+  outline: none;
+}
+
+/* Table Specific Layout */
+.procurement-table th {
+  padding: 10px 14px;
+}
+
+.procurement-table td {
+  padding: 10px 14px;
+}
+
+.po-num-link {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: color var(--transition-fast);
+}
+
+.po-num-link:hover {
+  color: var(--color-primary-dark);
+}
+
+.field-icon {
+  margin-right: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.date-field, .creator-field {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
+
+.po-vendor-tag {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  text-transform: uppercase;
+}
+
+.product-details-cell {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal !important;
+}
+
+.product-item-summary {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+
+.product-item-summary:last-child {
+  margin-bottom: 0;
+}
+
+.req-link-tag {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 10.5px;
+}
+
+.po-net-total {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* PO status pills */
+.po-status-raised {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.po-status-partial {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.po-status-received {
+  background: #dcfce7;
+  color: #1565c0; /* Match custom style if needed, let's keep clean */
+  color: #166534;
+}
+
+.create-invoice-disabled-btn {
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  color: #94a3b8;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: not-allowed;
+}
+
+/* Loading & Empty State */
+.procurement-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 12px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(14, 165, 164, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.procurement-empty-state {
+  text-align: center;
+  padding: 50px 30px;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.procurement-empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0 0 6px;
+}
+
+.procurement-empty-state p {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* ========================================================
+   VENDORS CATALOG TAB STYLING
+   ======================================================== */
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 4px;
+}
+
+.section-subtitle {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+
+.vendor-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.vendor-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.vendor-card:hover {
+  border-color: rgba(14, 165, 164, 0.25);
+  box-shadow: var(--shadow-md);
+}
+
+.vendor-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.vendor-logo-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.vendor-title-block h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: var(--text-main);
+}
+
+.vendor-type-tag {
+  font-size: 9.5px;
+  color: var(--color-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.vendor-card-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-grow: 1;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  line-height: 1.4;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 8px;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.info-row span {
+  color: var(--text-muted);
+}
+
+.info-row strong {
+  color: var(--text-main);
+  text-align: right;
+}
+
+.vendor-card-footer {
+  padding: 14px 20px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-color);
+}
+
+.raise-po-btn {
+  width: 100%;
+  height: 36px;
+  font-size: 12px;
+}
+
+/* ========================================================
+   INVOICES PLACEHOLDER TAB
+   ======================================================== */
+
+.invoices-placeholder-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 60px 40px;
+  text-align: center;
+  max-width: 500px;
+  margin: 40px auto;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+  animation: glowPulse 4s infinite alternate;
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+  }
+  100% {
+    box-shadow: 0 4px 20px -2px rgba(14, 165, 164, 0.15), 0 2px 8px -1px rgba(14, 165, 164, 0.1);
+    border-color: rgba(14, 165, 164, 0.3);
+  }
+}
+
+.placeholder-icon {
+  font-size: 54px;
+  color: var(--color-primary);
+  margin-bottom: 20px;
+  opacity: 0.85;
+}
+
+.invoices-placeholder-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 10px;
+}
+
+.invoices-placeholder-card p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.loading-bar-placeholder {
+  width: 80%;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 3px;
+  margin: 0 auto 20px;
+  overflow: hidden;
+}
+
+.fill-bar {
+  width: 70%;
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 3px;
+  animation: progressPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes progressPulse {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(150%); }
+}
+
+.placeholder-status-tag {
+  display: inline-block;
+  background: rgba(14, 165, 164, 0.08);
+  border: 1px solid rgba(14, 165, 164, 0.2);
+  color: var(--color-primary);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ========================================================
+   INVOICES REAL LAYOUT STYLING
+   ======================================================== */
+
+.invoice-filters-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.invoice-date-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.date-input-container {
+  display: flex;
+  align-items: center;
+}
+
+.invoice-date-input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 13px;
+  height: 40px;
+  padding: 0 12px;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+  min-width: 210px;
+  font-family: inherit;
+}
+
+.invoice-date-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.08);
+  outline: none;
+}
+
+.clear-date-btn {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 15px;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-left: 6px;
+  font-weight: 700;
+}
+
+.clear-date-btn:hover {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.invoice-product-details-cell {
+  max-width: 280px;
+  white-space: nowrap !important;
+}
+
+.invoice-product-item {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: #0f172a;
+  line-height: 1.5;
+  margin-bottom: 2px;
+}
+
+.invoice-product-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Ensure PO clickable links show with a beautiful theme color and clean text */
+.invoice-table .po-num-link {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  transition: color var(--transition-fast);
+}
+
+.invoice-table .po-num-link:hover {
+  color: var(--color-primary-dark);
+}
