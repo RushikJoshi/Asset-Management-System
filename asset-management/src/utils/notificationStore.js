@@ -16,8 +16,9 @@ function writeAll(list) {
   window.dispatchEvent(new CustomEvent(EVENT_NAME));
 }
 
-const userKeys = (user = {}) =>
-  [
+const userKeys = (user) => {
+  if (!user || typeof user !== "object") return [];
+  return [
     user._id,
     user.id,
     user.email,
@@ -27,9 +28,11 @@ const userKeys = (user = {}) =>
   ]
     .map((value) => String(value || "").trim().toLowerCase())
     .filter(Boolean);
+};
 
-const requestOwnerKeys = (asset = {}) =>
-  [
+const requestOwnerKeys = (asset) => {
+  if (!asset || typeof asset !== "object") return [];
+  return [
     asset.createdBy,
     asset.requestedByUser,
     asset.requestedByEmail,
@@ -39,6 +42,7 @@ const requestOwnerKeys = (asset = {}) =>
   ]
     .map((value) => String(value || "").trim().toLowerCase())
     .filter(Boolean);
+};
 
 const hasAnyMatch = (left = [], right = []) =>
   left.some((item) => right.includes(item));
@@ -51,8 +55,9 @@ const parseReportingTo = (reportingToString) => {
     .filter(Boolean);
 };
 
-const isNotificationForUser = (item, user = {}) => {
-  const meta = item.meta || {};
+const isNotificationForUser = (item, user) => {
+  if (!user) return false;
+  const meta = item?.meta || {};
   const targets = meta.targetUsers || [];
   const targetRoles = meta.targetRoles || [];
   const excluded = meta.excludeUsers || [];
@@ -88,25 +93,29 @@ export function subscribeNotifications(handler) {
   return () => window.removeEventListener(EVENT_NAME, listener);
 }
 
-export function getNotifications(user = {}) {
+export function getNotifications(user) {
+  if (!user) return [];
   return readAll().filter((item) => isNotificationForUser(item, user));
 }
 
-export function getUnreadNotificationCount(user = {}) {
+export function getUnreadNotificationCount(user) {
+  if (!user) return 0;
   return getNotifications(user).filter((item) => isNotificationUnread(item, user)).length;
 }
 
-export function isNotificationUnread(item, user = {}) {
+export function isNotificationUnread(item, user) {
+  if (!user) return false;
   const currentKeys = userKeys(user);
-  if (item.read) return false;
-  if (!currentKeys.length) return !item.read;
-  return !currentKeys.some((key) => item.readBy?.[key]);
+  if (item?.read) return false;
+  if (!currentKeys.length) return !item?.read;
+  return !currentKeys.some((key) => item?.readBy?.[key]);
 }
 
-export function getUnreadNotificationCountsByMenu(user = {}) {
+export function getUnreadNotificationCountsByMenu(user) {
+  if (!user) return {};
   return getNotifications(user).reduce((counts, item) => {
     if (!isNotificationUnread(item, user)) return counts;
-    const menuLabel = item.meta?.menuLabel;
+    const menuLabel = item?.meta?.menuLabel;
     if (!menuLabel) return counts;
     return { ...counts, [menuLabel]: (counts[menuLabel] || 0) + 1 };
   }, {});
@@ -214,26 +223,29 @@ export function syncAssetNotifications(assets = []) {
       asset.maintenancePeriod
     ) {
       const dueDate = new Date(asset.purchaseDate);
-      dueDate.setMonth(dueDate.getMonth() + Number(asset.maintenancePeriod));
-      while (dueDate < today) {
-        dueDate.setMonth(dueDate.getMonth() + Number(asset.maintenancePeriod));
-      }
-      const daysLeft = Math.ceil((dueDate - today) / 86400000);
-      if (daysLeft >= 0 && daysLeft <= 7) {
-        items.push({
-          id: `sys_maintenance_${asset._id}`,
-          title: "Maintenance due soon",
-          message: `${assetName} maintenance is due in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`,
-          type: "info",
-          meta: {
-            assetId: asset._id,
-            menuLabel: "Maintenance",
-            route: "/maintenance",
-            targetRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
-          },
-          read: false,
-          createdAt: new Date().toISOString(),
-        });
+      const period = Number(asset.maintenancePeriod);
+      if (!isNaN(period) && period > 0) {
+        dueDate.setMonth(dueDate.getMonth() + period);
+        while (dueDate < today) {
+          dueDate.setMonth(dueDate.getMonth() + period);
+        }
+        const daysLeft = Math.ceil((dueDate - today) / 86400000);
+        if (daysLeft >= 0 && daysLeft <= 7) {
+          items.push({
+            id: `sys_maintenance_${asset._id}`,
+            title: "Maintenance due soon",
+            message: `${assetName} maintenance is due in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`,
+            type: "info",
+            meta: {
+              assetId: asset._id,
+              menuLabel: "Maintenance",
+              route: "/maintenance",
+              targetRoles: ["SUPER_ADMIN", "ADMIN", "IT_STAFF"],
+            },
+            read: false,
+            createdAt: new Date().toISOString(),
+          });
+        }
       }
     }
 
@@ -303,7 +315,8 @@ export function markAllNotificationsRead() {
   writeAll(readAll().map((item) => ({ ...item, read: true })));
 }
 
-export function markUserNotificationsRead(user = {}) {
+export function markUserNotificationsRead(user) {
+  if (!user) return;
   const currentKeys = userKeys(user);
   if (!currentKeys.length) {
     markAllNotificationsRead();
@@ -325,7 +338,8 @@ export function markUserNotificationsRead(user = {}) {
   );
 }
 
-export function markUserNotificationsReadByMenu(menuLabel, user = {}) {
+export function markUserNotificationsReadByMenu(menuLabel, user) {
+  if (!user) return;
   const currentKeys = userKeys(user);
   if (!menuLabel) return;
 
@@ -348,7 +362,8 @@ export function markUserNotificationsReadByMenu(menuLabel, user = {}) {
   );
 }
 
-export function markUserNotificationRead(id, user = {}) {
+export function markUserNotificationRead(id, user) {
+  if (!user) return;
   const currentKeys = userKeys(user);
   writeAll(
     readAll().map((item) => {

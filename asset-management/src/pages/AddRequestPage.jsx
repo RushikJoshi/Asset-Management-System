@@ -120,7 +120,9 @@ export default function AddRequestPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
 
     const missingRequired = {};
     formSections.forEach(section => {
@@ -138,6 +140,11 @@ export default function AddRequestPage() {
     if (Object.keys(missingRequired).length > 0) {
       console.log("Validation errors blocking form submission:", missingRequired);
       setErrors(missingRequired);
+      showToast({
+        title: "Validation Error",
+        message: "Please fill in all required fields marked with *.",
+        type: "error"
+      });
       return;
     }
 
@@ -274,7 +281,12 @@ export default function AddRequestPage() {
           <button type="button" className="cancel-btn" onClick={() => navigate("/requests")}>
             Cancel
           </button>
-          <button type="submit" form="add-request-form" className="submit-btn">
+          <button 
+            type="submit" 
+            form="add-request-form" 
+            className="submit-btn"
+            onClick={handleSubmit}
+          >
             Submit
           </button>
         </div>
