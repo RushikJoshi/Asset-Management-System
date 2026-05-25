@@ -23,8 +23,9 @@ export function Login() {
         message: location.state.message,
         type: "success",
       });
-      // Clear location state to prevent showing on refresh
-      navigate(location.pathname, { replace: true, state: {} });
+      // Preserve any existing redirect destination while clearing the toast message
+      const preservedState = location.state.from ? { from: location.state.from } : {};
+      navigate(location.pathname, { replace: true, state: preservedState });
     }
   }, [location.state, navigate, location.pathname, showToast]);
 
@@ -47,7 +48,11 @@ export function Login() {
     setErrors({});
     const result = await dispatch(loginUser(form));
     if (loginUser.fulfilled.match(result)) {
-      navigate(getRoleHome(result.payload.user.role), { replace: true });
+      const redirectFrom = location.state?.from;
+      const redirectPath = redirectFrom
+        ? `${redirectFrom.pathname || "/"}${redirectFrom.search || ""}${redirectFrom.hash || ""}`
+        : getRoleHome(result.payload.user.role);
+      navigate(redirectPath, { replace: true });
     }
   };
 

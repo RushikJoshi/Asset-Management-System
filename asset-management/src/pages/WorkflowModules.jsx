@@ -43,10 +43,12 @@ const assetColumns = [
 const maintenanceDue = (asset) => {
   if (!asset.purchaseDate || !asset.maintenancePeriod) return null;
   const dueDate = new Date(asset.purchaseDate);
-  dueDate.setMonth(dueDate.getMonth() + Number(asset.maintenancePeriod));
+  const period = Number(asset.maintenancePeriod);
+  if (isNaN(period) || period <= 0) return null;
+  dueDate.setMonth(dueDate.getMonth() + period);
 
   while (dueDate < new Date()) {
-    dueDate.setMonth(dueDate.getMonth() + Number(asset.maintenancePeriod));
+    dueDate.setMonth(dueDate.getMonth() + period);
   }
 
   return dueDate;

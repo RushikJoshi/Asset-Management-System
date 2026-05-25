@@ -55,8 +55,64 @@ function AddAsset() {
   const [formConfig, setFormConfig] = useState(() =>
     isRequestMode ? loadRequestFormConfig() : loadAssetFormConfig(),
   );
+  const [createdAsset, setCreatedAsset] = useState(null);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [selectedCodeType, setSelectedCodeType] = useState("qr");
+  const [barcodeUrl, setBarcodeUrl] = useState("");
+  const [barcodeError, setBarcodeError] = useState("");
+  const [isSavingCodeType, setIsSavingCodeType] = useState(false);
 
   const formatDate = (value) => value?.split("T")[0] || "";
+
+  const getAssetCodeValue = (asset) =>
+    asset?.assetCode || asset?.serialNumber || asset?._id || "ASSET";
+
+  const handleChooseCodeType = async (type) => {
+    if (!createdAsset) return;
+    if (type === "qr") {
+      setSelectedCodeType("qr");
+      setBarcodeError("");
+      setBarcodeUrl("");
+      setShowGenerateDialog(false);
+      showToast({
+        title: "QR Selected",
+        message: "This asset will use QR code scan mode.",
+      });
+      return;
+    }
+
+    const codeValue = getAssetCodeValue(createdAsset);
+    const generated = generateCode39Barcode(codeValue);
+    if (generated.error) {
+      setBarcodeError(generated.error);
+      setBarcodeUrl("");
+      return;
+    }
+
+    setIsSavingCodeType(true);
+    try {
+      const payload = {
+        codeType: "barcode",
+        barcodeImage: generated.dataUrl,
+        barcodeText: codeValue,
+      };
+      const response = await dispatch(updateAsset({ id: createdAsset._id, payload })).unwrap();
+      const updatedAsset = response?.asset || response;
+      setCreatedAsset(updatedAsset);
+      setSelectedCodeType("barcode");
+      setBarcodeUrl(generated.dataUrl);
+      setBarcodeError("");
+      setShowGenerateDialog(false);
+      showToast({
+        title: "Barcode Selected",
+        message: "Barcode scan mode has been saved for this asset.",
+      });
+    } catch (error) {
+      setBarcodeError(error || "Failed to save barcode selection.");
+    } finally {
+      setIsSavingCodeType(false);
+    }
+  };
 
   const activeSchema = useMemo(
     () => (isRequestMode ? createRequestSchema(formConfig) : createAssetSchema(formConfig)),
@@ -244,16 +300,23 @@ function AddAsset() {
           title: isRequestMode ? "Request updated" : "Asset updated",
           message: `${payload.assetName || "Record"} saved successfully.`,
         });
-      } else {
-        await dispatch(addAsset(payload)).unwrap();
-        showToast({
-          title: isRequestMode ? "Request submitted" : "Asset added",
-          message: `${payload.assetName || "Record"} created successfully.`,
-        });
+        reset();
+        navigate(isRequestMode ? "/requests" : "/assets");
+        return;
       }
 
+      const response = await dispatch(addAsset(payload)).unwrap();
+      const asset = response?.asset || response;
+      setCreatedAsset(asset);
+      setShowGenerateDialog(true);
+      setSelectedCodeType("qr");
+      setBarcodeUrl("");
+      setBarcodeError("");
+      showToast({
+        title: isRequestMode ? "Request submitted" : "Asset added",
+        message: `${payload.assetName || "Record"} created successfully.`,
+      });
       reset();
-      navigate(isRequestMode ? "/requests" : "/assets");
     } catch (error) {
       showToast({
         title: isEditMode ? "Update failed" : "Submit failed",
@@ -539,6 +602,92 @@ function AddAsset() {
     );
   };
 
+  const generateCode39Barcode = (value) => {
+    const patternMap = {
+      0: "101001101101",
+      1: "110100101011",
+      2: "101100101011",
+      3: "110110010101",
+      4: "101001101011",
+      5: "110100110101",
+      6: "101100110101",
+      7: "101001011011",
+      8: "110100101101",
+      9: "101100101101",
+      A: "110101001011",
+      B: "101101001011",
+      C: "110110100101",
+      D: "101011001011",
+      E: "110101100101",
+      F: "101101100101",
+      G: "101010011011",
+      H: "110101001101",
+      I: "101101001101",
+      J: "101011001101",
+      K: "110101010011",
+      L: "101101010011",
+      M: "110110101001",
+      N: "101011010011",
+      O: "110101101001",
+      P: "101101101001",
+      Q: "101010110011",
+      R: "110101011001",
+      S: "101101011001",
+      T: "101011011001",
+      U: "110010101011",
+      V: "100110101011",
+      W: "110011010101",
+      X: "100101101011",
+      Y: "110010110101",
+      Z: "100110110101",
+      "-": "100101011011",
+      ".": "110010101101",
+      " ": "100110101101",
+      $: "100100100101",
+      "/": "100100101001",
+      "+": "100101001001",
+      "%": "101001001001",
+      "*": "100101101101",
+    };
+
+    const valueString = String(value || "").toUpperCase().trim();
+    if (!valueString) {
+      return { error: "No value provided for barcode generation." };
+    }
+
+    const invalidChar = valueString.split("").find((char) => !patternMap[char]);
+    if (invalidChar) {
+      return {
+        error: `Unsupported character for barcode: ${invalidChar}. Use letters, numbers, space, -, ., $, /, +, % only.`,
+      };
+    }
+
+    const encoded = ["*", ...valueString.split(""), "*"].map((char) => patternMap[char]).join("0");
+    const moduleWidth = 2;
+    const height = 100;
+    const width = encoded.length * moduleWidth + 20;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#000000";
+
+    let x = 10;
+    for (let index = 0; index < encoded.length; index += 1) {
+      const isBar = index % 2 === 0;
+      const segmentWidth = encoded[index] === "1" ? moduleWidth * 2 : moduleWidth;
+      if (isBar) {
+        ctx.fillRect(x, 0, segmentWidth, height);
+      }
+      x += segmentWidth;
+    }
+
+    return { dataUrl: canvas.toDataURL("image/png") };
+  };
+
   const renderConfiguredSection = (section, index) => {
     if (
       !isRequestMode &&
@@ -595,6 +744,111 @@ function AddAsset() {
           {formSections.map((section, index) => renderConfiguredSection(section, index))}
         </div>
       </form>
+
+      {showGenerateDialog && createdAsset && (
+        <div className="code-gen-modal-backdrop">
+          <div className="code-gen-modal">
+            <div className="code-gen-header">
+              <div>
+                <h2>Generate a code for this asset</h2>
+                <p>Choose whether you want a QR code or a barcode for the newly created asset.</p>
+              </div>
+              <button className="close-modal-btn" type="button" onClick={() => setShowGenerateDialog(false)}>
+                ×
+              </button>
+            </div>
+
+            <div className="code-gen-type-row">
+              <button
+                type="button"
+                className={`code-gen-type ${selectedCodeType === "qr" ? "active" : ""}`}
+                onClick={() => setSelectedCodeType("qr")}
+              >
+                QR Code
+              </button>
+              <button
+                type="button"
+                className={`code-gen-type ${selectedCodeType === "barcode" ? "active" : ""}`}
+                onClick={() => {
+                  setSelectedCodeType("barcode");
+                  setBarcodeError("");
+                  if (!barcodeUrl) {
+                    const codeValue =
+                      createdAsset.assetCode || createdAsset.serialNumber || createdAsset._id || "ASSET";
+                    const generated = generateCode39Barcode(codeValue);
+                    if (generated.error) {
+                      setBarcodeError(generated.error);
+                      setBarcodeUrl("");
+                    } else {
+                      setBarcodeUrl(generated.dataUrl);
+                    }
+                  }
+                }}
+              >
+                Barcode
+              </button>
+            </div>
+
+            <div className="code-gen-preview">
+              {selectedCodeType === "qr" ? (
+                createdAsset.qrCode ? (
+                  <img src={createdAsset.qrCode} alt="Asset QR" className="code-preview-image" />
+                ) : (
+                  <div className="code-error-message">QR code is not available for this asset.</div>
+                )
+              ) : barcodeError ? (
+                <div className="code-error-message">{barcodeError}</div>
+              ) : barcodeUrl ? (
+                <img src={barcodeUrl} alt="Asset Barcode" className="code-preview-image" />
+              ) : (
+                <div className="code-error-message">Barcode could not be generated.</div>
+              )}
+            </div>
+
+            <div className="code-gen-meta">
+              <p>
+                <strong>Asset:</strong> {createdAsset.assetName || createdAsset.assetCode || createdAsset.serialNumber || "New Asset"}
+              </p>
+              <p>
+                <strong>Code value:</strong> {createdAsset.assetCode || createdAsset.serialNumber || createdAsset._id}
+              </p>
+            </div>
+
+            <div className="code-gen-actions">
+              <button
+                type="button"
+                className="submit-btn"
+                onClick={() => handleChooseCodeType("qr")}
+                disabled={isSavingCodeType}
+              >
+                Use QR Code
+              </button>
+              <button
+                type="button"
+                className="submit-btn"
+                onClick={() => handleChooseCodeType("barcode")}
+                disabled={isSavingCodeType}
+              >
+                Use Barcode
+              </button>
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={() => setShowGenerateDialog(false)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={() => navigate("/assets")}
+              >
+                Back to Assets
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

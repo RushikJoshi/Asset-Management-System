@@ -245,6 +245,44 @@ function AppLayout() {
   }, [assetListData, user]);
 
   useEffect(() => {
+    if (!user) return;
+
+    let timeoutId;
+    const INACTIVITY_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
+
+    const resetTimer = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => {
+        dispatch(logout());
+        navigate("/login", { replace: true });
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Initialize timer
+    resetTimer();
+
+    // Listen to user activity events
+    const events = ["mousemove", "mousedown", "keypress", "scroll", "touchstart"];
+    const handleActivity = () => resetTimer();
+
+    events.forEach((event) => {
+      window.addEventListener(event, handleActivity);
+    });
+
+    // Cleanup listeners and timeout on unmount or user change
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      events.forEach((event) => {
+        window.removeEventListener(event, handleActivity);
+      });
+    };
+  }, [user, dispatch, navigate]);
+
+  useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);

@@ -209,6 +209,8 @@ function Assets() {
   const fileInputRef = useRef(null);
   const [openModal, setOpenModal] = useState(false);
   const [selectedQr, setSelectedQr] = useState("");
+  const [selectedCodeType, setSelectedCodeType] = useState("qr");
+  const [selectedAsset, setSelectedAsset] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [stickerModal, setStickerModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -562,11 +564,14 @@ function Assets() {
                           <button
                             className="scan-btn"
                             onClick={() => {
-                              setSelectedQr(item.qrCode);
+                              const isBarcode = String(item.codeType || "").toLowerCase() === "barcode";
+                              setSelectedAsset(item);
+                              setSelectedCodeType(isBarcode ? "barcode" : "qr");
+                              setSelectedQr(isBarcode ? item.barcodeImage || item.qrCode : item.qrCode);
                               setOpenModal(true);
                             }}
                           >
-                            Scan QR
+                            {String(item.codeType || "").toLowerCase() === "barcode" ? "Scan Barcode" : "Scan QR"}
                           </button>
                           <button
                             className="view-btn"
@@ -622,18 +627,23 @@ function Assets() {
       {openModal && (
         <div className="modal-overlay">
           <div className="qr-modal">
-            <button className="close-btn" onClick={() => setOpenModal(false)}>
+            <button
+              className="close-btn"
+              onClick={() => {
+                setOpenModal(false);
+                setSelectedAsset(null);
+              }}
+            >
               X
             </button>
 
-            <h2>Scan QR Code</h2>
-
             <div className="modal-qr-wrapper">
-              <img src={selectedQr} alt="QR" className="modal-qr" />
-
-              <div className="qr-center-text modal-center-text">
-                <img src={logoImage} alt="AssetPro logo" className="qr-center-logo" />
-              </div>
+              <img src={selectedQr} alt={selectedCodeType === "barcode" ? "Barcode" : "QR"} className="modal-qr" />
+              {selectedCodeType === "qr" && (
+                <div className="qr-center-text modal-center-text">
+                  <img src={logoImage} alt="AssetPro logo" className="qr-center-logo" />
+                </div>
+              )}
             </div>
           </div>
         </div>
