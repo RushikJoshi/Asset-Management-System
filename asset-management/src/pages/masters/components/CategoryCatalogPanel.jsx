@@ -43,13 +43,49 @@ function CategoryCatalogPanel({ rows, onAdd, onUpdate, onRemove }) {
               />
               <span>IP + computer specs</span>
             </label>
-            <button type="button" className="field-delete-btn" onClick={() => onRemove(row.id)}>
+            <button 
+              type="button" 
+              className="field-delete-btn" 
+              onClick={() => onRemove(row.id)}
+              style={{
+                backgroundColor: "#ef4444",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "6px",
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: "600",
+                cursor: "pointer",
+                boxShadow: "0 2px 4px rgba(239, 68, 68, 0.2)",
+                transition: "background-color 0.2s"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#dc2626"}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ef4444"}
+            >
               Remove
             </button>
           </div>
         ))}
       </div>
-      <button type="button" className="save-master-btn category-add-btn" onClick={onAdd}>
+      <button 
+        type="button" 
+        className="save-master-btn category-add-btn" 
+        onClick={onAdd}
+        style={{
+          backgroundColor: "#2563eb",
+          color: "#ffffff",
+          border: "none",
+          borderRadius: "6px",
+          padding: "8px 16px",
+          fontSize: "13px",
+          fontWeight: "600",
+          cursor: "pointer",
+          boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)",
+          transition: "background-color 0.2s"
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#1d4ed8"}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#2563eb"}
+      >
         Add category
       </button>
     </div>

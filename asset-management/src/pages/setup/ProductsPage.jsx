@@ -268,7 +268,7 @@ export default function ProductsPage() {
           <button
             onClick={() => setShowAddModal(true)}
             style={{
-              backgroundColor: "#5B50EC",
+              backgroundColor: "#2563eb",
               color: "#ffffff",
               border: "none",
               borderRadius: "6px",
@@ -279,37 +279,13 @@ export default function ProductsPage() {
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              boxShadow: "0 2px 4px rgba(91, 80, 236, 0.2)",
+              boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)",
               transition: "all 0.2s"
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#4f46e5"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#5B50EC"}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#1d4ed8"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#2563eb"}
           >
-            <FaPlus /> Add Product
-          </button>
-          
-          <button
-            style={{
-              backgroundColor: "#ffffff",
-              color: "#64748b",
-              border: "1px solid #cbd5e1",
-              borderRadius: "6px",
-              padding: "10px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s"
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="8" y1="6" x2="21" y2="6"></line>
-              <line x1="8" y1="12" x2="21" y2="12"></line>
-              <line x1="8" y1="18" x2="21" y2="18"></line>
-              <line x1="3" y1="6" x2="3.01" y2="6"></line>
-              <line x1="3" y1="12" x2="3.01" y2="12"></line>
-              <line x1="3" y1="18" x2="3.01" y2="18"></line>
-            </svg>
+            Add Product
           </button>
         </div>
       </div>
@@ -628,7 +604,7 @@ export default function ProductsPage() {
                 <button
                   type="submit"
                   style={{
-                    backgroundColor: "#5B50EC",
+                    backgroundColor: "#2563eb",
                     color: "#ffffff",
                     border: "none",
                     borderRadius: "6px",
@@ -636,7 +612,7 @@ export default function ProductsPage() {
                     fontWeight: "600",
                     fontSize: "13px",
                     cursor: "pointer",
-                    boxShadow: "0 2px 4px rgba(91, 80, 236, 0.15)"
+                    boxShadow: "0 2px 4px rgba(37, 99, 235, 0.15)"
                   }}
                 >
                   Add Product

@@ -7,6 +7,7 @@ import "./Procurements.css";
 import AddPOModal from "../components/AddPOModal";
 import { useToast } from "../components/toast/toastStore";
 import apiInstance from "../apis/apiConfig";
+import { TablePagination, TablePageSizeSelector } from "../components/common/ModuleComponents";
 
 const VENDORS = [
   {
@@ -51,6 +52,35 @@ function Procurements() {
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [searchInvoiceQuery, setSearchInvoiceQuery] = useState("");
   const [invoiceDateFilter, setInvoiceDateFilter] = useState("");
+
+  // Purchase Orders pagination state
+  const [poPage, setPoPage] = useState(1);
+  const [poPageSize, setPoPageSize] = useState(20);
+
+  // Invoices pagination state
+  const [invPage, setInvPage] = useState(1);
+  const [invPageSize, setInvPageSize] = useState(20);
+
+  // Reset pages on search/filter/data changes
+  useEffect(() => {
+    setPoPage(1);
+  }, [statusFilter, searchQuery, purchaseOrders.length]);
+
+  useEffect(() => {
+    setInvPage(1);
+  }, [searchInvoiceQuery, invoiceDateFilter, invoices.length]);
+
+  // Slicing Purchase Orders
+  const totalPOs = purchaseOrders.length;
+  const poStartIndex = (poPage - 1) * poPageSize;
+  const poEndIndex = Math.min(poStartIndex + poPageSize, totalPOs);
+  const slicedPOs = purchaseOrders.slice(poStartIndex, poEndIndex);
+
+  // Slicing Invoices
+  const totalInvoices = invoices.length;
+  const invStartIndex = (invPage - 1) * invPageSize;
+  const invEndIndex = Math.min(invStartIndex + invPageSize, totalInvoices);
+  const slicedInvoices = invoices.slice(invStartIndex, invEndIndex);
 
   const fetchPOs = async () => {
     setLoading(true);
@@ -219,7 +249,7 @@ function Procurements() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div className="filter-box">
+              <div className="filter-box" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -230,6 +260,9 @@ function Procurements() {
                   <option value="Partially Received">Partially Received</option>
                   <option value="Received">Received</option>
                 </select>
+                {totalPOs > 20 && (
+                  <TablePageSizeSelector pageSize={poPageSize} onPageSizeChange={(size) => { setPoPageSize(size); setPoPage(1); }} />
+                )}
               </div>
             </div>
 
@@ -239,84 +272,95 @@ function Procurements() {
                 <p>Loading Purchase Orders...</p>
               </div>
             ) : purchaseOrders.length > 0 ? (
-              <div className="table-wrapper">
-                <table className="asset-table procurement-table">
-                  <thead>
-                    <tr>
-                      <th>PO Number</th>
-                      <th>PO Date</th>
-                      <th>Raised By</th>
-                      <th>Vendor</th>
-                      <th>Product Details</th>
-                      <th>Net Total</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {purchaseOrders.map((po) => (
-                      <tr key={po._id} className="po-table-row">
-                        <td>
-                          <button
-                            className="po-num-link"
-                            onClick={() => navigate(`/procurements/${po._id}`)}
-                          >
-                            {po.poNumber}
-                          </button>
-                        </td>
-                        <td>
-                          <div className="date-field">
-                            <FaCalendarAlt className="field-icon" />
-                            {moment(po.purchaseOrderDate).format("DD-MM-YYYY")}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="creator-field">
-                            <FaUser className="field-icon" />
-                            {po.raisedBy}
-                          </div>
-                        </td>
-                        <td>
-                          <span className="po-vendor-tag">{po.vendor.orgName}</span>
-                        </td>
-                        <td className="product-details-cell">
-                          {po.products.map((p, idx) => (
-                            <div key={idx} className="product-item-summary">
-                              <strong>{p.productName}</strong> x {p.requiredQuantity}{" "}
-                              {p.requestId && <span className="req-link-tag">({p.requestId})</span>}
-                            </div>
-                          ))}
-                        </td>
-                        <td>
-                          <strong className="po-net-total">₹{po.netTotal.toLocaleString("en-IN")}</strong>
-                        </td>
-                        <td>
-                          <span className={`asset-status-pill ${getStatusClass(po.status)}`}>
-                            {po.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="action-buttons">
+              <div className="module-table-card">
+                <div className="module-table-scroll-area">
+                  <table className="asset-table procurement-table">
+                    <thead>
+                      <tr>
+                        <th>PO Number</th>
+                        <th>PO Date</th>
+                        <th>Raised By</th>
+                        <th>Vendor</th>
+                        <th>Product Details</th>
+                        <th>Net Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {slicedPOs.map((po) => (
+                        <tr key={po._id} className="po-table-row">
+                          <td>
                             <button
-                              className="view-btn"
-                              title="View Summary details"
+                              className="po-num-link"
                               onClick={() => navigate(`/procurements/${po._id}`)}
                             >
-                              <FaEye />
+                              {po.poNumber}
                             </button>
-                            <button
-                              className="create-invoice-disabled-btn"
-                              title="Create Invoice (Layout details pending)"
-                              disabled
-                            >
-                              + Invoice
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </td>
+                          <td>
+                            <div className="date-field">
+                              <FaCalendarAlt className="field-icon" />
+                              {moment(po.purchaseOrderDate).format("DD-MM-YYYY")}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="creator-field">
+                              <FaUser className="field-icon" />
+                              {po.raisedBy}
+                            </div>
+                          </td>
+                          <td>
+                            <span className="po-vendor-tag">{po.vendor.orgName}</span>
+                          </td>
+                          <td className="product-details-cell">
+                            {po.products.map((p, idx) => (
+                              <div key={idx} className="product-item-summary">
+                                <strong>{p.productName}</strong> x {p.requiredQuantity}{" "}
+                                {p.requestId && <span className="req-link-tag">({p.requestId})</span>}
+                              </div>
+                            ))}
+                          </td>
+                          <td>
+                            <strong className="po-net-total">₹{po.netTotal.toLocaleString("en-IN")}</strong>
+                          </td>
+                          <td>
+                            <span className={`asset-status-pill ${getStatusClass(po.status)}`}>
+                              {po.status}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="action-buttons">
+                              <button
+                                className="view-btn"
+                                title="View Summary details"
+                                onClick={() => navigate(`/procurements/${po._id}`)}
+                              >
+                                <FaEye />
+                              </button>
+                              <button
+                                className="create-invoice-disabled-btn"
+                                title="Create Invoice (Layout details pending)"
+                                disabled
+                              >
+                                + Invoice
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {totalPOs > 0 && (
+                  <TablePagination
+                    totalItems={totalPOs}
+                    currentPage={poPage}
+                    pageSize={poPageSize}
+                    onPageChange={setPoPage}
+                    displayedCount={slicedPOs?.length || 0}
+                  />
+                )}
               </div>
             ) : (
               <div className="procurement-empty-state">
@@ -374,8 +418,9 @@ function Procurements() {
                     <button
                       className="add-btn raise-po-btn"
                       onClick={() => handleOpenAddPO(vendor)}
+                      style={{ backgroundColor: "#2563eb", color: "#ffffff", border: "none" }}
                     >
-                      <FaPlus /> Raise Purchase Order
+                      Raise Purchase Order
                     </button>
                   </div>
                 </motion.div>
@@ -397,7 +442,7 @@ function Procurements() {
                   onChange={(e) => setSearchInvoiceQuery(e.target.value)}
                 />
               </div>
-              <div className="invoice-date-filter-wrapper">
+              <div className="invoice-date-filter-wrapper" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                 <span className="filter-label">Filter By:</span>
                 <div className="date-input-container">
                   <input
@@ -416,6 +461,9 @@ function Procurements() {
                     </button>
                   )}
                 </div>
+                {totalInvoices > 20 && (
+                  <TablePageSizeSelector pageSize={invPageSize} onPageSizeChange={(size) => { setInvPageSize(size); setInvPage(1); }} />
+                )}
               </div>
             </div>
 
@@ -425,70 +473,81 @@ function Procurements() {
                 <p>Loading Invoices...</p>
               </div>
             ) : invoices.length > 0 ? (
-              <div className="table-wrapper">
-                <table className="asset-table procurement-table invoice-table">
-                  <thead>
-                    <tr>
-                      <th>Invoice No</th>
-                      <th>Invoice Date</th>
-                      <th>Product Details</th>
-                      <th>Purchase Order</th>
-                      <th>Purchase Order Date</th>
-                      <th>Procurer</th>
-                      <th>Total Cost</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoices.map((invoice) => (
-                      <tr key={invoice._id} className="po-table-row">
-                        <td>
-                          <strong>{invoice.invoiceNo}</strong>
-                        </td>
-                        <td>
-                          <div className="date-field">
-                            <FaCalendarAlt className="field-icon" />
-                            {moment(invoice.invoiceDate).format("DD-MMM-YY")}
-                          </div>
-                        </td>
-                        <td className="product-details-cell invoice-product-details-cell">
-                          {invoice.products.map((p, idx) => (
-                            <div key={idx} className="product-item-summary invoice-product-item">
-                              {p.brand} | {p.model} | {p.quantity} | {p.unit}
-                            </div>
-                          ))}
-                        </td>
-                        <td>
-                          <button
-                            className="po-num-link"
-                            onClick={() => handlePoClick(invoice.poNumber)}
-                          >
-                            {invoice.poNumber ? invoice.poNumber.replace("-", " - ") : ""}
-                          </button>
-                        </td>
-                        <td>
-                          <div className="date-field">
-                            <FaCalendarAlt className="field-icon" />
-                            {moment(invoice.purchaseOrderDate).format("DD-MMM-YY")}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="creator-field">
-                            <FaUser className="field-icon" />
-                            {invoice.procurer}
-                          </div>
-                        </td>
-                        <td>
-                          <strong className="po-net-total">
-                            ₹ {invoice.totalCost.toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </strong>
-                        </td>
+              <div className="module-table-card">
+                <div className="module-table-scroll-area">
+                  <table className="asset-table procurement-table invoice-table">
+                    <thead>
+                      <tr>
+                        <th>Invoice No</th>
+                        <th>Invoice Date</th>
+                        <th>Product Details</th>
+                        <th>Purchase Order</th>
+                        <th>Purchase Order Date</th>
+                        <th>Procurer</th>
+                        <th>Total Cost</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {slicedInvoices.map((invoice) => (
+                        <tr key={invoice._id} className="po-table-row">
+                          <td>
+                            <strong>{invoice.invoiceNo}</strong>
+                          </td>
+                          <td>
+                            <div className="date-field">
+                              <FaCalendarAlt className="field-icon" />
+                              {moment(invoice.invoiceDate).format("DD-MMM-YY")}
+                            </div>
+                          </td>
+                          <td className="product-details-cell invoice-product-details-cell">
+                            {invoice.products.map((p, idx) => (
+                              <div key={idx} className="product-item-summary invoice-product-item">
+                                {p.brand} | {p.model} | {p.quantity} | {p.unit}
+                              </div>
+                            ))}
+                          </td>
+                          <td>
+                            <button
+                              className="po-num-link"
+                              onClick={() => handlePoClick(invoice.poNumber)}
+                            >
+                              {invoice.poNumber ? invoice.poNumber.replace("-", " - ") : ""}
+                            </button>
+                          </td>
+                          <td>
+                            <div className="date-field">
+                              <FaCalendarAlt className="field-icon" />
+                              {moment(invoice.purchaseOrderDate).format("DD-MMM-YY")}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="creator-field">
+                              <FaUser className="field-icon" />
+                              {invoice.procurer}
+                            </div>
+                          </td>
+                          <td>
+                            <strong className="po-net-total">
+                              ₹ {invoice.totalCost.toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </strong>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {totalInvoices > 0 && (
+                  <TablePagination
+                    totalItems={totalInvoices}
+                    currentPage={invPage}
+                    pageSize={invPageSize}
+                    onPageChange={setInvPage}
+                    displayedCount={slicedInvoices?.length || 0}
+                  />
+                )}
               </div>
             ) : (
               <div className="procurement-empty-state">

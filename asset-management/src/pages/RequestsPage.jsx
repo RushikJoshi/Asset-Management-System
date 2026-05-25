@@ -34,6 +34,16 @@ export function Requests() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  
+  const getInitials = (name) => {
+    if (!name || name === "Unknown") return "👤";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
   const { assetListData } = useSelector(
     (state) => state.assetList
   );
@@ -58,6 +68,7 @@ export function Requests() {
         _id: item._id, // Keep one ID for keying/modals if needed
         requestId: reqId,
         requestedBy: item.requestedBy || "Unknown",
+        requestedByPhoto: item.requestedByPhoto || "",
         requestDate: item.requestDate || item.createdAt,
         reportingTo: item.reportingTo || "Admin\ncreatorindustrysolutions",
         items: [],
@@ -104,7 +115,7 @@ export function Requests() {
     return `${day}-${month}-${year}`;
   };
 
-  // KPI Calculations
+  // Date Formatter matching Zoho: e.g. "18-May-26"
   const requestedCount = groupedRequests.filter((item) => item.status === "Requested" || item.status === "Pending").length;
   const approvedCount = groupedRequests.filter((item) => item.status === "Approved").length;
   const inProgressCount = groupedRequests.filter((item) => item.status === "PO Raised" || item.status === "In Progress").length;
@@ -162,20 +173,33 @@ export function Requests() {
       label: "Requested By",
       render: (row) => (
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "50%",
-            backgroundColor: "#eff6ff",
-            color: "#1e40af",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: "bold",
-            fontSize: "12px"
-          }}>
-            {row.requestedBy.substring(0, 2).toUpperCase()}
-          </div>
+          {row.requestedByPhoto ? (
+            <img
+              src={row.requestedByPhoto}
+              alt={row.requestedBy}
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                objectFit: "cover"
+              }}
+            />
+          ) : (
+            <div style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor: "#eff6ff",
+              color: "#1e40af",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "bold",
+              fontSize: "12px"
+            }}>
+              {getInitials(row.requestedBy)}
+            </div>
+          )}
           <span style={{ fontWeight: "500", color: "#1e293b" }}>{row.requestedBy}</span>
         </div>
       )
@@ -329,12 +353,12 @@ export function Requests() {
           <h2>Requests</h2>
           <p>View and manage all organization asset procurement requests.</p>
         </div>
-        <button 
-          type="button" 
-          className="dashboard-add-btn" 
+        <button
+          type="button"
+          className="dashboard-add-btn "
           onClick={() => navigate("/add-request")}
           style={{
-            backgroundColor: "#4f46e5",
+            backgroundColor: "#139686",
             color: "#ffffff",
             padding: "8px 16px",
             borderRadius: "8px",
@@ -344,15 +368,22 @@ export function Requests() {
             gap: "8px",
             border: "none",
             cursor: "pointer",
-            boxShadow: "0 2px 4px rgba(79, 70, 229, 0.15)"
+            boxShadow: "0 2px 4px rgba(37, 99, 235, 0.15)",
           }}
         >
-          <FaPlus style={{ fontSize: '12px' }} /> Add Request
+          Add Request
         </button>
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="kpi-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
+      <div
+        className="kpi-cards-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, 1fr)",
+          gap: "16px",
+        }}
+      >
         {[
           {
             label: "Requested",
@@ -392,8 +423,15 @@ export function Requests() {
         ].map((kpi, idx) => (
           <div className="kpi-card-new" key={idx}>
             <div className="kpi-card-content">
-              <span className="kpi-card-label" style={{ color: '#64748b' }}>{kpi.label}</span>
-              <strong className="kpi-card-value" style={{ color: kpi.color, fontSize: '26px' }}>{kpi.value}</strong>
+              <span className="kpi-card-label" style={{ color: "#64748b" }}>
+                {kpi.label}
+              </span>
+              <strong
+                className="kpi-card-value"
+                style={{ color: kpi.color, fontSize: "26px" }}
+              >
+                {kpi.value}
+              </strong>
               <span className="kpi-card-subtext">{kpi.subtext}</span>
             </div>
             <div
@@ -407,7 +445,10 @@ export function Requests() {
       </div>
 
       {/* Table & Filters Card */}
-      <div className="bottom-card-large" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div
+        className="bottom-card-large"
+        style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+      >
         <div className="requests-toolbar">
           <div className="requests-toolbar-left">
             <div className="search-box-wrapper">
@@ -422,7 +463,7 @@ export function Requests() {
             </div>
             <div className="filter-wrapper">
               <span className="filter-label">
-                <FaFilter style={{ fontSize: '11px' }} /> Filter By:
+                <FaFilter style={{ fontSize: "11px" }} /> Filter By:
               </span>
               <select
                 className="status-filter-premium"
@@ -436,9 +477,6 @@ export function Requests() {
                 <option value="Completed">Completed</option>
               </select>
             </div>
-          </div>
-          <div className="requests-toolbar-right">
-            Showing {filteredRequests.length} of {groupedRequests.length} requests
           </div>
         </div>
 

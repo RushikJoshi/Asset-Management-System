@@ -33,7 +33,7 @@ export const addAsset = createAsyncThunk(
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Something went wrong",
+        error.response?.data?.message || error.response?.data?.error || "Something went wrong",
       );
     }
   },
@@ -78,7 +78,7 @@ export const updateAsset = createAsyncThunk(
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to update asset",
+        error.response?.data?.message || error.response?.data?.error || "Failed to update asset",
       );
     }
   },

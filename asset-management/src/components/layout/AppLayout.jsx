@@ -70,6 +70,11 @@ const navItems = [
         label: "Request Form",
         icon: <FaClipboardCheck />,
       },
+      {
+        to: "/masters/procurement-form",
+        label: "Procurement Form",
+        icon: <FaShoppingCart />,
+      },
       { to: "/masters/categories", label: "Categories", icon: <FaTags /> },
     ],
   },

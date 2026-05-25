@@ -1,5 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -13,6 +12,7 @@ import Profile from "../pages/Profile";
 import MasterEditor from "../pages/MasterEditor";
 import AssetFormMaster from "../pages/masters/AssetFormMaster";
 import RequestFormMaster from "../pages/masters/RequestFormMaster";
+import ProcurementFormMaster from "../pages/masters/ProcurementFormMaster";
 import CategoryMaster from "../pages/masters/CategoryMaster";
 import {
   Assignments,
@@ -45,7 +45,8 @@ function AppRouter() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
+        <Route element={<RequireAuth />}>
+          <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/assets" element={<Assets />} />
           <Route path="/requests" element={<Requests />} />
@@ -65,6 +66,7 @@ function AppRouter() {
           <Route path="/master-editor" element={<MasterEditor />} />
           <Route path="/masters/asset-form" element={<AssetFormMaster />} />
           <Route path="/masters/request-form" element={<RequestFormMaster />} />
+          <Route path="/masters/procurement-form" element={<ProcurementFormMaster />} />
           <Route path="/masters/categories" element={<CategoryMaster />} />
           <Route path="/scan-demo" element={<ScanDemo />} />
           <Route path="/add-asset" element={<AddAsset />} />
@@ -77,6 +79,7 @@ function AppRouter() {
           <Route path="/setup/vendors" element={<VendorsPage />} />
           <Route path="/setup/products" element={<ProductsPage />} />
           <Route path="/setup/preferences" element={<PreferencesPage />} />
+          </Route>
         </Route>
         <Route path="/scan/:id" element={<AssetDetails />} />
       </Routes>
@@ -84,7 +87,7 @@ function AppRouter() {
   );
 }
 
-function RequireAuth({ children }) {
+function RequireAuth() {
   const location = useLocation();
   const { user, token } = useSelector((state) => state.auth);
   const [roles, setRoles] = useState([]);
@@ -117,7 +120,7 @@ function RequireAuth({ children }) {
     return <Navigate to={getRoleHome(user.role, roleAccess)} replace />;
   }
 
-  return children;
+  return <Outlet />;
 }
 
 export default AppRouter;

@@ -267,6 +267,7 @@
 
 .line-items-table-wrapper {
   overflow-x: auto;
+  padding-bottom: 20px;
 }
 
 .items-table {

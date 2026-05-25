@@ -5,6 +5,7 @@ import { FaBuilding, FaUser, FaPhone, FaMapMarkerAlt, FaPlus, FaArrowLeft, FaBox
 export default function VendorsPage() {
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [focusedField, setFocusedField] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState("");
 
@@ -308,7 +309,6 @@ export default function VendorsPage() {
         </div>
       ) : (
         <>
-          {/* Main Vendor List View */}
           <PageTitle
             action={
               <button
@@ -380,47 +380,87 @@ export default function VendorsPage() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(15, 23, 42, 0.4)",
-          backdropFilter: "blur(4px)",
+          backgroundColor: "rgba(15, 23, 42, 0.3)",
+          backdropFilter: "blur(6px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          zIndex: 9999
+          zIndex: 9999,
+          animation: "fadeIn 0.2s ease"
         }}>
           <div style={{
-            background: "#ffffff",
-            borderRadius: "16px",
-            width: "480px",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+            background: "var(--bg-surface)",
+            borderRadius: "14px",
+            width: "500px",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.15)",
             border: "1px solid var(--border-color)",
-            overflow: "hidden"
+            overflow: "hidden",
+            transition: "all 0.3s ease"
           }}>
+            {/* Modal Header */}
             <div style={{
-              padding: "20px 24px",
+              padding: "18px 24px",
               borderBottom: "1px solid var(--border-color)",
-              background: "linear-gradient(135deg, #f8fafc, #f1f5f9)",
+              background: "linear-gradient(135deg, #eff6ff, #f8fafc)",
               display: "flex",
-              justifyContent: "between",
+              justifyContent: "space-between",
               alignItems: "center"
             }}>
-              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "var(--text-main)" }}>Register Corporate Vendor</h3>
+              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "var(--text-main)", letterSpacing: "-0.01em" }}>
+                Register Corporate Vendor
+              </h3>
               <button
                 onClick={() => setShowAddModal(false)}
-                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text-muted)" }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  color: "var(--text-muted)",
+                  width: "30px",
+                  height: "30px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(100, 116, 139, 0.1)";
+                  e.currentTarget.style.color = "var(--text-main)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "var(--text-muted)";
+                }}
               >
                 &times;
               </button>
             </div>
 
-            <form onSubmit={handleAddVendor} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <form onSubmit={handleAddVendor} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
               {formError && (
-                <div style={{ color: "#B91C1C", backgroundColor: "#FEF2F2", padding: "10px", borderRadius: "6px", fontSize: "13px", fontWeight: "600" }}>
-                  {formError}
+                <div style={{
+                  color: "#ef4444",
+                  backgroundColor: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  padding: "12px 14px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}>
+                  <span>⚠</span> {formError}
                 </div>
               )}
 
+              {/* Vendor / Company Name */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Vendor / Company Name</label>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Vendor / Company Name
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -428,12 +468,31 @@ export default function VendorsPage() {
                   onChange={handleInputChange}
                   placeholder="e.g. Dell Global, Microsoft India"
                   required
+                  onFocus={() => setFocusedField("name")}
+                  onBlur={() => setFocusedField("")}
+                  style={{
+                    width: "100%",
+                    height: "40px",
+                    padding: "0 14px",
+                    fontSize: "13px",
+                    borderRadius: "8px",
+                    border: focusedField === "name" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                    boxShadow: focusedField === "name" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--text-main)",
+                    transition: "all 0.2s ease",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              {/* Contact Agent & Reliability Tier Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Contact Agent Name</label>
+                  <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Contact Agent Name
+                  </label>
                   <input
                     type="text"
                     name="contact"
@@ -441,12 +500,51 @@ export default function VendorsPage() {
                     onChange={handleInputChange}
                     placeholder="e.g. Sarah Connor"
                     required
+                    onFocus={() => setFocusedField("contact")}
+                    onBlur={() => setFocusedField("")}
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      padding: "0 14px",
+                      fontSize: "13px",
+                      borderRadius: "8px",
+                      border: focusedField === "contact" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                      boxShadow: focusedField === "contact" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                      backgroundColor: "var(--bg-surface)",
+                      color: "var(--text-main)",
+                      transition: "all 0.2s ease",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
                   />
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Reliability Tier</label>
-                  <select name="reliability" value={formData.reliability} onChange={handleInputChange}>
+                  <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Reliability Tier
+                  </label>
+                  <select 
+                    name="reliability" 
+                    value={formData.reliability} 
+                    onChange={handleInputChange}
+                    onFocus={() => setFocusedField("reliability")}
+                    onBlur={() => setFocusedField("")}
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      padding: "0 14px",
+                      fontSize: "13px",
+                      borderRadius: "8px",
+                      border: focusedField === "reliability" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                      boxShadow: focusedField === "reliability" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                      backgroundColor: "var(--bg-surface)",
+                      color: "var(--text-main)",
+                      transition: "all 0.2s ease",
+                      outline: "none",
+                      cursor: "pointer",
+                      boxSizing: "border-box"
+                    }}
+                  >
                     <option value="Premium">Premium Tier</option>
                     <option value="High">High Reliability</option>
                     <option value="Medium">Medium Reliability</option>
@@ -454,9 +552,12 @@ export default function VendorsPage() {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              {/* Email & Phone Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Email Address</label>
+                  <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     name="email"
@@ -464,32 +565,86 @@ export default function VendorsPage() {
                     onChange={handleInputChange}
                     placeholder="e.g. sales@vendor.com"
                     required
+                    onFocus={() => setFocusedField("email")}
+                    onBlur={() => setFocusedField("")}
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      padding: "0 14px",
+                      fontSize: "13px",
+                      borderRadius: "8px",
+                      border: focusedField === "email" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                      boxShadow: focusedField === "email" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                      backgroundColor: "var(--bg-surface)",
+                      color: "var(--text-main)",
+                      transition: "all 0.2s ease",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
                   />
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Phone Number</label>
+                  <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Phone Number
+                  </label>
                   <input
                     type="text"
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
                     placeholder="e.g. +1 (555) 000-0000"
+                    onFocus={() => setFocusedField("phone")}
+                    onBlur={() => setFocusedField("")}
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      padding: "0 14px",
+                      fontSize: "13px",
+                      borderRadius: "8px",
+                      border: focusedField === "phone" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                      boxShadow: focusedField === "phone" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                      backgroundColor: "var(--bg-surface)",
+                      color: "var(--text-main)",
+                      transition: "all 0.2s ease",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
                   />
                 </div>
               </div>
 
+              {/* Corporate Address */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Corporate Address</label>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Corporate Address
+                </label>
                 <input
                   type="text"
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
                   placeholder="e.g. Street City State"
+                  onFocus={() => setFocusedField("address")}
+                  onBlur={() => setFocusedField("")}
+                  style={{
+                    width: "100%",
+                    height: "40px",
+                    padding: "0 14px",
+                    fontSize: "13px",
+                    borderRadius: "8px",
+                    border: focusedField === "address" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                    boxShadow: focusedField === "address" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--text-main)",
+                    transition: "all 0.2s ease",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
                 />
               </div>
 
+              {/* Action Buttons */}
               <div style={{
                 display: "flex",
                 justifyContent: "flex-end",
@@ -501,15 +656,52 @@ export default function VendorsPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="secondary-button"
-                  style={{ height: "40px", fontSize: "13px" }}
+                  style={{
+                    height: "40px",
+                    padding: "0 20px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "#ffffff",
+                    color: "var(--text-muted)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--bg-subtle)";
+                    e.currentTarget.style.color = "var(--text-main)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = "#ffffff";
+                    e.currentTarget.style.color = "var(--text-muted)";
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="module-button"
-                  style={{ height: "40px", fontSize: "13px" }}
+                  style={{
+                    height: "40px",
+                    padding: "0 20px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    borderRadius: "8px",
+                    border: "none",
+                    background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))",
+                    color: "#ffffff",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(33, 133, 243, 0.2)",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(33, 133, 243, 0.3)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = "none";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(33, 133, 243, 0.2)";
+                  }}
                 >
                   Register Vendor
                 </button>

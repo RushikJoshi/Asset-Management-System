@@ -164,20 +164,170 @@
   scrollbar-color: #cbd5e1 transparent;
 }
 
-/* Custom Thin Scrollbar for the table wrapper */
-.module-table-wrap::-webkit-scrollbar {
+/* Reusable Table Card Layout with Sticky Header and Pagination Footer */
+.module-table-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.module-table-scroll-area {
+  overflow: auto;
+  max-height: 380px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.module-table-scroll-area::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-.module-table-wrap::-webkit-scrollbar-track {
+.module-table-scroll-area::-webkit-scrollbar-track {
   background: transparent;
 }
-.module-table-wrap::-webkit-scrollbar-thumb {
+.module-table-scroll-area::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 10px;
 }
-.module-table-wrap::-webkit-scrollbar-thumb:hover {
+.module-table-scroll-area::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8;
+}
+
+/* Pagination container bar styling */
+.module-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.module-pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-show-text {
+  display: none;
+}
+
+.pagination-info-text {
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.module-table-top-bar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: var(--bg-surface);
+}
+
+.pagination-select.compact-select {
+  width: 56px !important;
+  min-width: 56px !important;
+  height: 28px !important;
+  padding: 0 4px 0 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--color-primary) !important;
+  border: 1.5px solid var(--color-primary) !important;
+  border-radius: 6px !important;
+  background-color: transparent !important;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230ea5a4'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 12px;
+  padding-right: 18px !important;
+  box-shadow: 0 1px 2px rgba(14, 165, 164, 0.05);
+  transition: all var(--transition-fast) !important;
+}
+
+.pagination-select.compact-select:hover {
+  background-color: rgba(14, 165, 164, 0.05) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.module-pagination-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-btn {
+  height: 30px;
+  min-width: 30px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.pagination-btn.arrow-btn {
+  background-color: var(--color-primary) !important;
+  border: 1px solid var(--color-primary) !important;
+  color: #ffffff !important;
+}
+
+.pagination-btn.arrow-btn:hover:not(:disabled) {
+  background-color: var(--color-secondary) !important;
+  border-color: var(--color-secondary) !important;
+  opacity: 0.95;
+}
+
+.pagination-btn.arrow-btn:disabled {
+  background-color: var(--bg-subtle) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-muted) !important;
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pagination-btn.num-btn {
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+}
+
+.pagination-btn.num-btn:hover {
+  color: var(--color-primary) !important;
+  background-color: rgba(14, 165, 164, 0.05) !important;
+}
+
+.pagination-btn.num-btn.active {
+  color: var(--color-primary) !important;
+  font-weight: 755;
+  font-size: 15px;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.pagination-dots {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0 4px;
 }
 
 .module-table {
@@ -555,8 +705,8 @@
 }
 
 .qr-sticker-badge img {
-  width: 48px;
-  height: 48px;
+  width: 76px;
+  height: 76px;
   display: block;
 }
 
