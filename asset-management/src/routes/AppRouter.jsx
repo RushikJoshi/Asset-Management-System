@@ -79,9 +79,9 @@ function AppRouter() {
           <Route path="/setup/vendors" element={<VendorsPage />} />
           <Route path="/setup/products" element={<ProductsPage />} />
           <Route path="/setup/preferences" element={<PreferencesPage />} />
+          <Route path="/scan/:id" element={<AssetDetails />} />
           </Route>
         </Route>
-        <Route path="/scan/:id" element={<AssetDetails />} />
       </Routes>
     </BrowserRouter>
   );

@@ -277,6 +277,20 @@ const assetSchema = new mongoose.Schema(
       default: {},
     },
 
+    codeType: {
+      type: String,
+      enum: ["qr", "barcode"],
+      default: "qr",
+    },
+
+    barcodeImage: {
+      type: String,
+    },
+
+    barcodeText: {
+      type: String,
+    },
+
     // QR Code
     qrCode: {
       type: String,

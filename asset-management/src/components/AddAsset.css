@@ -230,6 +230,125 @@ select:focus,
   min-height: 16px;
 }
 
+.code-gen-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 9999;
+}
+
+.code-gen-modal {
+  width: min(740px, 100%);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: 24px;
+}
+
+.code-gen-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.code-gen-header h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: var(--text-main);
+}
+
+.code-gen-header p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.close-modal-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.code-gen-type-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.code-gen-type {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.code-gen-type.active {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+}
+
+.code-gen-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 170px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  margin-bottom: 18px;
+  padding: 12px;
+}
+
+.code-preview-image {
+  max-width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+
+.code-error-message {
+  color: var(--text-main);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.code-gen-meta {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 18px;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.code-gen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.code-gen-actions .cancel-btn {
+  min-width: 140px;
+  padding: 8px 14px;
+}
+
 /* Radio Buttons */
 .ownership-row {
   display: flex;
