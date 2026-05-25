@@ -1,4 +1,5 @@
 import Asset from "../models/Asset.js";
+import User from "../models/User.js";
 import QRCode from "qrcode";
 import crypto from "crypto";
 import {
@@ -62,8 +63,12 @@ const normalizeAssetPayload = (payload) => {
 
   ["warrantyPeriod", "maintenancePeriod", "price", "warrantyReminderDays"].forEach(
     (key) => {
-      if (data[key] === "" || data[key] === null) data[key] = undefined;
-      if (data[key] !== undefined) data[key] = Number(data[key]);
+      if (data[key] === "" || data[key] === null) {
+        data[key] = undefined;
+      } else if (data[key] !== undefined) {
+        const val = Number(data[key]);
+        data[key] = Number.isNaN(val) ? undefined : val;
+      }
     },
   );
 
@@ -131,6 +136,43 @@ export const getQrScanBaseUrl = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+const attachRequestedByPhoto = async (assetOrAssets) => {
+  try {
+    const isArray = Array.isArray(assetOrAssets);
+    const assets = isArray ? assetOrAssets : [assetOrAssets];
+    
+    const users = await User.find({ status: "ACTIVE" }, "name email username profilePhoto").lean();
+    const userMapByEmail = {};
+    const userMapByUsername = {};
+    const userMapByName = {};
+    users.forEach(u => {
+      if (u.email) userMapByEmail[u.email.toLowerCase()] = u.profilePhoto || "";
+      if (u.username) userMapByUsername[u.username.toLowerCase()] = u.profilePhoto || "";
+      if (u.name) userMapByName[u.name.toLowerCase()] = u.profilePhoto || "";
+    });
+
+    const mapped = assets.map(asset => {
+      const doc = asset.toObject ? asset.toObject() : asset;
+      let photo = "";
+      if (doc.employeeEmail) {
+        photo = userMapByEmail[doc.employeeEmail.toLowerCase()];
+      }
+      if (!photo && doc.requestedBy) {
+        photo = userMapByUsername[doc.requestedBy.toLowerCase()] || userMapByName[doc.requestedBy.toLowerCase()];
+      }
+      return {
+        ...doc,
+        requestedByPhoto: photo || ""
+      };
+    });
+
+    return isArray ? mapped : mapped[0];
+  } catch (error) {
+    console.error("Error attaching user profile photo:", error);
+    return assetOrAssets;
   }
 };
 
@@ -342,11 +384,12 @@ const renderScanAssetPage = (asset) => {
 export const getAllAssets = async (req, res) => {
   try {
     const assets = await Asset.find().sort({ createdAt: -1 });
+    const assetsWithPhotos = await attachRequestedByPhoto(assets);
 
     res.status(200).json({
       success: true,
-      count: assets.length,
-      assets,
+      count: assetsWithPhotos.length,
+      assets: assetsWithPhotos,
     });
   } catch (error) {
     res.status(500).json({
@@ -405,9 +448,11 @@ export const createAsset = async (req, res) => {
       asset.qrCode = await generateQrCode(asset, req);
     }
     await asset.save();
+    
+    const resolvedAsset = await attachRequestedByPhoto(asset);
     res.status(201).json({
       success: true,
-      asset,
+      asset: resolvedAsset,
     });
   } catch (error) {
     res.status(500).json({
@@ -522,7 +567,8 @@ export const getAsset = async (req, res) => {
       await asset.save();
     }
 
-    res.status(200).json(asset);
+    const resolvedAsset = await attachRequestedByPhoto(asset);
+    res.status(200).json(resolvedAsset);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -650,11 +696,12 @@ export const updateAsset = async (req, res) => {
     }
 
     const updatedAsset = await asset.save();
+    const resolvedAsset = await attachRequestedByPhoto(updatedAsset);
 
     res.status(200).json({
       success: true,
       message: "Asset updated successfully",
-      asset: updatedAsset,
+      asset: resolvedAsset,
     });
   } catch (error) {
     res.status(500).json({

@@ -4,15 +4,29 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser, registerUser } from "../store/slices/authSlice";
 import { getRoleHome, ROLE_OPTIONS } from "../utils/permissions";
 import { fetchRoles, rolesToOptions } from "../utils/roleApi";
+import { useToast } from "../components/toast/toastStore";
 import "./Auth.css";
 
 export function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useToast();
   const { loading, error } = useSelector((state) => state.auth);
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (location.state?.message) {
+      showToast({
+        title: "Registration Success",
+        message: location.state.message,
+        type: "success",
+      });
+      // Clear location state to prevent showing on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, location.pathname, showToast]);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -64,7 +78,6 @@ export function Login() {
         />
         {errors.password && <span className="field-error">{errors.password}</span>}
 
-        {location.state?.message && <p className="auth-success">{location.state.message}</p>}
         {error && <p className="auth-error">{error}</p>}
         <button type="submit" disabled={loading}>{loading ? "Signing in..." : "Login"}</button>
         <p className="auth-link">New user? <Link to="/register">Register account</Link></p>

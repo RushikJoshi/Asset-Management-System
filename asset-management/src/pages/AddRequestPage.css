@@ -121,7 +121,6 @@
 .field-group select,
 .field-group textarea {
   width: 100%;
-  padding: 10px 14px;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   font-size: 13.5px;
@@ -129,6 +128,17 @@
   outline: none;
   transition: border-color 0.2s;
   background: #ffffff;
+  box-sizing: border-box;
+}
+
+.field-group input,
+.field-group select {
+  height: 40px !important;
+  padding: 0 14px !important;
+}
+
+.field-group textarea {
+  padding: 10px 14px;
 }
 
 .field-group input:focus,

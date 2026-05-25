@@ -5,20 +5,32 @@ import { isNetworkAssetCategory } from "../utils/categoryCatalog";
 const isComputerAsset = (category, formConfig) =>
   isNetworkAssetCategory(category, formConfig?.__categoryCatalog);
 
-const isVisible = (config, name) => config[name]?.visible !== false;
-const isRequired = (config, name) => config[name]?.required === true;
-const applyRequiredWhenConfigured = (schema, config, name, label) =>
-  isVisible(config, name) && isRequired(config, name)
-    ? schema.required(`${label} is required`)
-    : schema;
-const requiredWhenConfigured = (config, name, label) =>
-  applyRequiredWhenConfigured(yup.string(), config, name, label);
+const getActiveSections = (config) =>
+  getAssetFormSections(config).filter((section) =>
+    ["Asset Information", "IP Configuration", "Computer Specifications", "Remarks"].includes(section.key)
+  );
+
 const labelMapFromConfig = (config) =>
-  getAssetFormSections(config)
+  getActiveSections(config)
     .flatMap((section) => section.fields)
     .reduce((acc, field) => ({ ...acc, [field.name]: field.label }), {});
 
+const isRequired = (config, name) => config[name]?.required === true;
+
 export const createAssetSchema = (formConfig = {}) => {
+  const activeSections = getActiveSections(formConfig);
+  const activeFieldNames = new Set(activeSections.flatMap((section) => section.fields.map((f) => f.name)));
+
+  const isVisible = (config, name) => config[name]?.visible !== false && activeFieldNames.has(name);
+
+  const applyRequiredWhenConfigured = (schema, config, name, label) =>
+    isVisible(config, name) && isRequired(config, name)
+      ? schema.required(`${label} is required`)
+      : schema;
+
+  const requiredWhenConfigured = (config, name, label) =>
+    applyRequiredWhenConfigured(yup.string(), config, name, label);
+
   const labels = labelMapFromConfig(formConfig);
   const labelFor = (name, fallback) => labels[name] || fallback;
   const stringField = (name, fallback) => requiredWhenConfigured(formConfig, name, labelFor(name, fallback));
@@ -29,6 +41,9 @@ export const createAssetSchema = (formConfig = {}) => {
       name,
       labelFor(name, fallback),
     );
+
+  const conditionalRequired = (name, message, fallbackSchema = yup.string()) =>
+    isVisible(formConfig, name) ? fallbackSchema.required(message) : fallbackSchema.notRequired();
 
   const schemaShape = {
   assetName: requiredWhenConfigured(formConfig, "assetName", "Asset Name"),
@@ -47,9 +62,9 @@ export const createAssetSchema = (formConfig = {}) => {
     otherwise: (schema) => schema.notRequired(),
   }),
 
-  serialNumber: yup.string().required("Serial Number is required for tracking"),
+  serialNumber: conditionalRequired("serialNumber", "Serial Number is required for tracking"),
 
-  assetCode: yup.string().required("Asset Code is required for tracking"),
+  assetCode: conditionalRequired("assetCode", "Asset Code is required for tracking"),
 
   purchaseDate: stringField("purchaseDate", "Purchase Date"),
 
@@ -106,13 +121,13 @@ export const createAssetSchema = (formConfig = {}) => {
 
   warrantyEnd: stringField("warrantyEnd", "Warranty End"),
 
-  officeName: yup.string().required("Office Name is required for tracking"),
+  officeName: conditionalRequired("officeName", "Office Name is required for tracking"),
 
   branchCode: stringField("branchCode", "Branch Code"),
 
   floor: stringField("floor", "Floor"),
 
-  department: yup.string().required("Department is required for tracking"),
+  department: conditionalRequired("department", "Department is required for tracking"),
 
   room: stringField("room", "Room/Cabin"),
 
@@ -175,7 +190,11 @@ export const createAssetSchema = (formConfig = {}) => {
 
   retirementDate: stringField("retirementDate", "Retirement Date"),
 
-  assetDescription: stringField("assetDescription", "Asset Description"),
+  assetDescription: yup.string().when("category", {
+    is: (cat) => !isComputerAsset(cat, formConfig),
+    then: (schema) => requiredWhenConfigured(formConfig, "assetDescription", labelFor("assetDescription", "Remarks")),
+    otherwise: (schema) => schema.notRequired(),
+  }),
 
   deviceOwnedBy: requiredWhenConfigured(formConfig, "deviceOwnedBy", "Device owner"),
 

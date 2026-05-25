@@ -32,6 +32,12 @@ export const DEFAULT_CATEGORY_CATALOG = {
       network: true,
     },
     {
+      id: "mobile",
+      name: "Mobile",
+      subCategories: ["Smartphone", "Tablet"],
+      network: true,
+    },
+    {
       id: "monitor",
       name: "Monitor",
       subCategories: ["LCD", "LED", "Curved"],
@@ -41,6 +47,18 @@ export const DEFAULT_CATEGORY_CATALOG = {
       id: "printer",
       name: "Printer",
       subCategories: ["Laser", "Inkjet", "MFP"],
+      network: false,
+    },
+    {
+      id: "vehicle",
+      name: "Vehicle",
+      subCategories: ["Car", "Bike", "Truck"],
+      network: false,
+    },
+    {
+      id: "furniture",
+      name: "Furniture",
+      subCategories: ["Desk", "Table", "Cabinet"],
       network: false,
     },
     {
@@ -99,7 +117,7 @@ export function isNetworkAssetCategory(category, catalog) {
   const entry = merged.categories.find((c) => c.name.toLowerCase() === cat.toLowerCase());
   if (entry) return Boolean(entry.network);
 
-  return ["laptop", "pc", "desktop", "computer"].includes(cat.toLowerCase());
+  return ["laptop", "pc", "desktop", "computer", "mobile"].includes(cat.toLowerCase());
 }
 
 export function getSubcategoriesForCategory(category, catalog) {

@@ -21,9 +21,7 @@ import {
 } from "../utils/assetFormBuilder";
 import "./AddAsset.css";
 
-const computerCategories = ["laptop", "pc", "desktop", "computer"];
-const isComputerCategory = (category) =>
-  computerCategories.includes(String(category || "").trim().toLowerCase());
+import { isNetworkAssetCategory, getSubcategoriesForCategory } from "../utils/categoryCatalog";
 
 const generateReqId = () => `REQ-${Date.now()}`;
 
@@ -76,7 +74,9 @@ function AddAsset() {
     mode: "all",
     resolver: yupResolver(activeSchema),
     defaultValues: {
-      assetStatus: "AVAILABLE",
+      category: "",
+      subCategory: "",
+      assetStatus: "",
       deviceOwnedBy: "Me",
       warrantyReminderDays: 10,
       requestType: "Procurement",
@@ -90,12 +90,29 @@ function AddAsset() {
 
   const deviceOwnedBy = useWatch({ control, name: "deviceOwnedBy" });
   const category = useWatch({ control, name: "category" });
-  const showComputerFields = isComputerCategory(category);
-  const isFieldVisible = (name) => formConfig[name]?.visible !== false;
+  const showComputerFields = isNetworkAssetCategory(category, formConfig?.__categoryCatalog);
+  const formSections = useMemo(() => {
+    if (isRequestMode) {
+      return getRequestFormSections(formConfig);
+    }
+
+    return getAssetFormSections(formConfig).filter((section) => {
+      if (section.key === "Asset Information") return true;
+      if (showComputerFields) {
+        return ["IP Configuration", "Computer Specifications"].includes(section.key);
+      } else {
+        return section.key === "Remarks";
+      }
+    });
+  }, [isRequestMode, formConfig, showComputerFields]);
+
+  const renderedFieldNames = useMemo(() => {
+    return new Set(formSections.flatMap((section) => section.fields.map((f) => f.name)));
+  }, [formSections]);
+
+  const isFieldVisible = (name) =>
+    formConfig[name]?.visible !== false && renderedFieldNames.has(name);
   const isFieldRequired = (name) => formConfig[name]?.required === true;
-  const formSections = isRequestMode
-    ? getRequestFormSections(formConfig)
-    : getAssetFormSections(formConfig);
 
   const allCustomFields = formSections.flatMap((section) =>
     section.fields.filter((field) => field.custom).map((field) => ({
@@ -146,7 +163,7 @@ function AddAsset() {
     const missingField = Object.entries(formConfig).find(
       ([name, field]) =>
         !name.startsWith("__") &&
-        field?.visible &&
+        isFieldVisible(name) &&
         field?.required &&
         !String(data[name] || "").trim(),
     );
@@ -193,7 +210,7 @@ function AddAsset() {
       payload.recordType = "ASSET";
     }
 
-    if (!isRequestMode && !isComputerCategory(payload.category)) {
+    if (!isRequestMode && !isNetworkAssetCategory(payload.category, formConfig?.__categoryCatalog)) {
       [
         "ipAddress",
         "macAddress",
@@ -303,7 +320,11 @@ function AddAsset() {
           {fieldLabelMap[inputname] || inputLabel}
           {checkMandatory(inputname) && <span className="required">*</span>}
         </label>
-        <input type="date" {...register(inputname)} className="custom-input" />
+        <input
+          type="date"
+          {...register(inputname)}
+          className={`custom-input ${errors[inputname] ? "input-error-border" : ""}`}
+        />
         {errors[inputname] && <span className="field-error">{errors[inputname].message}</span>}
       </div>
     ) : null;
@@ -315,7 +336,10 @@ function AddAsset() {
           {fieldLabelMap[field.name] || field.label}
           {checkMandatory(field.name) && <span className="required">*</span>}
         </label>
-        <select {...register(field.name)} className="custom-input">
+        <select
+          {...register(field.name)}
+          className={`custom-input ${errors[field.name] ? "input-error-border" : ""}`}
+        >
           {options.map((option) => (
             <option value={option} key={option}>
               {option}
@@ -339,6 +363,64 @@ function AddAsset() {
   const renderConfiguredField = (field) => {
     if (!isFieldVisible(field.name) || field.name === "ownerName") return null;
 
+    if (field.name === "category") {
+      const catalog = formConfig?.__categoryCatalog || { categories: [] };
+      const categories = catalog.categories || [];
+      return (
+        <div className="input-wrapper" key={field.name}>
+          <label className="input-label">
+            {fieldLabelMap.category || "Category"}
+            {checkMandatory("category") && <span className="required">*</span>}
+          </label>
+          <select
+            {...register("category")}
+            className={`custom-input ${errors.category ? "input-error-border" : ""}`}
+          >
+            <option value="">Select Category</option>
+            {categories.map((cat) => (
+              <option value={cat.name} key={cat.id || cat.name}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+          {errors.category && <span className="field-error">{errors.category.message}</span>}
+        </div>
+      );
+    }
+
+    if (field.name === "subCategory") {
+      const subcategories = getSubcategoriesForCategory(category, formConfig?.__categoryCatalog);
+      return (
+        <div className="input-wrapper" key={field.name}>
+          <label className="input-label">
+            {fieldLabelMap.subCategory || "Sub Category"}
+            {checkMandatory("subCategory") && <span className="required">*</span>}
+          </label>
+          {subcategories.length > 0 ? (
+            <select
+              {...register("subCategory")}
+              className={`custom-input ${errors.subCategory ? "input-error-border" : ""}`}
+            >
+              <option value="">Select Sub Category</option>
+              {subcategories.map((sub) => (
+                <option value={sub} key={sub}>
+                  {sub}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              placeholder="Enter Sub Category"
+              {...register("subCategory")}
+              className={`custom-input ${errors.subCategory ? "input-error-border" : ""}`}
+            />
+          )}
+          {errors.subCategory && <span className="field-error">{errors.subCategory.message}</span>}
+        </div>
+      );
+    }
+
     if (requestSelectFields.has(field.name)) {
       const options =
         field.name === "requestType"
@@ -360,7 +442,11 @@ function AddAsset() {
             {fieldLabelMap.assetStatus || "Asset Status"}
             {isFieldRequired("assetStatus") && <span className="required">*</span>}
           </label>
-          <select {...register("assetStatus")} className="custom-input">
+          <select
+            {...register("assetStatus")}
+            className={`custom-input ${errors.assetStatus ? "input-error-border" : ""}`}
+          >
+            <option value="">Select Status</option>
             <option value="AVAILABLE">Available</option>
             <option value="ASSIGNED">Assigned</option>
             <option value="UNDER_REPAIR">Under Repair</option>
@@ -371,6 +457,7 @@ function AddAsset() {
             <option value="DISPOSED">Disposed</option>
             <option value="RECYCLED">Recycled</option>
           </select>
+          {errors.assetStatus && <span className="field-error">{errors.assetStatus.message}</span>}
         </div>
       );
     }
@@ -385,7 +472,7 @@ function AddAsset() {
           <textarea
             placeholder={`Enter ${fieldLabelMap[field.name] || field.label}`}
             {...register(field.name)}
-            className="custom-textarea"
+            className={`custom-textarea ${errors[field.name] ? "input-error-border" : ""}`}
           />
           {errors[field.name] && <span className="field-error">{errors[field.name].message}</span>}
         </div>
@@ -394,27 +481,34 @@ function AddAsset() {
 
     if (field.name === "deviceOwnedBy") {
       return (
-        <div className="ownership-row" key={field.name}>
-          <span className="input-label">
-            {fieldLabelMap.deviceOwnedBy || "Device Owned By"}:
-            {isFieldRequired("deviceOwnedBy") && <span className="required">*</span>}
-          </span>
-          <label className="radio-label">
-            <input type="radio" value="Me" {...register("deviceOwnedBy")} /> Me
-          </label>
-          <label className="radio-label">
-            <input type="radio" value="Other" {...register("deviceOwnedBy")} /> Other
-          </label>
-          {deviceOwnedBy === "Other" && isFieldVisible("ownerName") && (
-            <div style={{ marginLeft: "20px", flex: 1 }}>
-              <FormUsersInputText
-                inputLabel={fieldLabelMap.ownerName || "Owner Name"}
-                inputname="ownerName"
-                register={register}
-                errors={errors}
-                mandatory={isFieldRequired("ownerName")}
-              />
-            </div>
+        <div key={field.name} style={{ gridColumn: "span 2" }}>
+          <div className="ownership-row" style={{ marginTop: 0, gridColumn: "auto" }}>
+            <span className="input-label">
+              {fieldLabelMap.deviceOwnedBy || "Device Owned By"}:
+              {isFieldRequired("deviceOwnedBy") && <span className="required">*</span>}
+            </span>
+            <label className="radio-label">
+              <input type="radio" value="Me" {...register("deviceOwnedBy")} /> Me
+            </label>
+            <label className="radio-label">
+              <input type="radio" value="Other" {...register("deviceOwnedBy")} /> Other
+            </label>
+            {deviceOwnedBy === "Other" && isFieldVisible("ownerName") && (
+              <div style={{ marginLeft: "20px", flex: 1 }}>
+                <FormUsersInputText
+                  inputLabel={fieldLabelMap.ownerName || "Owner Name"}
+                  inputname="ownerName"
+                  register={register}
+                  errors={errors}
+                  mandatory={isFieldRequired("ownerName")}
+                />
+              </div>
+            )}
+          </div>
+          {errors.deviceOwnedBy && (
+            <span className="field-error" style={{ marginTop: "4px" }}>
+              {errors.deviceOwnedBy.message}
+            </span>
           )}
         </div>
       );

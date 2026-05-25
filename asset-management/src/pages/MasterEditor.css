@@ -20,11 +20,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 24px 30px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   box-sizing: border-box;
 }
 
@@ -36,7 +36,7 @@
 }
 
 .master-editor-kicker {
-  color: #94a3b8;
+  color: var(--color-primary);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -45,7 +45,7 @@
 }
 
 .master-editor-title {
-  color: #ffffff;
+  color: var(--text-main);
   font-size: 24px;
   font-weight: 800;
   margin: 0;
@@ -54,7 +54,7 @@
 }
 
 .master-editor-subtitle {
-  color: #cbd5e1;
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
   margin-top: 4px;
@@ -72,9 +72,9 @@
   display: inline-flex;
   gap: 4px;
   padding: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-subtle);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border-color);
   box-sizing: border-box;
 }
 
@@ -82,7 +82,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: calc(var(--radius-md) - 2px);
-  color: #cbd5e1;
+  color: var(--text-muted);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -96,16 +96,16 @@
 }
 
 .master-form-tabs button:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .master-form-tabs button.active {
   background: #ffffff;
-  border-color: transparent;
-  color: #0f172a;
+  border-color: var(--border-color);
+  color: var(--color-primary);
   font-weight: 700;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* BUTTON CONTROLS */
@@ -140,15 +140,15 @@
 }
 
 .reset-master-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
 }
 
 .reset-master-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #ffffff;
+  background: var(--bg-subtle);
+  border-color: #cbd5e1;
+  color: var(--text-main);
   transform: translateY(-0.5px);
 }
 

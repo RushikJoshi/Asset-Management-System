@@ -18,6 +18,7 @@ import {
   parseCsvText,
 } from "../utils/assetUtils";
 import { useToast } from "../components/toast/toastStore";
+import { TablePagination, TablePageSizeSelector } from "../components/common/ModuleComponents";
 
 const pdfText = (value) => String(value || "-").replace(/[\\()]/g, "\\$&").replace(/[^\x20-\x7E]/g, "");
 
@@ -212,6 +213,8 @@ function Assets() {
   const [stickerModal, setStickerModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const [selectedDeleteId, setSelectedDeleteId] = useState(null);
   const { loading, error, assetListData } = useSelector(
@@ -244,6 +247,15 @@ function Assets() {
     return matchesStatus && haystack.includes(search.toLowerCase());
   });
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredAssets.length]);
+
+  const totalRows = filteredAssets.length;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalRows);
+  const slicedAssets = filteredAssets.slice(startIndex, endIndex);
+
   const stats = buildStats(assetListData);
 
   const getStickerDetails = (asset) => [
@@ -256,9 +268,16 @@ function Assets() {
   ];
 
   const openSideStickers = async () => {
-    setStickerModal(true);
+    if (!filteredAssets || filteredAssets.length === 0) {
+      showToast({
+        title: "No data to print",
+        message: "There are no assets available to print stickers.",
+        type: "error",
+      });
+      return;
+    }
 
-    if (!filteredAssets.length) return;
+    setStickerModal(true);
 
     try {
       await buildStickerPdf(filteredAssets, getStickerDetails);
@@ -277,6 +296,15 @@ function Assets() {
   };
 
   const exportCsv = () => {
+    if (!filteredAssets || filteredAssets.length === 0) {
+      showToast({
+        title: "No data to export",
+        message: "There are no assets available to export.",
+        type: "error",
+      });
+      return;
+    }
+
     const headers = [
       "Asset Name",
       "Asset Code",
@@ -448,6 +476,9 @@ function Assets() {
             <option value="LOST">Lost</option>
             <option value="RETIRED">Retired</option>
           </select>
+          {totalRows > 20 && (
+            <TablePageSizeSelector pageSize={pageSize} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }} />
+          )}
           </div>
           <div className="assets-toolbar-actions">
             <div className="assets-toolbar-actions-left">
@@ -457,26 +488,32 @@ function Assets() {
               <button onClick={downloadSampleCsv} className="sample-btn">
                 <FaDownload /> Sample CSV
               </button>
-              <button onClick={() => fileInputRef.current?.click()} className="import-btn">
-                <FaFileImport /> Import CSV
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,text/csv"
-                className="csv-file-input"
-                onChange={importCsv}
-              />
+              {canManageAssets && (
+                <>
+                  <button onClick={() => fileInputRef.current?.click()} className="import-btn">
+                    <FaFileImport /> Import CSV
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="csv-file-input"
+                    onChange={importCsv}
+                  />
+                </>
+              )}
               <button onClick={openSideStickers} className="side-sticker-btn">
                 <FaTags /> Print All Asset Stickers
               </button>
             </div>
-            <button
-              onClick={() => navigate("/add-asset")}
-              className={`add-btn add-btn-primary ${loading ? "loading-btn" : ""}`}
-            >
-              Add Asset
-            </button>
+            {canManageAssets && (
+              <button
+                onClick={() => navigate("/add-asset")}
+                className={`add-btn add-btn-primary ${loading ? "loading-btn" : ""}`}
+              >
+                Add Asset
+              </button>
+            )}
           </div>
         </div>
 
@@ -484,88 +521,100 @@ function Assets() {
         {error && <p className="error-text">{error}</p>}
 
         {/* TABLE */}
-        <div className="table-wrapper assets-table-scroll">
-          <table className="asset-table">
-            <thead>
-              <tr>
-                <th>No</th>
-
-                <th>Asset Name</th>
-                <th>Assigned To</th>
-                <th>Serial No</th>
-                <th>Assets Code</th>
-                <th>Status</th>
-                <th>Office</th>
-                <th>Warranty End</th>
-                <th>Assigned Date</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredAssets?.length > 0 ? (
-                filteredAssets.map((item, index) => (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td>{item.assetName}</td>
-                    <td>{item.assignedTo}</td>
-                    <td>{item.serialNumber}</td>
-                    <td>{item.assetCode}</td>
-                    <td>
-                      <span className={`asset-status-pill status-${String(item.assetStatus || "unknown").toLowerCase().replace(/_/g, "-")}`}>
-                        {String(item.assetStatus || "-").replace(/_/g, " ")}
-                      </span>
-                    </td>
-                    <td>{item.officeName || item.location}</td>
-                    <td>{item.warrantyEnd ? moment(item.warrantyEnd).format("DD-MM-YYYY") : "-"}</td>
-                    <td>{item.assignedDate ? moment(item.assignedDate).format("DD-MM-YYYY") : "-"}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="scan-btn"
-                          onClick={() => {
-                            setSelectedQr(item.qrCode);
-                            setOpenModal(true);
-                          }}
-                        >
-                          Scan QR
-                        </button>
-                        <button
-                          className="view-btn"
-                          onClick={() => navigate(`/asset-details/${item._id}`)}
-                        >
-                          <FaEye />
-                        </button>
-
-                        {canManageAssets && (
+        <div className="module-table-card">
+          <div className="module-table-scroll-area">
+            <table className="asset-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+  
+                  <th>Asset Name</th>
+                  <th>Assigned To</th>
+                  <th>Serial No</th>
+                  <th>Assets Code</th>
+                  <th>Status</th>
+                  <th>Office</th>
+                  <th>Warranty End</th>
+                  <th>Assigned Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+  
+              <tbody>
+                {slicedAssets?.length > 0 ? (
+                  slicedAssets.map((item, index) => (
+                    <tr key={index}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>{item.assetName}</td>
+                      <td>{item.assignedTo}</td>
+                      <td>{item.serialNumber}</td>
+                      <td>{item.assetCode}</td>
+                      <td>
+                        <span className={`asset-status-pill status-${String(item.assetStatus || "unknown").toLowerCase().replace(/_/g, "-")}`}>
+                          {String(item.assetStatus || "-").replace(/_/g, " ")}
+                        </span>
+                      </td>
+                      <td>{item.officeName || item.location}</td>
+                      <td>{item.warrantyEnd ? moment(item.warrantyEnd).format("DD-MM-YYYY") : "-"}</td>
+                      <td>{item.assignedDate ? moment(item.assignedDate).format("DD-MM-YYYY") : "-"}</td>
+                      <td>
+                        <div className="action-buttons">
                           <button
-                            className="edit-btn"
-                            onClick={() => navigate(`/edit-asset/${item._id}`)}
+                            className="scan-btn"
+                            onClick={() => {
+                              setSelectedQr(item.qrCode);
+                              setOpenModal(true);
+                            }}
                           >
-                            <FaEdit />
+                            Scan QR
                           </button>
-                        )}
-                        {canDeleteAssets && (
                           <button
-                            className="delete-btn"
-                            onClick={() => handleDeleteClick(item._id)}
+                            className="view-btn"
+                            onClick={() => navigate(`/asset-details/${item._id}`)}
                           >
-                            <FaTrash />
+                            <FaEye />
                           </button>
-                        )}
-                      </div>
+  
+                          {canManageAssets && (
+                            <button
+                              className="edit-btn"
+                              onClick={() => navigate(`/edit-asset/${item._id}`)}
+                            >
+                              <FaEdit />
+                            </button>
+                          )}
+                          {canDeleteAssets && (
+                            <button
+                              className="delete-btn"
+                              onClick={() => handleDeleteClick(item._id)}
+                            >
+                              <FaTrash />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="10" className="no-data">
+                      No Assets Found
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="10" className="no-data">
-                    No Assets Found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          {totalRows > 0 && (
+            <TablePagination
+              totalItems={totalRows}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              displayedCount={slicedAssets?.length || 0}
+            />
+          )}
         </div>
       </div>
       {/* QR MODAL */}

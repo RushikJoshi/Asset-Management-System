@@ -60,7 +60,7 @@ export const PERMISSION_OPTIONS = [
 export const MENU_ACCESS_OPTIONS = [
   { label: "Dashboard", routes: ["/"] },
   { label: "Assets", routes: ["/assets", "/add-asset", "/edit-asset", "/asset-details"] },
-  { label: "Masters", routes: ["/masters", "/master-editor", "/masters/asset-form", "/masters/request-form", "/masters/categories"] },
+  { label: "Masters", routes: ["/masters", "/master-editor", "/masters/asset-form", "/masters/request-form", "/masters/procurement-form", "/masters/categories"] },
   { label: "QR Console", routes: ["/scan-demo"] },
   { label: "Requests", routes: ["/requests", "/add-request", "/edit-request"] },
   { label: "Approvals", routes: ["/approvals"] },
@@ -242,6 +242,7 @@ export const ROUTE_PERMISSIONS = {
   "/masters": ["system.settings", "user.manage"],
   "/masters/asset-form": ["asset.create", "asset.edit", "asset.view"],
   "/masters/request-form": ["request.view"],
+  "/masters/procurement-form": ["procurement.manage"],
   "/masters/categories": [],
   "/add-request": ["request.create"],
   "/edit-request": ["request.create"],

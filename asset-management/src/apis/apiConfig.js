@@ -5,7 +5,6 @@ const getApiBaseUrl = () => {
   if (typeof window === "undefined") {
     return import.meta.env.VITE_API_BASE_URL || "http://localhost:7000/api";
   }
-
   const { protocol, hostname } = window.location;
   const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(hostname);
   const isNetworkHost = hostname && !isLocalHost;

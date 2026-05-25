@@ -13,6 +13,7 @@ import {
   FaArrowLeft,
   FaBoxes,
 } from "react-icons/fa";
+import { TablePagination, TablePageSizeSelector } from "../components/common/ModuleComponents";
 import "./ApprovalsPage.css";
 
 export function ApprovalsPage() {
@@ -24,12 +25,40 @@ export function ApprovalsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [loadingId, setLoadingId] = useState("");
 
+  const [reqPage, setReqPage] = useState(1);
+  const [reqPageSize, setReqPageSize] = useState(20);
+  const [compPage, setCompPage] = useState(1);
+  const [compPageSize, setCompPageSize] = useState(20);
+  const [retPage, setRetPage] = useState(1);
+  const [retPageSize, setRetPageSize] = useState(20);
+
+  useEffect(() => {
+    setReqPage(1);
+  }, [search, statusFilter, activeTab]);
+
+  useEffect(() => {
+    setCompPage(1);
+  }, [search, statusFilter, activeTab]);
+
+  useEffect(() => {
+    setRetPage(1);
+  }, [search, statusFilter, activeTab]);
+
   useEffect(() => {
     dispatch(fetchAssetList());
   }, [dispatch]);
 
   // Extract request records
   const requests = getRequestRecords(assetListData);
+
+  const getInitials = (name) => {
+    if (!name || name === "Unknown") return "👤";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   // Group requests by requestId
   const groupedRequests = [];
@@ -41,6 +70,7 @@ export function ApprovalsPage() {
       requestGroups[reqId] = {
         requestId: reqId,
         requestedBy: item.requestedBy || "Unknown",
+        requestedByPhoto: item.requestedByPhoto || "",
         requestDate: item.requestDate || item.createdAt,
         items: [],
       };
@@ -172,11 +202,61 @@ export function ApprovalsPage() {
     { id: "Comp-101", complainant: "Ravi Shah", issue: "Canon Printer Jamming in Admin Area", date: "09-May-26", status: "Resolved" }
   ];
 
+  const filteredComplaints = mockComplaints.filter((comp) => {
+    let matchesStatus = true;
+    if (statusFilter !== "ALL") {
+      if (statusFilter === "AWAITING") {
+        matchesStatus = comp.status === "Awaiting Check";
+      } else if (statusFilter === "RESOLVED") {
+        matchesStatus = comp.status === "Resolved";
+      }
+    }
+
+    const searchLower = search.toLowerCase();
+    const matchesSearch =
+      comp.id.toLowerCase().includes(searchLower) ||
+      comp.complainant.toLowerCase().includes(searchLower) ||
+      comp.issue.toLowerCase().includes(searchLower);
+
+    return matchesStatus && matchesSearch;
+  });
+
   // Mock returns data
   const mockReturns = [
     { id: "Ret-92", employee: "Ravi Shah", item: "HP EliteDesk Desktop G6", date: "15-May-26", status: "Returned" },
     { id: "Ret-91", employee: "Priyam", item: "Logitech MX Master Mouse", date: "11-May-26", status: "Awaiting Receipt" }
   ];
+
+  const filteredReturns = mockReturns.filter((ret) => {
+    let matchesStatus = true;
+    if (statusFilter !== "ALL") {
+      if (statusFilter === "AWAITING") {
+        matchesStatus = ret.status === "Awaiting Receipt";
+      } else if (statusFilter === "RETURNED") {
+        matchesStatus = ret.status === "Returned";
+      }
+    }
+
+    const searchLower = search.toLowerCase();
+    const matchesSearch =
+      ret.id.toLowerCase().includes(searchLower) ||
+      ret.employee.toLowerCase().includes(searchLower) ||
+      ret.item.toLowerCase().includes(searchLower);
+
+    return matchesStatus && matchesSearch;
+  });
+
+  const totalRequests = filteredGroups.length;
+  const reqStartIndex = (reqPage - 1) * reqPageSize;
+  const slicedRequests = filteredGroups.slice(reqStartIndex, reqStartIndex + reqPageSize);
+
+  const totalComplaints = filteredComplaints.length;
+  const compStartIndex = (compPage - 1) * compPageSize;
+  const slicedComplaints = filteredComplaints.slice(compStartIndex, compStartIndex + compPageSize);
+
+  const totalReturns = filteredReturns.length;
+  const retStartIndex = (retPage - 1) * retPageSize;
+  const slicedReturns = filteredReturns.slice(retStartIndex, retStartIndex + retPageSize);
 
   return (
     <div className="approvals-page-container">
@@ -192,19 +272,31 @@ export function ApprovalsPage() {
       <div className="approvals-tabs-nav">
         <button
           className={`tab-btn ${activeTab === "requests" ? "active" : ""}`}
-          onClick={() => setActiveTab("requests")}
+          onClick={() => {
+            setActiveTab("requests");
+            setSearch("");
+            setStatusFilter("ALL");
+          }}
         >
           Asset Requests
         </button>
         <button
           className={`tab-btn ${activeTab === "complaints" ? "active" : ""}`}
-          onClick={() => setActiveTab("complaints")}
+          onClick={() => {
+            setActiveTab("complaints");
+            setSearch("");
+            setStatusFilter("ALL");
+          }}
         >
           Complaints
         </button>
         <button
           className={`tab-btn ${activeTab === "returns" ? "active" : ""}`}
-          onClick={() => setActiveTab("returns")}
+          onClick={() => {
+            setActiveTab("returns");
+            setSearch("");
+            setStatusFilter("ALL");
+          }}
         >
           Asset Return
         </button>
@@ -216,7 +308,6 @@ export function ApprovalsPage() {
         {/* TABS 1: ASSET REQUESTS */}
         {activeTab === "requests" && (
           <div className="approvals-panel-content">
-            {/* Filter controls */}
             <div className="approvals-toolbar">
               <div className="toolbar-search-wrapper">
                 <FaSearch className="search-icon" />
@@ -238,105 +329,140 @@ export function ApprovalsPage() {
                   <option value="APPROVED">Approved</option>
                   <option value="REJECTED">Rejected</option>
                 </select>
+                {totalRequests > 20 && (
+                  <TablePageSizeSelector
+                    pageSize={reqPageSize}
+                    onPageSizeChange={(size) => {
+                      setReqPageSize(size);
+                      setReqPage(1);
+                    }}
+                  />
+                )}
               </div>
             </div>
 
-            {/* Table Container */}
-            <div className="approvals-table-wrapper">
-              <table className="zoho-approvals-table">
-                <thead>
-                  <tr>
-                    <th>Request ID</th>
-                    <th>Requested By</th>
-                    <th>Products List</th>
-                    <th>Requested Date</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: "center" }}>Approve</th>
-                    <th style={{ textAlign: "center" }}>Reject</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading && filteredGroups.length === 0 ? (
+            <div className="module-table-card">
+              <div className="module-table-scroll-area">
+                <table className="zoho-approvals-table">
+                  <thead>
                     <tr>
-                      <td colSpan={7} style={{ textAlign: "center", padding: "40px 20px" }}>
-                        <div className="loading-spinner"></div>
-                        <p style={{ marginTop: "12px", color: "#64748b" }}>Loading approval requests...</p>
-                      </td>
+                      <th>Request ID</th>
+                      <th>Requested By</th>
+                      <th>Products List</th>
+                      <th>Requested Date</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: "center" }}>Approve</th>
+                      <th style={{ textAlign: "center" }}>Reject</th>
                     </tr>
-                  ) : filteredGroups.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} style={{ textAlign: "center", padding: "60px 20px", color: "#64748b" }}>
-                        <FaClipboardCheck style={{ fontSize: "36px", color: "#cbd5e1", marginBottom: "12px" }} />
-                        <p>No matching approval requests found.</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredGroups.map((group) => {
-                      const isBusy = loadingId === group.requestId;
-                      return (
-                        <tr key={group.requestId} className={group.status === "Approved" ? "row-approved" : ""}>
-                          {/* Request ID */}
-                          <td className="col-req-id">
-                            <span>{group.requestId}</span>
-                          </td>
-
-                          {/* Requested By */}
-                          <td className="col-requested-by">
-                            <span>{group.requestedBy}</span>
-                          </td>
-
-                          {/* Products List (Line-by-line format) */}
-                          <td className="col-products-list">
-                            <div className="products-list-stack">
-                              {group.items.map((item, idx) => (
-                                <div key={idx} className="product-row-stack">
-                                  {item.brand} | {item.category} - {item.subCategory} | {item.quantity || 1}
-                                </div>
-                              ))}
-                            </div>
-                          </td>
-
-                          {/* Requested Date */}
-                          <td className="col-req-date">
-                            {formatDate(group.requestDate)}
-                          </td>
-
-                          {/* Status */}
-                          <td className="col-status">
-                            <span className={`status-label text-${group.status.toLowerCase()}`}>
-                              {group.status}
-                            </span>
-                          </td>
-
-                          {/* Approve Action */}
-                          <td className="col-action-btn" style={{ textAlign: "center" }}>
-                            <button
-                              type="button"
-                              className={`btn-zoho btn-zoho-approve ${group.status === "Approved" ? "active" : ""}`}
-                              disabled={isBusy}
-                              onClick={() => handleApprove(group)}
-                            >
-                              {group.status === "Approved" ? "Approved" : "Approve"}
-                            </button>
-                          </td>
-
-                          {/* Reject Action */}
-                          <td className="col-action-btn" style={{ textAlign: "center" }}>
-                            <button
-                              type="button"
-                              className={`btn-zoho btn-zoho-reject ${group.status === "Rejected" ? "active" : ""}`}
-                              disabled={isBusy}
-                              onClick={() => handleReject(group)}
-                            >
-                              {group.status === "Rejected" ? "Rejected" : "Reject"}
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {loading && slicedRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: "center", padding: "40px 20px" }}>
+                          <div className="loading-spinner"></div>
+                          <p style={{ marginTop: "12px", color: "#64748b" }}>Loading approval requests...</p>
+                        </td>
+                      </tr>
+                    ) : slicedRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: "center", padding: "60px 20px", color: "#64748b" }}>
+                          <FaClipboardCheck style={{ fontSize: "36px", color: "#cbd5e1", marginBottom: "12px" }} />
+                          <p>No matching approval requests found.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      slicedRequests.map((group) => {
+                        const isBusy = loadingId === group.requestId;
+                        return (
+                          <tr key={group.requestId} className={group.status === "Approved" ? "row-approved" : ""}>
+                            <td className="col-req-id">
+                              <span>{group.requestId}</span>
+                            </td>
+                            <td className="col-requested-by">
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                {group.requestedByPhoto ? (
+                                  <img
+                                    src={group.requestedByPhoto}
+                                    alt={group.requestedBy}
+                                    style={{
+                                      width: "32px",
+                                      height: "32px",
+                                      borderRadius: "50%",
+                                      objectFit: "cover"
+                                    }}
+                                  />
+                                ) : (
+                                  <div style={{
+                                    width: "32px",
+                                    height: "32px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#eff6ff",
+                                    color: "#1e40af",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontWeight: "bold",
+                                    fontSize: "12px"
+                                  }}>
+                                    {getInitials(group.requestedBy)}
+                                  </div>
+                                )}
+                                <span style={{ fontWeight: "500", color: "#1e293b" }}>{group.requestedBy}</span>
+                              </div>
+                            </td>
+                            <td className="col-products-list">
+                              <div className="products-list-stack">
+                                {group.items.map((item, idx) => (
+                                  <div key={idx} className="product-row-stack">
+                                    {item.brand} | {item.category} - {item.subCategory} | {item.quantity || 1}
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="col-req-date">
+                              {formatDate(group.requestDate)}
+                            </td>
+                            <td className="col-status">
+                              <span className={`status-label text-${group.status.toLowerCase()}`}>
+                                {group.status}
+                              </span>
+                            </td>
+                            <td className="col-action-btn" style={{ textAlign: "center" }}>
+                              <button
+                                type="button"
+                                className={`btn-zoho btn-zoho-approve ${group.status === "Approved" ? "active" : ""}`}
+                                disabled={isBusy}
+                                onClick={() => handleApprove(group)}
+                              >
+                                {group.status === "Approved" ? "Approved" : "Approve"}
+                              </button>
+                            </td>
+                            <td className="col-action-btn" style={{ textAlign: "center" }}>
+                              <button
+                                type="button"
+                                className={`btn-zoho btn-zoho-reject ${group.status === "Rejected" ? "active" : ""}`}
+                                disabled={isBusy}
+                                onClick={() => handleReject(group)}
+                              >
+                                {group.status === "Rejected" ? "Rejected" : "Reject"}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {totalRequests > 0 && (
+                <TablePagination
+                  totalItems={totalRequests}
+                  currentPage={reqPage}
+                  pageSize={reqPageSize}
+                  onPageChange={setReqPage}
+                  displayedCount={slicedRequests.length}
+                />
+              )}
             </div>
           </div>
         )}
@@ -344,61 +470,113 @@ export function ApprovalsPage() {
         {/* TABS 2: COMPLAINTS */}
         {activeTab === "complaints" && (
           <div className="approvals-panel-content">
-            <div className="approvals-table-wrapper">
-              <table className="zoho-approvals-table">
-                <thead>
-                  <tr>
-                    <th>Complaint ID</th>
-                    <th>Requested By</th>
-                    <th>Service Details</th>
-                    <th>Filed Date</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: "center" }}>Resolve</th>
-                    <th style={{ textAlign: "center" }}>Reject</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockComplaints.map((comp) => (
-                    <tr key={comp.id} className={comp.status === "Resolved" ? "row-approved" : ""}>
-                      <td className="col-req-id">{comp.id}</td>
-                      <td className="col-requested-by">{comp.complainant}</td>
-                      <td>
-                        <strong style={{ color: "#334155" }}>{comp.issue}</strong>
-                      </td>
-                      <td className="col-req-date">{comp.date}</td>
-                      <td className="col-status">
-                        <span className={`status-label text-${comp.status === "Resolved" ? "approved" : "requested"}`}>
-                          {comp.status}
-                        </span>
-                      </td>
-                      <td className="col-action-btn" style={{ textAlign: "center" }}>
-                        <button
-                          type="button"
-                          className={`btn-zoho btn-zoho-approve ${comp.status === "Resolved" ? "active" : ""}`}
-                          disabled={comp.status === "Resolved"}
-                          onClick={() => {
-                            showToast({ title: "Complaint Resolved", message: `${comp.id} successfully updated.` });
-                          }}
-                        >
-                          {comp.status === "Resolved" ? "Resolved" : "Resolve"}
-                        </button>
-                      </td>
-                      <td className="col-action-btn" style={{ textAlign: "center" }}>
-                        <button
-                          type="button"
-                          className="btn-zoho btn-zoho-reject"
-                          disabled={comp.status === "Resolved"}
-                          onClick={() => {
-                            showToast({ title: "Complaint Dismissed", message: `${comp.id} rejected.`, type: "info" });
-                          }}
-                        >
-                          Reject
-                        </button>
-                      </td>
+            <div className="approvals-toolbar">
+              <div className="toolbar-search-wrapper">
+                <FaSearch className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search by ID, complainant, or issue..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="toolbar-filter-wrapper">
+                <span className="filter-label">Filter By:</span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="ALL">- Status -</option>
+                  <option value="AWAITING">Awaiting Check</option>
+                  <option value="RESOLVED">Resolved</option>
+                </select>
+                {totalComplaints > 20 && (
+                  <TablePageSizeSelector
+                    pageSize={compPageSize}
+                    onPageSizeChange={(size) => {
+                      setCompPageSize(size);
+                      setCompPage(1);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="module-table-card">
+              <div className="module-table-scroll-area">
+                <table className="zoho-approvals-table">
+                  <thead>
+                    <tr>
+                      <th>Complaint ID</th>
+                      <th>Requested By</th>
+                      <th>Service Details</th>
+                      <th>Filed Date</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: "center" }}>Resolve</th>
+                      <th style={{ textAlign: "center" }}>Reject</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {slicedComplaints.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: "center", padding: "60px 20px", color: "#64748b" }}>
+                          <FaClipboardCheck style={{ fontSize: "36px", color: "#cbd5e1", marginBottom: "12px" }} />
+                          <p>No matching service complaints found.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      slicedComplaints.map((comp) => (
+                        <tr key={comp.id} className={comp.status === "Resolved" ? "row-approved" : ""}>
+                          <td className="col-req-id">{comp.id}</td>
+                          <td className="col-requested-by">{comp.complainant}</td>
+                          <td>
+                            <strong style={{ color: "#334155" }}>{comp.issue}</strong>
+                          </td>
+                          <td className="col-req-date">{comp.date}</td>
+                          <td className="col-status">
+                            <span className={`status-label text-${comp.status === "Resolved" ? "approved" : "requested"}`}>
+                              {comp.status}
+                            </span>
+                          </td>
+                          <td className="col-action-btn" style={{ textAlign: "center" }}>
+                            <button
+                              type="button"
+                              className={`btn-zoho btn-zoho-approve ${comp.status === "Resolved" ? "active" : ""}`}
+                              disabled={comp.status === "Resolved"}
+                              onClick={() => {
+                                showToast({ title: "Complaint Resolved", message: `${comp.id} successfully updated.` });
+                              }}
+                            >
+                              {comp.status === "Resolved" ? "Resolved" : "Resolve"}
+                            </button>
+                          </td>
+                          <td className="col-action-btn" style={{ textAlign: "center" }}>
+                            <button
+                              type="button"
+                              className="btn-zoho btn-zoho-reject"
+                              disabled={comp.status === "Resolved"}
+                              onClick={() => {
+                                showToast({ title: "Complaint Dismissed", message: `${comp.id} rejected.`, type: "info" });
+                              }}
+                            >
+                              Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {totalComplaints > 0 && (
+                <TablePagination
+                  totalItems={totalComplaints}
+                  currentPage={compPage}
+                  pageSize={compPageSize}
+                  onPageChange={setCompPage}
+                  displayedCount={slicedComplaints.length}
+                />
+              )}
             </div>
           </div>
         )}
@@ -406,61 +584,113 @@ export function ApprovalsPage() {
         {/* TABS 3: ASSET RETURNS */}
         {activeTab === "returns" && (
           <div className="approvals-panel-content">
-            <div className="approvals-table-wrapper">
-              <table className="zoho-approvals-table">
-                <thead>
-                  <tr>
-                    <th>Return ID</th>
-                    <th>Requested By</th>
-                    <th>Asset Details</th>
-                    <th>Return Date</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: "center" }}>Accept</th>
-                    <th style={{ textAlign: "center" }}>Reject</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockReturns.map((ret) => (
-                    <tr key={ret.id} className={ret.status === "Returned" ? "row-approved" : ""}>
-                      <td className="col-req-id">{ret.id}</td>
-                      <td className="col-requested-by">{ret.employee}</td>
-                      <td>
-                        <strong style={{ color: "#334155" }}>{ret.item}</strong>
-                      </td>
-                      <td className="col-req-date">{ret.date}</td>
-                      <td className="col-status">
-                        <span className={`status-label text-${ret.status === "Returned" ? "approved" : "requested"}`}>
-                          {ret.status}
-                        </span>
-                      </td>
-                      <td className="col-action-btn" style={{ textAlign: "center" }}>
-                        <button
-                          type="button"
-                          className={`btn-zoho btn-zoho-approve ${ret.status === "Returned" ? "active" : ""}`}
-                          disabled={ret.status === "Returned"}
-                          onClick={() => {
-                            showToast({ title: "Return Approved", message: `${ret.id} receipt confirmed.` });
-                          }}
-                        >
-                          {ret.status === "Returned" ? "Received" : "Accept"}
-                        </button>
-                      </td>
-                      <td className="col-action-btn" style={{ textAlign: "center" }}>
-                        <button
-                          type="button"
-                          className="btn-zoho btn-zoho-reject"
-                          disabled={ret.status === "Returned"}
-                          onClick={() => {
-                            showToast({ title: "Return Rejected", message: `${ret.id} declined.`, type: "info" });
-                          }}
-                        >
-                          Reject
-                        </button>
-                      </td>
+            <div className="approvals-toolbar">
+              <div className="toolbar-search-wrapper">
+                <FaSearch className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search by ID, employee, or item..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="toolbar-filter-wrapper">
+                <span className="filter-label">Filter By:</span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="ALL">- Status -</option>
+                  <option value="AWAITING">Awaiting Receipt</option>
+                  <option value="RETURNED">Returned</option>
+                </select>
+                {totalReturns > 20 && (
+                  <TablePageSizeSelector
+                    pageSize={retPageSize}
+                    onPageSizeChange={(size) => {
+                      setRetPageSize(size);
+                      setRetPage(1);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="module-table-card">
+              <div className="module-table-scroll-area">
+                <table className="zoho-approvals-table">
+                  <thead>
+                    <tr>
+                      <th>Return ID</th>
+                      <th>Requested By</th>
+                      <th>Asset Details</th>
+                      <th>Return Date</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: "center" }}>Accept</th>
+                      <th style={{ textAlign: "center" }}>Reject</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {slicedReturns.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: "center", padding: "60px 20px", color: "#64748b" }}>
+                          <FaClipboardCheck style={{ fontSize: "36px", color: "#cbd5e1", marginBottom: "12px" }} />
+                          <p>No matching asset returns found.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      slicedReturns.map((ret) => (
+                        <tr key={ret.id} className={ret.status === "Returned" ? "row-approved" : ""}>
+                          <td className="col-req-id">{ret.id}</td>
+                          <td className="col-requested-by">{ret.employee}</td>
+                          <td>
+                            <strong style={{ color: "#334155" }}>{ret.item}</strong>
+                          </td>
+                          <td className="col-req-date">{ret.date}</td>
+                          <td className="col-status">
+                            <span className={`status-label text-${ret.status === "Returned" ? "approved" : "requested"}`}>
+                              {ret.status}
+                            </span>
+                          </td>
+                          <td className="col-action-btn" style={{ textAlign: "center" }}>
+                            <button
+                              type="button"
+                              className={`btn-zoho btn-zoho-approve ${ret.status === "Returned" ? "active" : ""}`}
+                              disabled={ret.status === "Returned"}
+                              onClick={() => {
+                                showToast({ title: "Return Approved", message: `${ret.id} receipt confirmed.` });
+                              }}
+                            >
+                              {ret.status === "Returned" ? "Received" : "Accept"}
+                            </button>
+                          </td>
+                          <td className="col-action-btn" style={{ textAlign: "center" }}>
+                            <button
+                              type="button"
+                              className="btn-zoho btn-zoho-reject"
+                              disabled={ret.status === "Returned"}
+                              onClick={() => {
+                                showToast({ title: "Return Rejected", message: `${ret.id} declined.`, type: "info" });
+                              }}
+                            >
+                              Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {totalReturns > 0 && (
+                <TablePagination
+                  totalItems={totalReturns}
+                  currentPage={retPage}
+                  pageSize={retPageSize}
+                  onPageChange={setRetPage}
+                  displayedCount={slicedReturns.length}
+                />
+              )}
             </div>
           </div>
         )}

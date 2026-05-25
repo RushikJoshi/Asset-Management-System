@@ -38,11 +38,12 @@ export default function AddRequestPage() {
   }, []);
   
   const [formData, setFormData] = useState({
-    requestType: "Procurement",
+    requestType: "",
     requestStatus: "Pending",
     managerApproval: "Pending",
     adminApproval: "Pending",
-    purchaseStatus: "Pending"
+    purchaseStatus: "Pending",
+    requestDate: new Date().toISOString().split("T")[0]
   });
 
   const [errors, setErrors] = useState({});
@@ -82,6 +83,7 @@ export default function AddRequestPage() {
         ...prev,
         requestedBy: user.name || user.username || "",
         employeeEmail: user.email || "",
+        requestDate: new Date().toISOString().split("T")[0]
       }));
     }
   }, [isEditMode, assetListData, id, user, formSections]);
@@ -103,15 +105,17 @@ export default function AddRequestPage() {
 
   const generateReqId = () => {
     let maxNum = 100;
-    assetListData.forEach((item) => {
-      if (item.requestId) {
-        const match = item.requestId.match(/\d+/);
-        if (match) {
-          const num = parseInt(match[0], 10);
-          if (num > maxNum) maxNum = num;
+    if (Array.isArray(assetListData)) {
+      assetListData.forEach((item) => {
+        if (item && item.requestId) {
+          const match = String(item.requestId).match(/\d+/);
+          if (match) {
+            const num = parseInt(match[0], 10);
+            if (num > maxNum) maxNum = num;
+          }
         }
-      }
-    });
+      });
+    }
     return `Req-${maxNum + 1}`;
   };
 
@@ -125,11 +129,14 @@ export default function AddRequestPage() {
         const isEmpty = value === undefined || value === null || String(value).trim() === "";
         if (isFieldVisible(field.name) && isFieldRequired(field.name) && isEmpty) {
           missingRequired[field.name] = `${field.label} is required`;
+        } else if (isFieldVisible(field.name) && field.name === "price" && !isEmpty && Number.isNaN(Number(value))) {
+          missingRequired[field.name] = "Estimated Cost must be a valid number";
         }
       });
     });
 
     if (Object.keys(missingRequired).length > 0) {
+      console.log("Validation errors blocking form submission:", missingRequired);
       setErrors(missingRequired);
       return;
     }
@@ -150,6 +157,8 @@ export default function AddRequestPage() {
         customFields
       };
 
+      console.log("Submitting request form. Payload:", payload);
+
       if (!isEditMode) {
         payload.requestId = generateReqId();
         payload.requestDate = formData.requestDate || new Date().toISOString().split("T")[0];
@@ -169,6 +178,7 @@ export default function AddRequestPage() {
       }
       navigate("/requests");
     } catch (err) {
+      console.error("Failed to save request:", err);
       showToast({
         title: "Error",
         message: err || "Unable to save request.",
@@ -180,7 +190,7 @@ export default function AddRequestPage() {
   const renderField = (field) => {
     if (!isFieldVisible(field.name)) return null;
 
-    const isSelect = ["requestPriority", "requestStatus", "managerApproval", "adminApproval", "purchaseStatus"].includes(field.name);
+    const isSelect = ["requestType", "requestPriority", "requestStatus", "managerApproval", "adminApproval", "purchaseStatus"].includes(field.name);
     const isTextArea = ["requestReason"].includes(field.name);
     const isDate = ["requestDate", "expectedReturn"].includes(field.name);
 
@@ -198,6 +208,14 @@ export default function AddRequestPage() {
             className={errors[field.name] ? "error" : ""}
           >
             <option value="">Select...</option>
+            {field.name === "requestType" && (
+              <>
+                <option value="Procurement">Procurement</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Transfer">Transfer</option>
+                <option value="Return">Return</option>
+              </>
+            )}
             {field.name === "requestPriority" && (
               <>
                 <option value="Low">Low</option>

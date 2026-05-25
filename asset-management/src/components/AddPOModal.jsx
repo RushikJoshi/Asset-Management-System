@@ -3,11 +3,19 @@ import { FaTimes, FaPlus, FaTrash, FaCalculator, FaShippingFast } from "react-ic
 import "./AddPOModal.css";
 import { useToast } from "../components/toast/toastStore";
 import apiInstance from "../apis/apiConfig";
+import { loadProcurementFormConfig, getProcurementFormSections } from "../utils/assetFormBuilder";
 
 function AddPOModal({ isOpen, onClose, onSuccess, vendor }) {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [approvedRequests, setApprovedRequests] = useState([]);
+  
+  const [formConfig] = useState(() => loadProcurementFormConfig());
+  const isFieldVisible = (name) => formConfig[name]?.visible !== false;
+  const isFieldRequired = (name) => formConfig[name]?.required === true;
+  const formSections = getProcurementFormSections(formConfig);
+  const shippingSection = formSections.find(s => s.key === "Shipping Location" || s.title === "Shipping Location");
+
   const [shippingAddress, setShippingAddress] = useState({
     addressLine1: "Suite 404, Tech Park",
     addressLine2: "Gota",
@@ -116,13 +124,17 @@ function AddPOModal({ isOpen, onClose, onSuccess, vendor }) {
     e.preventDefault();
 
     // Validations
-    if (!shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.state) {
-      showToast({
-        title: "Validation error",
-        message: "Shipping Address details are required.",
-        type: "error",
-      });
-      return;
+    if (shippingSection) {
+      for (const field of shippingSection.fields) {
+        if (isFieldVisible(field.name) && isFieldRequired(field.name) && !shippingAddress[field.name]?.trim()) {
+          showToast({
+            title: "Validation error",
+            message: `${field.label} is required.`,
+            type: "error",
+          });
+          return;
+        }
+      }
     }
 
     for (let index = 0; index < products.length; index++) {
@@ -240,45 +252,23 @@ function AddPOModal({ isOpen, onClose, onSuccess, vendor }) {
                 <h3><FaShippingFast className="header-icon" /> Shipping Location</h3>
               </div>
               <div className="address-inputs-grid">
-                <div className="form-group span-2">
-                  <label>Address Line 1 *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Enter main building, office name, suite, etc."
-                    value={shippingAddress.addressLine1}
-                    onChange={(e) => handleAddressChange("addressLine1", e.target.value)}
-                  />
-                </div>
-                <div className="form-group span-2">
-                  <label>Address Line 2 (Optional)</label>
-                  <input
-                    type="text"
-                    placeholder="Area, block, lane description..."
-                    value={shippingAddress.addressLine2}
-                    onChange={(e) => handleAddressChange("addressLine2", e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>City / District *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ahmedabad"
-                    value={shippingAddress.city}
-                    onChange={(e) => handleAddressChange("city", e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>State / Province *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Gujarat"
-                    value={shippingAddress.state}
-                    onChange={(e) => handleAddressChange("state", e.target.value)}
-                  />
-                </div>
+                {shippingSection?.fields.filter(f => isFieldVisible(f.name)).map(field => {
+                  const isSpan2 = ["addressLine1", "addressLine2"].includes(field.name);
+                  return (
+                    <div className={`form-group ${isSpan2 ? "span-2" : ""}`} key={field.name}>
+                      <label>
+                        {field.label} {isFieldRequired(field.name) && "*"}
+                      </label>
+                      <input
+                        type="text"
+                        required={isFieldRequired(field.name)}
+                        placeholder={`Enter ${field.label}...`}
+                        value={shippingAddress[field.name] || ""}
+                        onChange={(e) => handleAddressChange(field.name, e.target.value)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

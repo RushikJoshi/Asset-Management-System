@@ -7,6 +7,7 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [focusedField, setFocusedField] = useState("");
 
   // Mock list of initial users
   const [users, setUsers] = useState([
@@ -291,8 +292,8 @@ export default function UsersPage() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(15, 23, 42, 0.4)",
-          backdropFilter: "blur(4px)",
+          backgroundColor: "rgba(15, 23, 42, 0.3)",
+          backdropFilter: "blur(6px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -300,39 +301,78 @@ export default function UsersPage() {
           animation: "fadeIn 0.2s ease"
         }}>
           <div style={{
-            background: "#ffffff",
-            borderRadius: "16px",
-            width: "480px",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            background: "var(--bg-surface)",
+            borderRadius: "14px",
+            width: "500px",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.15)",
             border: "1px solid var(--border-color)",
-            overflow: "hidden"
+            overflow: "hidden",
+            transition: "all 0.3s ease"
           }}>
+            {/* Modal Header */}
             <div style={{
-              padding: "20px 24px",
+              padding: "18px 24px",
               borderBottom: "1px solid var(--border-color)",
-              background: "linear-gradient(135deg, #f8fafc, #f1f5f9)",
+              background: "linear-gradient(135deg, #eff6ff, #f8fafc)",
               display: "flex",
-              justifyContent: "between",
+              justifyContent: "space-between",
               alignItems: "center"
             }}>
-              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "var(--text-main)" }}>Add New System User</h3>
+              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "var(--text-main)", letterSpacing: "-0.01em" }}>
+                Add New System User
+              </h3>
               <button 
                 onClick={() => setShowAddModal(false)}
-                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text-muted)" }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  color: "var(--text-muted)",
+                  width: "30px",
+                  height: "30px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(100, 116, 139, 0.1)";
+                  e.currentTarget.style.color = "var(--text-main)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "var(--text-muted)";
+                }}
               >
                 &times;
               </button>
             </div>
             
-            <form onSubmit={handleAddUser} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <form onSubmit={handleAddUser} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
               {formError && (
-                <div style={{ color: "#B91C1C", backgroundColor: "#FEF2F2", padding: "10px", borderRadius: "6px", fontSize: "13px", fontWeight: "600" }}>
-                  {formError}
+                <div style={{
+                  color: "#ef4444",
+                  backgroundColor: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  padding: "12px 14px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}>
+                  <span>⚠</span> {formError}
                 </div>
               )}
 
+              {/* Full Name Field */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Full Name</label>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Full Name
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -340,11 +380,30 @@ export default function UsersPage() {
                   onChange={handleInputChange}
                   placeholder="e.g. John Doe"
                   required
+                  onFocus={() => setFocusedField("name")}
+                  onBlur={() => setFocusedField("")}
+                  style={{
+                    width: "100%",
+                    height: "40px",
+                    padding: "0 14px",
+                    fontSize: "13px",
+                    borderRadius: "8px",
+                    border: focusedField === "name" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                    boxShadow: focusedField === "name" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--text-main)",
+                    transition: "all 0.2s ease",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
                 />
               </div>
 
+              {/* Email Address Field */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Email Address</label>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Email Address
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -352,11 +411,30 @@ export default function UsersPage() {
                   onChange={handleInputChange}
                   placeholder="e.g. john.doe@assetpro.com"
                   required
+                  onFocus={() => setFocusedField("email")}
+                  onBlur={() => setFocusedField("")}
+                  style={{
+                    width: "100%",
+                    height: "40px",
+                    padding: "0 14px",
+                    fontSize: "13px",
+                    borderRadius: "8px",
+                    border: focusedField === "email" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                    boxShadow: focusedField === "email" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--text-main)",
+                    transition: "all 0.2s ease",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
                 />
               </div>
 
+              {/* Department / Cost Center Field */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Department / Cost Center</label>
+                <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Department / Cost Center
+                </label>
                 <input
                   type="text"
                   name="department"
@@ -364,13 +442,53 @@ export default function UsersPage() {
                   onChange={handleInputChange}
                   placeholder="e.g. Finance, Tech Operations"
                   required
+                  onFocus={() => setFocusedField("department")}
+                  onBlur={() => setFocusedField("")}
+                  style={{
+                    width: "100%",
+                    height: "40px",
+                    padding: "0 14px",
+                    fontSize: "13px",
+                    borderRadius: "8px",
+                    border: focusedField === "department" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                    boxShadow: focusedField === "department" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--text-main)",
+                    transition: "all 0.2s ease",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              {/* System Role & Status Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>System Role</label>
-                  <select name="role" value={formData.role} onChange={handleInputChange} style={{ width: "100%" }}>
+                  <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    System Role
+                  </label>
+                  <select 
+                    name="role" 
+                    value={formData.role} 
+                    onChange={handleInputChange}
+                    onFocus={() => setFocusedField("role")}
+                    onBlur={() => setFocusedField("")}
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      padding: "0 14px",
+                      fontSize: "13px",
+                      borderRadius: "8px",
+                      border: focusedField === "role" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                      boxShadow: focusedField === "role" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                      backgroundColor: "var(--bg-surface)",
+                      color: "var(--text-main)",
+                      transition: "all 0.2s ease",
+                      outline: "none",
+                      cursor: "pointer",
+                      boxSizing: "border-box"
+                    }}
+                  >
                     <option value="ADMIN">Admin</option>
                     <option value="IT_STAFF">IT Staff</option>
                     <option value="MANAGER">Manager</option>
@@ -380,14 +498,38 @@ export default function UsersPage() {
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "600", color: "#475569" }}>Status</label>
-                  <select name="status" value={formData.status} onChange={handleInputChange} style={{ width: "100%" }}>
+                  <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Status
+                  </label>
+                  <select 
+                    name="status" 
+                    value={formData.status} 
+                    onChange={handleInputChange}
+                    onFocus={() => setFocusedField("status")}
+                    onBlur={() => setFocusedField("")}
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      padding: "0 14px",
+                      fontSize: "13px",
+                      borderRadius: "8px",
+                      border: focusedField === "status" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                      boxShadow: focusedField === "status" ? "0 0 0 3px rgba(33, 133, 243, 0.15)" : "var(--shadow-sm)",
+                      backgroundColor: "var(--bg-surface)",
+                      color: "var(--text-main)",
+                      transition: "all 0.2s ease",
+                      outline: "none",
+                      cursor: "pointer",
+                      boxSizing: "border-box"
+                    }}
+                  >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
                 </div>
               </div>
 
+              {/* Action Buttons */}
               <div style={{ 
                 display: "flex", 
                 justifyContent: "flex-end", 
@@ -399,15 +541,52 @@ export default function UsersPage() {
                 <button 
                   type="button" 
                   onClick={() => setShowAddModal(false)}
-                  className="secondary-button"
-                  style={{ height: "40px", fontSize: "13px" }}
+                  style={{
+                    height: "40px",
+                    padding: "0 20px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "#ffffff",
+                    color: "var(--text-muted)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = "var(--bg-subtle)";
+                    e.currentTarget.style.color = "var(--text-main)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = "#ffffff";
+                    e.currentTarget.style.color = "var(--text-muted)";
+                  }}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="module-button"
-                  style={{ height: "40px", fontSize: "13px" }}
+                  style={{
+                    height: "40px",
+                    padding: "0 20px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    borderRadius: "8px",
+                    border: "none",
+                    background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))",
+                    color: "#ffffff",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(33, 133, 243, 0.2)",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(33, 133, 243, 0.3)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = "none";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(33, 133, 243, 0.2)";
+                  }}
                 >
                   Create User
                 </button>

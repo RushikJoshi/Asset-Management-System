@@ -12,7 +12,11 @@ import { useToast } from "../../components/toast/toastStore";
 export function useFormBuilder(formType) {
   const { showToast } = useToast();
   const defaultSection =
-    formType === FORM_TYPES.REQUEST ? "Request Details" : "Asset Information";
+    formType === FORM_TYPES.REQUEST
+      ? "Request Details"
+      : formType === FORM_TYPES.PROCUREMENT
+        ? "Shipping Location"
+        : "Asset Information";
 
   const [config, setConfig] = useState(() => loadFormConfig(formType));
   const [newFieldLabel, setNewFieldLabel] = useState("");
@@ -296,7 +300,13 @@ export function useFormBuilder(formType) {
     saveFormConfig(formType, config);
     showToast({
       title: "Saved",
-      message: `${formType === FORM_TYPES.REQUEST ? "Request" : "Asset"} form saved.`,
+      message: `${
+        formType === FORM_TYPES.REQUEST
+          ? "Request"
+          : formType === FORM_TYPES.PROCUREMENT
+            ? "Procurement"
+            : "Asset"
+      } form saved.`,
     });
   }, [formType, config, showToast]);
 

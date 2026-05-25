@@ -975,6 +975,14 @@ export function ScanDemo() {
   const [refreshing, setRefreshing] = useState(false);
 
   const refreshForNetwork = async () => {
+    if (!filteredAssets || filteredAssets.length === 0) {
+      showToast({
+        title: "No assets found",
+        message: "Please add assets first to generate QR codes.",
+        type: "error",
+      });
+      return;
+    }
     const scanBaseUrl = getScanBaseUrl(getQrClientOrigin());
     setRefreshing(true);
     try {
@@ -1014,7 +1022,17 @@ export function ScanDemo() {
           <button 
             type="button" 
             className="secondary-button" 
-            onClick={() => window.print()}
+            onClick={() => {
+              if (!filteredAssets || filteredAssets.length === 0) {
+                showToast({
+                  title: "No assets to download",
+                  message: "There are no asset QR codes available to download.",
+                  type: "error",
+                });
+                return;
+              }
+              window.print();
+            }}
             style={{ margin: 0 }}
           >
             Download QR PDF
