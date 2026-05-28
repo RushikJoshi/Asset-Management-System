@@ -5,8 +5,13 @@ import dotenv from "dotenv";
 import route from "./routes/assetRoutes.js";
 import { ensureDefaultRoles } from "./models/Role.js";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -20,6 +25,14 @@ app.use(
 );
 
 app.use("/api", route);
+
+// Serve static files from the frontend dist directory
+app.use(express.static(path.join(__dirname, "../asset-management/dist")));
+
+// Fallback all other routes to index.html for SPA support
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../asset-management/dist/index.html"));
+});
 
 const PORT = process.env.PORT || 7001;
 const MONGO_URL = process.env.MONGO_URL;
