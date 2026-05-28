@@ -7,7 +7,14 @@ const getApiBaseUrl = () => {
   }
   const { protocol, hostname } = window.location;
   const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(hostname);
-  const isNetworkHost = hostname && !isLocalHost;
+
+  // Check if hostname is a private/local network IP address or local domain
+  const isLocalIp = 
+    /^192\.168\./.test(hostname) ||
+    /^10\./.test(hostname) ||
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
+    /^169\.254\./.test(hostname) ||
+    (hostname && hostname.endsWith(".local"));
 
   if (isLocalHost) {
     if (import.meta.env.DEV) {
@@ -16,11 +23,18 @@ const getApiBaseUrl = () => {
     return `${protocol}//${hostname}:7000/api`;
   }
 
-  if (isNetworkHost) {
+  if (isLocalIp) {
     return `${protocol}//${hostname}:7000/api`;
   }
 
-  return import.meta.env.VITE_API_BASE_URL || `${protocol}//${hostname}:7000/api`;
+  // If there is an explicit environment variable set that does not point to localhost, use it
+  const envApiUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envApiUrl && !envApiUrl.includes("localhost") && !envApiUrl.includes("127.0.0.1")) {
+    return envApiUrl;
+  }
+
+  // Otherwise, default to the public hostname without port 7000
+  return `${protocol}//${hostname}/api`;
 };
 
 export const API_BASE_URL = getApiBaseUrl();
